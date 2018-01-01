@@ -1,0 +1,8 @@
+# Mac stuff
+*.DS_Store
+
+# Building stuff
+*build*/*
+
+# IDE stuff
+.idea/*
