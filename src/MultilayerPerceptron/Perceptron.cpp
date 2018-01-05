@@ -3,9 +3,9 @@
 //
 
 #include <Utils.h>
-#include <assert.h>
+#include <cassert>
 #include <cmath>
-#include "Perceptron.h"
+#include "MultilayerPerceptron/Perceptron.h"
 
 Perceptron::Perceptron(ActivationType at) : activationType(at), bias(0.0) {
 }

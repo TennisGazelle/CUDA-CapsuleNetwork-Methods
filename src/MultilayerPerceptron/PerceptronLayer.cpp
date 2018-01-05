@@ -3,8 +3,7 @@
 //
 
 #include <cassert>
-#include <Utils.h>
-#include "PerceptronLayer.h"
+#include "MultilayerPerceptron/PerceptronLayer.h"
 
 PerceptronLayer::PerceptronLayer(size_t pInputSize, size_t numNodes) {
     parent = nullptr;
@@ -46,6 +45,8 @@ void PerceptronLayer::setParent(PerceptronLayer* parentLayer) {
 void PerceptronLayer::populateOutput() {
     // if i have a parent, save their output to my input
     if (parent != nullptr) {
+        // error checking
+        assert (inputSize == parent->outputSize);
         input = parent->output;
     }
     for (unsigned int i = 0; i < outputSize; i++) {
@@ -94,6 +95,9 @@ vector<double> PerceptronLayer::calculateErrorGradients(const vector<double> &pr
 
 void PerceptronLayer::updateWeights(const double total) {
     // tell perceptrons to update weight
+//    for (auto& p : perceptrons) { // THIS DOESN'T WORK, FIGURE OUT WHY
+//        p.adjustWeight(total);
+//    }
     for (unsigned int i = 0; i < perceptrons.size(); i++) {
         perceptrons[i].adjustWeight(total);
     }
@@ -113,9 +117,9 @@ void PerceptronLayer::outputLayerToFile(ofstream& fout) const {
 }
 
 int PerceptronLayer::getInputSize() const {
-    return inputSize;
+    return (int) inputSize;
 }
 
 int PerceptronLayer::getOutputSize() const {
-    return outputSize;
+    return (int) outputSize;
 }

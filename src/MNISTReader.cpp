@@ -8,10 +8,15 @@
 #include "MNISTReader.h"
 
 void MNISTReader::readMNISTData() {
-    int magicNumber, numImages, numRows, numCols, labels;
-    images.clear();
+    readDataWithLabels("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte", trainingData);
+    readDataWithLabels("../data/t10k-images-idx3-ubyte", "../data/t10k-labels-idx1-ubyte", testingData);
+}
 
-    ifstream fin("../data/train-images-idx3-ubyte", ios::binary);
+void MNISTReader::readDataWithLabels(const string &datafile, const string &labelfile, vector<Image>& dst){
+    int magicNumber, numImages, numRows, numCols, labels;
+    dst.clear();
+
+    ifstream fin(datafile, ios::binary);
     if (!fin.good()) {
         cerr << "Something went wrong in reading..." << endl;
         return;
@@ -34,20 +39,22 @@ void MNISTReader::readMNISTData() {
             image.addRow(row);
         }
 
-        images.push_back(image);
+        dst.push_back(image);
     }
     fin.close();
 
-    fin.open("../data/train-labels-idx1-ubyte", ios::binary);
+    fin.open(labelfile, ios::binary);
     grabFromFile(fin, magicNumber);
     grabFromFile(fin, labels);
     for (int i = 0; i < labels; i++) {
         unsigned char temp;
         fin.read((char*)&temp, 1);
-        images[i].setLabel(temp);
-//        images[i].print();
+        dst[i].setLabel(temp);
     }
     fin.close();
+
+//    cout << "example" << endl;
+//    dst[1].print();
 
 }
 
@@ -56,6 +63,10 @@ void MNISTReader::grabFromFile(ifstream &fin, int &num) {
     num = Utils::reverseInt(num);
 }
 
-const Image& MNISTReader::getImage(int index) const {
-    return images[index];
+const Image& MNISTReader::getTrainingImage(int index) const {
+    return trainingData[index];
+}
+
+const Image& MNISTReader::getTestingImage(int index) const {
+    return testingData[index];
 }

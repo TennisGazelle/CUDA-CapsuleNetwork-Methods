@@ -1,27 +1,13 @@
 
-#include <MultilayerPerceptron.h>
-#include <iostream>
+#include <MultilayerPerceptron/MultilayerPerceptron.h>
 
 int main() {
     vector<double> history(200);
 
     MultilayerPerceptron mp;
-//    mp.init("../bin/layer_weights/weights.nnet");
-    mp.init();
-    for (int i = 0; i < 200; i++) {
-        cout << "==========================" << endl;
-        cout << "TRAINING ITERATION: " << i << endl;
-        mp.train();
-        double runAccuracy = mp.tallyAndReportAccuracy();
-        history[i] = runAccuracy;
-
-        mp.writeToFile();
-    }
-
-    cout << "Accuracy history:" << endl;
-    for (auto h : history) {
-        cout << h << endl;
-    }
-
+    mp.init("../bin/layer_weights/weights-784-256-16-10.nnet");
+//    mp.init();
+//    mp.train();
+    mp.tallyAndReportAccuracy(false);
     return 0;
 }

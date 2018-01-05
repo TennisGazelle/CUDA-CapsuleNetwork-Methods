@@ -6,7 +6,8 @@
 #define NEURALNETS_ACTIVATIONTYPE_H
 
 enum ActivationType {
-    SIGMOID
+    SIGMOID,
+    TANGENTAL
 };
 
 #endif //NEURALNETS_ACTIVATIONTYPE_H

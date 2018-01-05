@@ -12,7 +12,7 @@ using namespace std;
 
 class Perceptron {
 public:
-    Perceptron(ActivationType at = SIGMOID);
+    explicit Perceptron(ActivationType at = SIGMOID);
     void init(size_t numInputs);
     void populateFromFileRow(const vector<double> &line);
     double evaluate(const vector<double> &input) const;

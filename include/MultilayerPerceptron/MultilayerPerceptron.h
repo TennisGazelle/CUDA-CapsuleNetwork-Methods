@@ -14,9 +14,10 @@ public:
     MultilayerPerceptron();
     void init(const string& possibleInputFilename = "");
     void run();
-    vector<double> loadImageAndGetOutput(int imageIndex);
+    vector<double> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     void train();
-    double tallyAndReportAccuracy();
+    void runEpoch();
+    double tallyAndReportAccuracy(bool useTraining = true);
 
     void writeToFile();
     bool readFromFile(const string& filename);
@@ -25,6 +26,7 @@ public:
 private:
     vector<PerceptronLayer> layers;
     MNISTReader reader;
+    unsigned int numTrainingEpochs = 200;
 };
 
 

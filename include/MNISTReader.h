@@ -14,10 +14,12 @@ class MNISTReader {
 public:
     MNISTReader() = default;
     void readMNISTData();
+    void readDataWithLabels(const string& datafile, const string& labelfile, vector<Image>& dst);
     static inline void grabFromFile(ifstream &fin, int &num);
 
-    const Image& getImage(int index) const;
-    vector<Image> images;
+    const Image& getTrainingImage(int index) const;
+    const Image& getTestingImage(int index) const;
+    vector<Image> trainingData, testingData;
 };
 
 

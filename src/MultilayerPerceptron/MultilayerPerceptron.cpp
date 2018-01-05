@@ -4,9 +4,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <cassert>
-#include <sstream>
-#include "MultilayerPerceptron.h"
+#include "MultilayerPerceptron/MultilayerPerceptron.h"
 
 MultilayerPerceptron::MultilayerPerceptron() {
 
@@ -22,8 +20,8 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
     } else {
         cout << "initializing network normally..." << endl;
         layers.reserve(3);
-        layers.emplace_back(PerceptronLayer(28*28, 16));
-        layers.emplace_back(PerceptronLayer(&layers[0], 16));
+        layers.emplace_back(PerceptronLayer(28*28, 10));
+        layers.emplace_back(PerceptronLayer(&layers[0], 10));
         layers.emplace_back(PerceptronLayer(&layers[1], 10));
 
         for (auto& l : layers) {
@@ -33,14 +31,21 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
 }
 
 void MultilayerPerceptron::run() {
-    // train a bunch of times
+    // train
+    train();
+    tallyAndReportAccuracy(false);
 }
 
-double MultilayerPerceptron::tallyAndReportAccuracy() {
+double MultilayerPerceptron::tallyAndReportAccuracy(bool useTraining) {
     cout << "tallying..." << endl;
     int numCorrectlyClassified = 0;
-    for (int i = 0; i < reader.images.size(); i++) {
-        auto output = loadImageAndGetOutput(i);
+
+    auto tallyData = reader.trainingData;
+    if (!useTraining)
+        tallyData = reader.testingData;
+
+    for (int i = 0; i < tallyData.size(); i++) {
+        auto output = loadImageAndGetOutput(i, useTraining);
 
         size_t guess = 0;
         double highest = 0.0;
@@ -49,23 +54,27 @@ double MultilayerPerceptron::tallyAndReportAccuracy() {
                 highest = output[j];
                 guess = j;
             }
-//            cout << j << "--" << output[j] << endl;
+//            cout << j << "--" << output[j] * 100 << endl;
         }
-//        cout << "Guess : " << guess << endl;
-//        cout << "Actual:" << reader.images[i].getLabel() << endl;
-        if (guess == reader.images[i].getLabel()) {
-            numCorrectlyClassified++;
-        }
+//        cout << "Guess  : " << guess << endl;
+//        cout << "Actual : " << tallyData[i].getLabel() << endl;
 //        cout << endl;
+        if (guess == tallyData[i].getLabel()) {
+            numCorrectlyClassified++;
+        } else {
+//            tallyData[i].print();
+        }
     }
     cout << endl;
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
-    cout << "Accuracy (out of " << reader.images.size() << ")       : " << double(numCorrectlyClassified)/double(reader.images.size()) * 100 << endl;
-    return double(numCorrectlyClassified)/double(reader.images.size()) * 100;
+    cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(reader.trainingData.size()) * 100 << endl;
+    return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
 }
 
-vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex) {
-    auto imageAsVector = reader.getImage(imageIndex).toVectorOfDoubles();
+vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool useTraining) {
+    auto imageAsVector = reader.getTrainingImage(imageIndex).toVectorOfDoubles();
+    if (!useTraining)
+        imageAsVector = reader.getTestingImage(imageIndex).toVectorOfDoubles();
 
     layers[0].setInput(imageAsVector);
     layers[0].populateOutput();
@@ -76,12 +85,27 @@ vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex) {
 }
 
 void MultilayerPerceptron::train() {
-    cout << "training..." << endl;
-    for (int i = 0; i < reader.images.size(); i++) {
+    cout << "training with " << numTrainingEpochs << " epochs..." << endl;
+
+    vector<double> history(numTrainingEpochs);
+    for (unsigned int i = 0; i < numTrainingEpochs; i++) {
+        cout << "=================" << endl;
+        cout << "EPOCH ITERATION: " << i << endl;
+        runEpoch();
+        double accuracy = tallyAndReportAccuracy();
+        tallyAndReportAccuracy(false);
+        history[i] = accuracy;
+
+//        writeToFile();
+    }
+}
+
+void MultilayerPerceptron::runEpoch(){
+    for (int i = 0; i < reader.trainingData.size(); i++) {
         // set the "true" values
         vector<double> networkOutput = loadImageAndGetOutput(i);
         vector<double> desired(10, 0);
-        desired[reader.images[i].getLabel()] = 1.0;
+        desired[reader.trainingData[i].getLabel()] = 1.0;
 
         for (unsigned int j = 0; j < desired.size(); j++) {
             desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
@@ -90,8 +114,10 @@ void MultilayerPerceptron::train() {
         // back-propagate!
         layers[layers.size()-1].backPropagate(desired);
 
-        if (!(i%20000) || i == reader.images.size()-1) {
-            cout << double(i) / double(reader.images.size()) << "% training done" << endl;
+        cout.precision(3);
+        cout << fixed;
+        if (!(i%5000) || i == reader.trainingData.size()-1) {
+            cout << double(i) / double(reader.trainingData.size()) << "% of epoch done" << endl;
         }
     }
 }
