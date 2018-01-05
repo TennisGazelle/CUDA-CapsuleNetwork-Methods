@@ -16,6 +16,8 @@ public:
     void run();
     vector<double> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     void train();
+
+    // TODO: break this function down to get the error inputs from the input fields...
     void runEpoch();
     double tallyAndReportAccuracy(bool useTraining = true);
 

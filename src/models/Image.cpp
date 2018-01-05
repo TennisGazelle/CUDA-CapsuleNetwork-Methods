@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <cassert>
-#include "Image.h"
+#include "models/Image.h"
 
 Image::Image() {
     reserve(28*28);

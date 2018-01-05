@@ -6,7 +6,7 @@
 #define NEURALNETS_MNISTREADER_H
 
 #include <vector>
-#include "Image.h"
+#include "models/Image.h"
 
 using namespace std;
 

@@ -6,7 +6,7 @@
 #define NEURALNETS_PERCEPTRON_H
 
 #include <vector>
-#include "ActivationType.h"
+#include "models/ActivationType.h"
 
 using namespace std;
 

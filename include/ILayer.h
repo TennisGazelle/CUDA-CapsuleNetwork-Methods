@@ -13,9 +13,6 @@ class ILayer {
 public:
     ILayer() = default;
 
-//    virtual void setInputSize(size_t pInputSize);
-//    virtual void setOutputSize(size_t pOutputSize);
-
     virtual void setInput(const vector<double> pInput);
     virtual vector<double> const& getOutput() const;
 

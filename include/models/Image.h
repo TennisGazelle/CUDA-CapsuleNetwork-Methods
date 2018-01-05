@@ -9,19 +9,6 @@
 
 using namespace std;
 
-enum Number {
-    ZERO,
-    ONE,
-    TWO,
-    THREE,
-    FOUR,
-    FIVE,
-    SIX,
-    SEVEN,
-    EIGHT,
-    NINE,
-};
-
 class Image : public vector<unsigned char> {
 public:
     Image();
