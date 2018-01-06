@@ -11,9 +11,12 @@ typedef vector <vector <double> > Filter;
 
 class ConvolutionalLayer : public ICNLayer {
 public:
-    ConvolutionalLayer() = default;
-    void calculateOutput(); // don't forget to perform ReLu at the end of it
+    ConvolutionalLayer(size_t iHeight, size_t iWidth, size_t numFilters, size_t fHeight = 5, size_t fWidth = 5);
+    ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, size_t fHeight = 5, size_t fWidth = 5);
+    void init();
+    void calculateOutput();
 private:
+    double dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const;
     // filters (constructor should include how many of them to have)
     vector<Filter> filters; // Note: THESE ARE THE WEIGHTS TO UPDATE
     size_t filterHeight, filterWidth;

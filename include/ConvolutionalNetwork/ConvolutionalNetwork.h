@@ -11,14 +11,18 @@
 
 class ConvolutionalNetwork {
 public:
+    ~ConvolutionalNetwork();
+
     void init();
     vector<double> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     void train();
 
+    void writeToFile();
+
 private:
     // contents
     vector<ICNLayer*> layers;
-    MultilayerPerceptron finalLayers;
+    MultilayerPerceptron* finalLayers;
 
     MNISTReader reader;
 };

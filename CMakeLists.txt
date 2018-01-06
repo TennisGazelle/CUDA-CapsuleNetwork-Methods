@@ -19,5 +19,4 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 # finally the exec
 add_executable(NeuralNets ${SOURCES} ${INCLUDES})
-target_link_libraries(NeuralNets
-        ${ARMADILLO_LIBRARIES})
+target_link_libraries(NeuralNets ${ARMADILLO_LIBRARIES})

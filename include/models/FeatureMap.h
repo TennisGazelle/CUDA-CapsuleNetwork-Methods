@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 class FeatureMap : public vector< vector<double> > {
 public:
     // to one dimension
