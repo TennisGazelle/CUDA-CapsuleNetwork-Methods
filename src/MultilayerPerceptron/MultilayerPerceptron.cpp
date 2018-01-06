@@ -6,8 +6,10 @@
 #include <fstream>
 #include "MultilayerPerceptron/MultilayerPerceptron.h"
 
-MultilayerPerceptron::MultilayerPerceptron() {
-
+MultilayerPerceptron::MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes) {
+    layerSizes.push_back(inputLayerSize);
+    layerSizes.insert(layerSizes.end(), hiddenLayerSizes.begin(), hiddenLayerSizes.end());
+    layerSizes.push_back(outputLayerSize);
 }
 
 void MultilayerPerceptron::init(const string& possibleInputFilename) {
@@ -19,10 +21,15 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
         readFromFile(possibleInputFilename);
     } else {
         cout << "initializing network normally..." << endl;
-        layers.reserve(3);
-        layers.emplace_back(PerceptronLayer(28*28, 10));
-        layers.emplace_back(PerceptronLayer(&layers[0], 10));
-        layers.emplace_back(PerceptronLayer(&layers[1], 10));
+        layers.reserve(layerSizes.size());
+
+        layers.emplace_back(PerceptronLayer(layerSizes[0], layerSizes[1]));
+        for (unsigned int i = 1; i < layerSizes.size(); i++) {
+            layers.emplace_back(PerceptronLayer(&layers[i-1], layerSizes[i]));
+        }
+//        layers.emplace_back(PerceptronLayer(28*28, 10));
+//        layers.emplace_back(PerceptronLayer(&layers[0], 10));
+//        layers.emplace_back(PerceptronLayer(&layers[1], 10));
 
         for (auto& l : layers) {
             l.init();
@@ -67,7 +74,7 @@ double MultilayerPerceptron::tallyAndReportAccuracy(bool useTraining) {
     }
     cout << endl;
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
-    cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(reader.trainingData.size()) * 100 << endl;
+    cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
     return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
 }
 
@@ -77,9 +84,9 @@ vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool 
         imageAsVector = reader.getTestingImage(imageIndex).toVectorOfDoubles();
 
     layers[0].setInput(imageAsVector);
-    layers[0].populateOutput();
-    layers[1].populateOutput();
-    layers[2].populateOutput();
+    for (auto& l : layers) {
+        l.populateOutput();
+    }
 
     return layers[layers.size()-1].getOutput();
 }
@@ -96,7 +103,7 @@ void MultilayerPerceptron::train() {
         tallyAndReportAccuracy(false);
         history[i] = accuracy;
 
-//        writeToFile();
+        writeToFile();
     }
 }
 
@@ -117,7 +124,7 @@ void MultilayerPerceptron::runEpoch(){
         cout.precision(3);
         cout << fixed;
         if (!(i%5000) || i == reader.trainingData.size()-1) {
-            cout << double(i) / double(reader.trainingData.size()) << "% of epoch done" << endl;
+            cout << double(i) / double(reader.trainingData.size()) * 100 << "% of epoch done" << endl;
         }
     }
 }
@@ -125,14 +132,18 @@ void MultilayerPerceptron::runEpoch(){
 void MultilayerPerceptron::writeToFile() {
     // build the filename
     string outputfileName = "../bin/layer_weights/weights";
-    outputfileName += "-" + to_string(layers[0].getInputSize());
-    for (auto& l : layers) {
-        outputfileName += "-" + to_string(l.getOutputSize());
+    for (auto& l : layerSizes) {
+        outputfileName += "-" + to_string(l);
     }
     outputfileName += ".nnet";
 
     ofstream fout;
     fout.open(outputfileName);
+    writeToFile(fout);
+    fout.close();
+}
+
+void MultilayerPerceptron::writeToFile(ofstream &fout) {
     // output how many layers
     fout << layers.size() << endl;
     // for each layer
@@ -140,7 +151,6 @@ void MultilayerPerceptron::writeToFile() {
         // output the parent's layer's weights then nodes
         layers[i].outputLayerToFile(fout);
     }
-    fout.close();
 }
 
 bool MultilayerPerceptron::readFromFile(const string& filename) {
