@@ -27,9 +27,6 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
         for (unsigned int i = 1; i < layerSizes.size(); i++) {
             layers.emplace_back(PerceptronLayer(&layers[i-1], layerSizes[i]));
         }
-//        layers.emplace_back(PerceptronLayer(28*28, 10));
-//        layers.emplace_back(PerceptronLayer(&layers[0], 10));
-//        layers.emplace_back(PerceptronLayer(&layers[1], 10));
 
         for (auto& l : layers) {
             l.init();
