@@ -17,12 +17,23 @@ vector<double> FeatureMap::toOneDim() const {
     return output;
 }
 
-FeatureMap& FeatureMap::toFeatureMap(size_t h, size_t w) {
-    resize(h);
-    for (auto& row : (*this)) {
-        row.resize(w);
+vector<FeatureMap> FeatureMap::toFeatureMaps(size_t h, size_t w, const vector<double> &cubeData) {
+    size_t depth = cubeData.size() / (h * w);
+    vector<FeatureMap> maps(depth);
+    for (auto& map : maps) {
+        map.setSize(h, w);
     }
-    return *this;
+
+    int cubeIndex = 0;
+    for (size_t mapIndex = 0; mapIndex < depth; mapIndex++) {
+        for (size_t r = 0; r < h; r++) {
+            for (size_t c = 0; c < w; c++) {
+                maps[mapIndex][r][c] = cubeData[cubeIndex++];
+            }
+        }
+    }
+
+    return maps;
 }
 
 void FeatureMap::setSize(size_t h, size_t w) {

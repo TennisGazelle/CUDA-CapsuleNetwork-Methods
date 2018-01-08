@@ -55,6 +55,10 @@ void ConvolutionalLayer::calculateOutput() {
     }
 }
 
+void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
+    return;
+}
+
 double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const {
     double sum = 0.0;
     size_t count = 0;

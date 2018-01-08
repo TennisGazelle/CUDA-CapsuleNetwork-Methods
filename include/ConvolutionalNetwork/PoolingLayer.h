@@ -10,9 +10,10 @@
 
 class PoolingLayer : public ICNLayer {
 public:
-    PoolingLayer(ICNLayer* parent, PoolingType pt = MAX, size_t sSize = 2, size_t wHeight = 5, size_t wWidth = 5);
+    explicit PoolingLayer(ICNLayer* parent, PoolingType pt = MAX, size_t sSize = 2, size_t wHeight = 5, size_t wWidth = 5);
     void init();
     void calculateOutput();
+    void backPropagate(const vector<FeatureMap>& errorGradient);
 private:
     double findPoolValue(size_t rowBegin, size_t colBegin, size_t channel);
     size_t windowHeight, windowWidth, strideSize;

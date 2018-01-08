@@ -19,13 +19,11 @@ public:
     void setParent(PerceptronLayer* parent);
 
     void populateOutput();
-    void backPropagate(const vector<double> errorGradient);
+    // returns the error gradient of the last layer (the input layer) just in case you want it
+    vector<double> backPropagate(const vector<double> errorGradient);
     void updateWeights(const double total);
     vector<double> calculateErrorGradients(const vector<double> &previousErrorGradient);
     void outputLayerToFile(ofstream& fout) const;
-
-    int getInputSize() const;
-    int getOutputSize() const;
 
 private:
     PerceptronLayer* parent;

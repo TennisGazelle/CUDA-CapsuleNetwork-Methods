@@ -54,7 +54,7 @@ void PerceptronLayer::populateOutput() {
     }
 }
 
-void PerceptronLayer::backPropagate(const vector<double> errorGradient) {
+vector<double> PerceptronLayer::backPropagate(const vector<double> errorGradient) {
     // clear out the nudges
     for (auto& d : sumNudges)
         d = 0.0;
@@ -74,11 +74,13 @@ void PerceptronLayer::backPropagate(const vector<double> errorGradient) {
     vector<double> previousErrorGradient = calculateErrorGradients(errorGradient);
 
     // now that I have the "error", tell the parent to do the same
-    if (parent != nullptr) {
-        parent->backPropagate(previousErrorGradient);
-    }
-
     updateWeights(60000.0);
+
+    if (parent != nullptr) {
+        return parent->backPropagate(previousErrorGradient);
+    }
+    return previousErrorGradient;
+
 }
 
 vector<double> PerceptronLayer::calculateErrorGradients(const vector<double> &previousErrorGradient) {
@@ -95,7 +97,8 @@ vector<double> PerceptronLayer::calculateErrorGradients(const vector<double> &pr
 
 void PerceptronLayer::updateWeights(const double total) {
     // tell perceptrons to update weight
-//    for (auto& p : perceptrons) { // THIS DOESN'T WORK, FIGURE OUT WHY
+// TODO: THIS DOESN'T WORK, FIGURE OUT WHY
+//    for (auto& p : perceptrons) {
 //        p.adjustWeight(total);
 //    }
     for (unsigned int i = 0; i < perceptrons.size(); i++) {
@@ -114,12 +117,4 @@ void PerceptronLayer::outputLayerToFile(ofstream& fout) const {
         }
         fout << endl;
     }
-}
-
-int PerceptronLayer::getInputSize() const {
-    return (int) inputSize;
-}
-
-int PerceptronLayer::getOutputSize() const {
-    return (int) outputSize;
 }

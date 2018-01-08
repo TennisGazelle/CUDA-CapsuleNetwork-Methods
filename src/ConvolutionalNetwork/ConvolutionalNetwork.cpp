@@ -23,7 +23,6 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 
 void ConvolutionalNetwork::init() {
     layers.push_back(new ConvolutionalLayer(28, 28, 20));
-//    layers.push_back(new ConvolutionalLayer(layers[0], 40));
     layers.push_back(new PoolingLayer(layers[0], MAX, 2, 5, 5));
     layers.push_back(new ConvolutionalLayer(layers[1], 10));
     layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
@@ -52,6 +51,15 @@ void ConvolutionalNetwork::train() {
     for (int i = 0; i < output.size(); i++) {
         cout << i << "--" << output[i] * 100 << endl;
     }
+    cout << endl << endl;
+
+    runEpoch();
+
+    output = loadImageAndGetOutput(0);
+
+    for (int i = 0; i < output.size(); i++) {
+        cout << i << "--" << output[i] * 100 << endl;
+    }
 }
 
 void ConvolutionalNetwork::writeToFile() {
@@ -61,4 +69,24 @@ void ConvolutionalNetwork::writeToFile() {
     // output your own stuff
     finalLayers->writeToFile(fout);
     fout.close();
+}
+
+void ConvolutionalNetwork::runEpoch() {
+    vector<double> networkOutput = loadImageAndGetOutput(0);
+    vector<double> desired(10, 0);
+    desired[MNISTReader::getInstance()->trainingData[0].getLabel()] = 1.0;
+
+    for (unsigned int i = 0; i < desired.size(); i++) {
+        desired[i] = networkOutput[i] * (1-networkOutput[i]) * (desired[i] - networkOutput[i]);
+    }
+
+    // back-propagation
+    // send this to the back fo the mlp and get the desired stuff back
+    auto mlpError = finalLayers->backPropagateError(desired);
+
+    layers[layers.size()-1]->backPropagate(FeatureMap::toFeatureMaps(
+            layers[layers.size()-1]->outputHeight,
+            layers[layers.size()-1]->outputWidth,
+            mlpError
+    ));
 }

@@ -124,7 +124,7 @@ void MultilayerPerceptron::runEpoch(){
         }
 
         // back-propagate!
-        layers[layers.size()-1].backPropagate(desired);
+        backPropagateError(desired);
 
         cout.precision(3);
         cout << fixed;
@@ -132,6 +132,10 @@ void MultilayerPerceptron::runEpoch(){
             cout << double(i) / double(MNISTReader::getInstance()->trainingData.size()) * 100 << "% of epoch done" << endl;
         }
     }
+}
+
+vector<double> MultilayerPerceptron::backPropagateError(const vector<double> &error) {
+    return layers[layers.size()-1].backPropagate(error);
 }
 
 void MultilayerPerceptron::writeToFile() {

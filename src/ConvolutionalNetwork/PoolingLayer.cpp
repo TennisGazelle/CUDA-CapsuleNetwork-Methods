@@ -33,6 +33,14 @@ void PoolingLayer::calculateOutput() {
     }
 }
 
+void PoolingLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
+    // do stuff if it's
+    assert (errorGradient.size() == outputMaps.size());
+
+
+    return;
+}
+
 double PoolingLayer::findPoolValue(size_t rowBegin, size_t colBegin, size_t channel) {
     double sum = 0.0;
     double highest = 0.0;

@@ -15,6 +15,7 @@ public:
     ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, size_t fHeight = 5, size_t fWidth = 5);
     void init();
     void calculateOutput();
+    void backPropagate(const vector<FeatureMap>& errorGradient);
 private:
     double dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const;
     // filters (constructor should include how many of them to have)

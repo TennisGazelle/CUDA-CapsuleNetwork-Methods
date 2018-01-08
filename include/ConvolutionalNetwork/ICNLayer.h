@@ -19,11 +19,13 @@ public:
     vector<double> getOutputAsOneDimensional() const;
 
     virtual void calculateOutput() = 0;
+    // TODO: this func must be called recursively for all parent layers; change design pattern later
+    virtual void backPropagate(const vector<FeatureMap>& errorGradient) = 0;
     void collectInput();
     void process();
 
     // this class should be similar to ILayer but not have the exact same things...
-    vector<FeatureMap> inputMaps, outputMaps;
+    vector<FeatureMap> inputMaps, outputMaps, weightAdjustment;
     size_t inputHeight = 0, inputWidth = 0;
     size_t outputHeight = 0, outputWidth = 0;
     ICNLayer* parent = nullptr;
