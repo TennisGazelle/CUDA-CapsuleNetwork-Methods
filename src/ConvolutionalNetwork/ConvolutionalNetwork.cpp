@@ -4,6 +4,7 @@
 
 #include <ConvolutionalNetwork/ConvolutionalLayer.h>
 #include <ConvolutionalNetwork/PoolingLayer.h>
+#include <iostream>
 #include "ConvolutionalNetwork/ConvolutionalNetwork.h"
 
 ConvolutionalNetwork::~ConvolutionalNetwork() {
@@ -28,6 +29,7 @@ void ConvolutionalNetwork::init() {
     layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
 
     finalLayers = new MultilayerPerceptron(layers[layers.size()-1]->getOutputSize1D(), 10, {10});
+    finalLayers->init();
 }
 
 vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool useTraining) {
@@ -45,7 +47,11 @@ vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool 
 }
 
 void ConvolutionalNetwork::train() {
-    loadImageAndGetOutput(0);
+    auto output = loadImageAndGetOutput(0);
+
+    for (int i = 0; i < output.size(); i++) {
+        cout << i << "--" << output[i] * 100 << endl;
+    }
 }
 
 void ConvolutionalNetwork::writeToFile() {

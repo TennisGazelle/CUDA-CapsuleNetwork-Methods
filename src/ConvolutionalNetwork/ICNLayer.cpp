@@ -37,7 +37,7 @@ void ICNLayer::setOutputDimension(size_t numOutputs, size_t height, size_t width
 }
 
 size_t ICNLayer::getOutputSize1D() const {
-    return outputHeight * outputWidth;
+    return outputHeight * outputWidth * outputMaps.size();
 }
 
 vector<double> ICNLayer::getOutputAsOneDimensional() const {
@@ -48,6 +48,8 @@ vector<double> ICNLayer::getOutputAsOneDimensional() const {
         auto temp = map.toOneDim();
         oneDOutput.insert(oneDOutput.end(), temp.begin(), temp.end());
     }
+
+    return oneDOutput;
 }
 
 void ICNLayer::process() {
