@@ -6,6 +6,7 @@
 #define NEURALNETS_IMAGE_H
 
 #include <vector>
+#include "FeatureMap.h"
 
 using namespace std;
 
@@ -15,6 +16,7 @@ public:
     void addRow(const vector<unsigned char> &row);
     void print() const;
     vector<double> toVectorOfDoubles() const;
+    FeatureMap to2DImage() const;
 
     size_t getLabel() const;
     void setLabel(unsigned char l);

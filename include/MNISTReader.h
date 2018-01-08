@@ -12,15 +12,19 @@ using namespace std;
 
 class MNISTReader {
 public:
+    ~MNISTReader();
+    static MNISTReader* getInstance();
+    const Image& getTrainingImage(int index) const;
+    const Image& getTestingImage(int index) const;
+
+    vector<Image> trainingData, testingData;
+private:
+    static MNISTReader* instance;
     MNISTReader() = default;
     void readMNISTData();
     void readDataWithLabels(const string& datafile, const string& labelfile, vector<Image>& dst);
-    static inline void grabFromFile(ifstream &fin, int &num);
 
-    const Image& getTrainingImage(int index) const;
-    const Image& getTestingImage(int index) const;
-    vector<Image> trainingData, testingData;
+    static inline void grabFromFile(ifstream &fin, unsigned int &num);
 };
-
 
 #endif //NEURALNETS_MNISTREADER_H

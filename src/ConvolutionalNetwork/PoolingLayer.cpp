@@ -10,28 +10,19 @@ PoolingLayer::PoolingLayer(ICNLayer* pParent, PoolingType pt, size_t sSize, size
         : windowHeight(wHeight), windowWidth(wWidth), strideSize(sSize), poolingType(pt) {
     // calculate the output sizes
     setParentLayer(pParent);
-    setInputDimension(parent->outputHeight, parent->outputWidth);
+
+    setInputDimension(parent->outputMaps.size(), parent->outputHeight, parent->outputWidth);
+    init();
 }
 
 void PoolingLayer::init() {
-    setOutputDimension(size_t(ceil(double(inputHeight)/double(strideSize))), size_t(ceil(double(inputWidth)/double(strideSize))));
+    // size the outputs according to the channels
+    setOutputDimension(inputMaps.size(), size_t(ceil(double(inputHeight)/double(strideSize))), size_t(ceil(double(inputWidth)/double(strideSize))));
 }
 
 void PoolingLayer::calculateOutput() {
     // pooling layers have to have parents
     assert (parent != nullptr);
-
-    // TODO: move the following code block
-    {
-        // size the outputs according to the channels
-        outputMaps.resize(inputMaps.size());
-        for (auto& map : outputMaps) {
-            map.resize(outputHeight);
-            for(auto& row : map) {
-                row.resize(outputWidth);
-            }
-        }
-    }
 
     for (size_t channel = 0; channel < parent->outputMaps.size(); channel++) {
         for (size_t rowBegin = 0, rowIndex = 0; rowBegin < inputHeight; rowBegin += strideSize, rowIndex++) {
@@ -45,18 +36,20 @@ void PoolingLayer::calculateOutput() {
 double PoolingLayer::findPoolValue(size_t rowBegin, size_t colBegin, size_t channel) {
     double sum = 0.0;
     double highest = 0.0;
-    int count = 0;
+    size_t count = 0;
     for (size_t row = rowBegin; row < rowBegin + inputHeight; row++) {
         for (size_t col = colBegin; col < colBegin + inputWidth; col++) {
-            highest = max(highest, inputMaps[channel][row][col]);
-            sum += inputMaps[channel][row][col];
-            count++;
+            if (row < inputHeight && col < inputWidth) {
+                highest = max(highest, inputMaps[channel][row][col]);
+                sum += inputMaps[channel][row][col];
+                count++;
+            }
         }
     }
 
     if (poolingType == MAX) {
         return highest;
-    } else if (poolingType == MEAN) {
+    } else {
         return sum/double(count);
     }
 }

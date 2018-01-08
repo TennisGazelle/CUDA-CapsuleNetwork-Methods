@@ -14,7 +14,6 @@ MultilayerPerceptron::MultilayerPerceptron(size_t inputLayerSize, size_t outputL
 
 void MultilayerPerceptron::init(const string& possibleInputFilename) {
     cout << "init..." << endl;
-    reader.readMNISTData();
 
     // TODO - if there's a filename as parameter, read the neural net weights from a file
     if (!possibleInputFilename.empty() && readFromFile(possibleInputFilename)) {
@@ -44,9 +43,9 @@ double MultilayerPerceptron::tallyAndReportAccuracy(bool useTraining) {
     cout << "tallying..." << endl;
     int numCorrectlyClassified = 0;
 
-    auto tallyData = reader.trainingData;
+    auto tallyData = MNISTReader::getInstance()->trainingData;
     if (!useTraining)
-        tallyData = reader.testingData;
+        tallyData = MNISTReader::getInstance()->testingData;
 
     for (int i = 0; i < tallyData.size(); i++) {
         auto output = loadImageAndGetOutput(i, useTraining);
@@ -75,10 +74,19 @@ double MultilayerPerceptron::tallyAndReportAccuracy(bool useTraining) {
     return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
 }
 
+vector<double> MultilayerPerceptron::loadInputAndGetOutput(const vector<double> &input) {
+    layers[0].setInput(input);
+    for (auto& l : layers) {
+        l.populateOutput();
+    }
+
+    return layers[layers.size()-1].getOutput();
+}
+
 vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool useTraining) {
-    auto imageAsVector = reader.getTrainingImage(imageIndex).toVectorOfDoubles();
+    auto imageAsVector = MNISTReader::getInstance()->getTrainingImage(imageIndex).toVectorOfDoubles();
     if (!useTraining)
-        imageAsVector = reader.getTestingImage(imageIndex).toVectorOfDoubles();
+        imageAsVector = MNISTReader::getInstance()->getTestingImage(imageIndex).toVectorOfDoubles();
 
     layers[0].setInput(imageAsVector);
     for (auto& l : layers) {
@@ -105,11 +113,11 @@ void MultilayerPerceptron::train() {
 }
 
 void MultilayerPerceptron::runEpoch(){
-    for (int i = 0; i < reader.trainingData.size(); i++) {
+    for (int i = 0; i < MNISTReader::getInstance()->trainingData.size(); i++) {
         // set the "true" values
         vector<double> networkOutput = loadImageAndGetOutput(i);
         vector<double> desired(10, 0);
-        desired[reader.trainingData[i].getLabel()] = 1.0;
+        desired[MNISTReader::getInstance()->trainingData[i].getLabel()] = 1.0;
 
         for (unsigned int j = 0; j < desired.size(); j++) {
             desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
@@ -120,15 +128,15 @@ void MultilayerPerceptron::runEpoch(){
 
         cout.precision(3);
         cout << fixed;
-        if (!(i%5000) || i == reader.trainingData.size()-1) {
-            cout << double(i) / double(reader.trainingData.size()) * 100 << "% of epoch done" << endl;
+        if (!(i%5000) || i == MNISTReader::getInstance()->trainingData.size()-1) {
+            cout << double(i) / double(MNISTReader::getInstance()->trainingData.size()) * 100 << "% of epoch done" << endl;
         }
     }
 }
 
 void MultilayerPerceptron::writeToFile() {
     // build the filename
-    string outputfileName = "../bin/layer_weights/weights";
+    string outputfileName = "../bin/layer_weights/mlp";
     for (auto& l : layerSizes) {
         outputfileName += "-" + to_string(l);
     }
@@ -144,9 +152,9 @@ void MultilayerPerceptron::writeToFile(ofstream &fout) {
     // output how many layers
     fout << layers.size() << endl;
     // for each layer
-    for (int i = 0; i < layers.size(); i++) {
+    for (auto& l : layers) {
         // output the parent's layer's weights then nodes
-        layers[i].outputLayerToFile(fout);
+        l.outputLayerToFile(fout);
     }
 }
 

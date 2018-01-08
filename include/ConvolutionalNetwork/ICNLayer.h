@@ -11,11 +11,16 @@
 class ICNLayer {
 public:
     virtual void init() = 0;
+    void setInput(const vector<FeatureMap>& input);
     void setParentLayer(ICNLayer* parentLayer);
-    void setInputDimension(size_t height, size_t width);
-    void setOutputDimension(size_t height, size_t width);
+    void setInputDimension(size_t numInputs, size_t height, size_t width);
+    void setOutputDimension(size_t numOutputs, size_t height, size_t width);
     size_t getOutputSize1D() const;
+    vector<double> getOutputAsOneDimensional() const;
+
     virtual void calculateOutput() = 0;
+    void collectInput();
+    void process();
 
     // this class should be similar to ILayer but not have the exact same things...
     vector<FeatureMap> inputMaps, outputMaps;

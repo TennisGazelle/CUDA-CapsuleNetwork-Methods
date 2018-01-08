@@ -15,6 +15,7 @@ public:
     void init(const string& possibleInputFilename = "");
     void run();
     vector<double> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
+    vector<double> loadInputAndGetOutput(const vector<double>& input);
     void train();
 
     // TODO: break this function down to get the error inputs from the input fields...
@@ -28,7 +29,6 @@ public:
 
 private:
     vector<PerceptronLayer> layers;
-    MNISTReader reader;
     unsigned int numTrainingEpochs = 200;
 
     vector<size_t> layerSizes;

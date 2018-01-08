@@ -21,21 +21,31 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 }
 
 void ConvolutionalNetwork::init() {
-    layers.push_back(new ConvolutionalLayer(28, 28, 10));
-    layers.push_back(new ConvolutionalLayer(layers[0], 10));
-    layers.push_back(new PoolingLayer(layers[1], MAX, 2, 5, 5));
-    layers.push_back(new ConvolutionalLayer(layers[2], 10));
-    layers.push_back(new PoolingLayer(layers[3], MAX, 2, 5, 5));
+    layers.push_back(new ConvolutionalLayer(28, 28, 20));
+//    layers.push_back(new ConvolutionalLayer(layers[0], 40));
+    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 5, 5));
+    layers.push_back(new ConvolutionalLayer(layers[1], 10));
+    layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
 
     finalLayers = new MultilayerPerceptron(layers[layers.size()-1]->getOutputSize1D(), 10, {10});
 }
 
 vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool useTraining) {
+    // TODO: get 2D image from MNIST reader
+    auto imageAsVector = MNISTReader::getInstance()->getTrainingImage(imageIndex).to2DImage();
+    if (!useTraining)
+        imageAsVector = MNISTReader::getInstance()->getTestingImage(imageIndex).to2DImage();
 
+    layers[0]->setInput({imageAsVector});
+    for (auto& l : layers) {
+        l->process();
+    }
+
+    return finalLayers->loadInputAndGetOutput(layers[layers.size()-1]->getOutputAsOneDimensional());
 }
 
 void ConvolutionalNetwork::train() {
-
+    loadImageAndGetOutput(0);
 }
 
 void ConvolutionalNetwork::writeToFile() {

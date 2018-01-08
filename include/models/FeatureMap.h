@@ -14,7 +14,8 @@ public:
     // to one dimension
     vector<double> toOneDim() const;
     // from one dim (with dimensions expected
-    FeatureMap& toFeatureMap(size_t h, size_t w) const;
+    FeatureMap& toFeatureMap(size_t h, size_t w);
+    void setSize(size_t h, size_t w);
 };
 
 

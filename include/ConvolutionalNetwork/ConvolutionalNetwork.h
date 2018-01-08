@@ -23,8 +23,6 @@ private:
     // contents
     vector<ICNLayer*> layers;
     MultilayerPerceptron* finalLayers;
-
-    MNISTReader reader;
 };
 
 

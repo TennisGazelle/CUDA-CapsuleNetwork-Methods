@@ -7,13 +7,29 @@
 #include <Utils.h>
 #include "MNISTReader.h"
 
+MNISTReader* MNISTReader::instance = nullptr;
+
+MNISTReader* MNISTReader::getInstance() {
+    if (instance == nullptr) {
+        instance = new MNISTReader;
+        instance->readMNISTData();
+    }
+    return instance;
+}
+
+MNISTReader::~MNISTReader() {
+    if (instance == nullptr) {
+        delete instance;
+    }
+}
+
 void MNISTReader::readMNISTData() {
     readDataWithLabels("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte", trainingData);
     readDataWithLabels("../data/t10k-images-idx3-ubyte", "../data/t10k-labels-idx1-ubyte", testingData);
 }
 
 void MNISTReader::readDataWithLabels(const string &datafile, const string &labelfile, vector<Image>& dst){
-    int magicNumber, numImages, numRows, numCols, labels;
+    unsigned int magicNumber, numImages, numRows, numCols, labels;
     dst.clear();
 
     ifstream fin(datafile, ios::binary);
@@ -58,7 +74,7 @@ void MNISTReader::readDataWithLabels(const string &datafile, const string &label
 
 }
 
-void MNISTReader::grabFromFile(ifstream &fin, int &num) {
+void MNISTReader::grabFromFile(ifstream &fin, unsigned int &num) {
     fin.read((char*)&num, sizeof(num));
     num = Utils::reverseInt(num);
 }

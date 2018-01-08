@@ -44,3 +44,17 @@ size_t Image::getLabel() const {
 void Image::setLabel(unsigned char l) {
     label = l;
 }
+
+FeatureMap Image::to2DImage() const {
+    FeatureMap pixels;
+    pixels.reserve(28);
+    for (unsigned int r = 0; r < 28; r++) {
+        vector<double> row(28);
+        for (unsigned int col = 0; col < 28; col++) {
+            row[col] = double(at(col + (r * 28)));
+        }
+        pixels.push_back(row);
+    }
+
+    return pixels;
+}
