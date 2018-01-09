@@ -5,9 +5,8 @@
 #ifndef NEURALNETS_CONVOLUTIONALLAYER_H
 #define NEURALNETS_CONVOLUTIONALLAYER_H
 
+#include <models/Filter.h>
 #include "ICNLayer.h"
-
-typedef vector <vector <double> > Filter;
 
 class ConvolutionalLayer : public ICNLayer {
 public:
@@ -18,8 +17,10 @@ public:
     void backPropagate(const vector<FeatureMap>& errorGradient);
 private:
     double dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const;
+    void updateFilterAdjustments(double error, size_t filterIndex, size_t beginRow, size_t beginCol);
     // filters (constructor should include how many of them to have)
-    vector<Filter> filters; // Note: THESE ARE THE WEIGHTS TO UPDATE
+    vector<Filter> filters, filterAdjustments; // Note: THESE ARE THE WEIGHTS TO UPDATE
+    vector<FeatureMap> inputDesiredChange;
     size_t filterHeight, filterWidth;
 };
 

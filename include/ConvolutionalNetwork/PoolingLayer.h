@@ -16,6 +16,7 @@ public:
     void backPropagate(const vector<FeatureMap>& errorGradient);
 private:
     double findPoolValue(size_t rowBegin, size_t colBegin, size_t channel);
+    pair<size_t, size_t> returnCoordinatesOfHighest(size_t rowBegin, size_t colBegin, size_t channel);
     size_t windowHeight, windowWidth, strideSize;
     PoolingType poolingType;
 };

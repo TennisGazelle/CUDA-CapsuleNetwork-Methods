@@ -42,3 +42,11 @@ void FeatureMap::setSize(size_t h, size_t w) {
         row.resize(w);
     }
 }
+
+void FeatureMap::clearOut() {
+    for (auto& row : (*this)) {
+        for (auto& col : row) {
+            col = 0;
+        }
+    }
+}

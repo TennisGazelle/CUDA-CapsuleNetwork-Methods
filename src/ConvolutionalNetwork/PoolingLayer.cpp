@@ -37,17 +37,55 @@ void PoolingLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
     // do stuff if it's
     assert (errorGradient.size() == outputMaps.size());
 
+    // there is no weight adjustment, so just map the error to the input maps
+    vector<FeatureMap> prevErrorGradient = inputMaps;
+    for (auto& map : prevErrorGradient) {
+        map.clearOut();
+    }
 
-    return;
+    // window through
+    for (size_t channel = 0; channel < parent->outputMaps.size(); channel++) {
+        for (size_t rowBegin = 0, rowIndex = 0; rowBegin < inputHeight; rowBegin += strideSize, rowIndex++) {
+            for (size_t colBegin = 0, colIndex = 0; colBegin < inputWidth; colBegin += strideSize, colIndex++) {
+                if (poolingType == MAX) {
+                    // for max pooling, just map the error to the map value (the other values get no error)
+                    auto coords = returnCoordinatesOfHighest(rowBegin, colBegin, channel);
+                    prevErrorGradient[channel][coords.first][coords.second] = errorGradient[channel][rowIndex][colIndex];
+                } else if (poolingType == MEAN) {
+                    // for mean pooling, give every cell in the window 1/(wH * wW)-th of the error
+                    // TODO: implement mean pooling later
+                }
+            }
+        }
+    }
+
+    // give this error gradient to the previous guys
+    parent->backPropagate(prevErrorGradient);
+}
+
+pair<size_t, size_t> PoolingLayer::returnCoordinatesOfHighest(size_t rowBegin, size_t colBegin, size_t channel) {
+    pair<size_t, size_t> coordinatesOfHighest = {rowBegin, colBegin};
+    double highest = 0.0;
+
+    for (size_t row = rowBegin; row < rowBegin + windowHeight; row++) {
+        for (size_t col = colBegin; col < colBegin + windowWidth; col++) {
+            if (row < windowHeight && col < windowWidth && highest < inputMaps[channel][row][col]) {
+                highest = inputMaps[channel][row][col];
+                coordinatesOfHighest = {row, col};
+            }
+        }
+    }
+
+    return coordinatesOfHighest;
 }
 
 double PoolingLayer::findPoolValue(size_t rowBegin, size_t colBegin, size_t channel) {
     double sum = 0.0;
     double highest = 0.0;
     size_t count = 0;
-    for (size_t row = rowBegin; row < rowBegin + inputHeight; row++) {
-        for (size_t col = colBegin; col < colBegin + inputWidth; col++) {
-            if (row < inputHeight && col < inputWidth) {
+    for (size_t row = rowBegin; row < rowBegin + windowHeight; row++) {
+        for (size_t col = colBegin; col < colBegin + windowWidth; col++) {
+            if (row < windowHeight && col < windowWidth) {
                 highest = max(highest, inputMaps[channel][row][col]);
                 sum += inputMaps[channel][row][col];
                 count++;

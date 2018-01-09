@@ -25,7 +25,7 @@ public:
     void process();
 
     // this class should be similar to ILayer but not have the exact same things...
-    vector<FeatureMap> inputMaps, outputMaps, weightAdjustment;
+    vector<FeatureMap> inputMaps, outputMaps;
     size_t inputHeight = 0, inputWidth = 0;
     size_t outputHeight = 0, outputWidth = 0;
     ICNLayer* parent = nullptr;
