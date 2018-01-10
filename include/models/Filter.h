@@ -12,6 +12,7 @@ using namespace std;
 class Filter : public vector< vector<double> > {
 public:
     void clearOut();
+    Filter operator+(const Filter& right);
 };
 
 

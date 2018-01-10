@@ -70,18 +70,27 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
         map.clearOut();
     }
 
-
-//    // map the adjustment needed for each filter, per window
-//    for (size_t outputIndex = 0; outputIndex < filters.size(); outputIndex++) {
-//        for (size_t outputRow = 0; outputRow < inputHeight - filterHeight; outputRow++) {
-//            for (size_t outputCol = 0; outputCol < inputWidth - filterWidth; outputCol++) {
-//                // redistribute the error gradient to all the weights
-//                updateFilterAdjustments(errorGradient[outputIndex][outputRow][outputCol], outputIndex, outputRow, outputCol);
-//            }
-//        }
-//    }
+    // map the adjustment needed for each filter, per window
+    for (size_t outputIndex = 0; outputIndex < filters.size(); outputIndex++) {
+        for (size_t outputRow = 0; outputRow < outputHeight; outputRow++) {
+            for (size_t outputCol = 0; outputCol < outputRow; outputCol++) {
+                // redistribute the error gradient to all the weights
+                mapError(prevErrorGradient, errorGradient[outputIndex][outputRow][outputCol], outputRow, outputCol);
+            }
+        }
+    }
 
     // adjust the filters according to some learning rate
+    for (size_t filterIndex = 0; filterIndex < filters.size(); filterIndex++) {
+        for(size_t filterRow = 0; filterRow < filters[filterIndex].size(); filterRow++) {
+            for (size_t filterCol = 0; filterCol < filters[filterIndex][filterRow].size(); filterCol++) {
+                updateFilterAdj(filterIndex, filterRow, filterCol);
+            }
+        }
+
+        // THINK: worth overloading '+=' for Filters?
+        filters[filterIndex] = filters[filterIndex] + filterAdjustments[filterIndex];
+    }
 
     // remap the error to the previous layer
     return;
@@ -103,13 +112,21 @@ double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int f
     return sum / double(count);
 }
 
-void ConvolutionalLayer::updateFilterAdjustments(double error, size_t filterIndex, size_t beginRow, size_t beginCol) {
-    const static double learningRate = .001;
-    const static double momentum = 0.9;
-
-    for (size_t row = beginRow; row < beginRow + filterHeight; row++) {
-        for (size_t col = beginCol; col < beginCol + filterWidth; col++) {
-            learningRate * inputMaps[][row - beginRow][col - beginCol]
+void ConvolutionalLayer::mapError(vector<FeatureMap>& mapping, double error, size_t beginRow, size_t beginCol) {
+    for (size_t inputChannel = 0; inputChannel < inputMaps.size(); inputChannel++) {
+        for (size_t row = beginRow; row < beginRow + filterHeight; row++) {
+            for (size_t col = beginCol; col < beginCol + filterWidth; col++) {
+                double prevInput = inputMaps[inputChannel][row][col];
+                mapping[inputChannel][row][col] += error * prevInput * (1-prevInput);
+            }
         }
     }
+}
+
+void ConvolutionalLayer::updateFilterAdj(size_t filterIndex, size_t filterRow, size_t filterCol) {
+    const static double learningRate = 0.001;
+    const static double momentum = 0.9;
+
+    // one weight is used for multiple outputs, get the sum of these b_i's and delta_i's
+
 }

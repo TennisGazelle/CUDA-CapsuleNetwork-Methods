@@ -47,18 +47,16 @@ vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool 
 
 void ConvolutionalNetwork::train() {
     auto output = loadImageAndGetOutput(0);
-
     for (int i = 0; i < output.size(); i++) {
-        cout << i << "--" << output[i] * 100 << endl;
+        cout << i << "--" << output[i] << endl;
     }
     cout << endl << endl;
 
     runEpoch();
 
     output = loadImageAndGetOutput(0);
-
     for (int i = 0; i < output.size(); i++) {
-        cout << i << "--" << output[i] * 100 << endl;
+        cout << i << "--" << output[i] << endl;
     }
 }
 
