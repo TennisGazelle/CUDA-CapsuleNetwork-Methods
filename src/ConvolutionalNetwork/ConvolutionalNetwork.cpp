@@ -32,12 +32,12 @@ void ConvolutionalNetwork::init() {
 }
 
 vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool useTraining) {
-    // TODO: get 2D image from MNIST reader
-    auto imageAsVector = MNISTReader::getInstance()->getTrainingImage(imageIndex).to2DImage();
+    auto image = MNISTReader::getInstance()->getTrainingImage(imageIndex).to2DImage();
     if (!useTraining)
-        imageAsVector = MNISTReader::getInstance()->getTestingImage(imageIndex).to2DImage();
+        image = MNISTReader::getInstance()->getTestingImage(imageIndex).to2DImage();
 
-    layers[0]->setInput({imageAsVector});
+    // sent as 'vector' of 2d images
+    layers[0]->setInput({image});
     for (auto& l : layers) {
         l->process();
     }
@@ -46,18 +46,20 @@ vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool 
 }
 
 void ConvolutionalNetwork::train() {
-    auto output = loadImageAndGetOutput(0);
-    for (int i = 0; i < output.size(); i++) {
-        cout << i << "--" << output[i] << endl;
-    }
-    cout << endl << endl;
+    vector<double> history;
+    history.reserve(10);
+    for (size_t i = 0; i < 10; i++) {
+        cout << "EPOCH ITERATION:" << i << endl;
+        runEpoch();
+        history.push_back(tally(false));
 
-    runEpoch();
-
-    output = loadImageAndGetOutput(0);
-    for (int i = 0; i < output.size(); i++) {
-        cout << i << "--" << output[i] << endl;
+        // write to File
     }
+
+    for (int i = 0; i < history.size(); i++) {
+        cout << i << "," << history[i] << endl;
+    }
+    cout << "DONE!" << endl;
 }
 
 void ConvolutionalNetwork::writeToFile() {
@@ -70,21 +72,57 @@ void ConvolutionalNetwork::writeToFile() {
 }
 
 void ConvolutionalNetwork::runEpoch() {
-    vector<double> networkOutput = loadImageAndGetOutput(0);
-    vector<double> desired(10, 0);
-    desired[MNISTReader::getInstance()->trainingData[0].getLabel()] = 1.0;
+    cout << "training ... " << endl;
+    for (int i = 0; i < MNISTReader::getInstance()->trainingData.size(); i++) {
+        vector<double> networkOutput = loadImageAndGetOutput(i);
+        vector<double> desired(10, 0);
+        desired[MNISTReader::getInstance()->trainingData[i].getLabel()] = 1.0;
+        for (unsigned int j = 0; j < desired.size(); j++) {
+            desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
+        }
 
-    for (unsigned int i = 0; i < desired.size(); i++) {
-        desired[i] = networkOutput[i] * (1-networkOutput[i]) * (desired[i] - networkOutput[i]);
+        // back-propagation
+        // send this to the back fo the mlp and get the desired stuff back
+        auto mlpError = finalLayers->backPropagateError(desired);
+
+        layers[layers.size()-1]->backPropagate(FeatureMap::toFeatureMaps(
+                layers[layers.size()-1]->outputHeight,
+                layers[layers.size()-1]->outputWidth,
+                mlpError
+        ));
+
+        cout.precision(3);
+        cout << fixed;
+        if (!(i%5000) || i == MNISTReader::getInstance()->trainingData.size()-1) {
+            cout << double(i) / double(MNISTReader::getInstance()->trainingData.size()) * 100 << "% of epoch done" << endl;
+        }
+    }
+}
+
+double ConvolutionalNetwork::tally(bool useTraining) {
+    cout << "tallying..." << endl;
+    int numCorrectlyClassified = 0;
+    auto tallyData = MNISTReader::getInstance()->trainingData;
+    if (!useTraining) {
+        tallyData = MNISTReader::getInstance()->testingData;
     }
 
-    // back-propagation
-    // send this to the back fo the mlp and get the desired stuff back
-    auto mlpError = finalLayers->backPropagateError(desired);
-
-    layers[layers.size()-1]->backPropagate(FeatureMap::toFeatureMaps(
-            layers[layers.size()-1]->outputHeight,
-            layers[layers.size()-1]->outputWidth,
-            mlpError
-    ));
+    for (int i = 0; i < tallyData.size(); i++) {
+        auto output = loadImageAndGetOutput(i, useTraining);
+        size_t guess = 0;
+        double highest = 0.0;
+        for (size_t j = 0; j < output.size(); j++) {
+            if (highest < output[j]) {
+                guess = j;
+                highest = output[j];
+            }
+        }
+        if (guess == tallyData[i].getLabel()) {
+            numCorrectlyClassified++;
+        }
+    }
+    cout << endl;
+    cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
+    cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
+    return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
 }

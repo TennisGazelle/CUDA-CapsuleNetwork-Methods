@@ -17,7 +17,7 @@ public:
     vector<double> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     void runEpoch();
     void train();
-    void tally(int imageIndex, bool useTraining = true);
+    double tally(bool useTraining = true);
 
     void writeToFile();
 

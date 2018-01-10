@@ -17,6 +17,7 @@ public:
     static vector<FeatureMap> toFeatureMaps(size_t h, size_t w, const vector<double> &cubeData);
     void setSize(size_t h, size_t w);
     void clearOut();
+    void print() const;
 };
 
 

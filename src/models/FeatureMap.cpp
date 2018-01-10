@@ -2,6 +2,7 @@
 // Created by Daniel Lopez on 1/4/18.
 //
 
+#include <iostream>
 #include "models/FeatureMap.h"
 
 vector<double> FeatureMap::toOneDim() const {
@@ -48,5 +49,14 @@ void FeatureMap::clearOut() {
         for (auto& col : row) {
             col = 0;
         }
+    }
+}
+
+void FeatureMap::print() const {
+    for (auto row : (*this)) {
+        for (auto col : row) {
+            cout << col << " ";
+        }
+        cout << endl;
     }
 }

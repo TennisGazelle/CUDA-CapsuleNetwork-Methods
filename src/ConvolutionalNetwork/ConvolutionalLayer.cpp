@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <Utils.h>
 #include <cassert>
+#include <iostream>
 
 #include "ConvolutionalNetwork/ConvolutionalLayer.h"
 
@@ -33,7 +34,7 @@ void ConvolutionalLayer::init() {
             row.resize(filterWidth);
             // depth
             for (auto& pixel : row) {
-                pixel = Utils::getRandBetween(-1, 1); // TODO Random function here on normal dist.interval [-1, 1]
+                pixel = Utils::getWeightRand(28*28); // TODO Random function here on normal dist.interval [-1, 1]
             }
         }
     }
@@ -80,16 +81,27 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
         }
     }
 
+    for (auto map : prevErrorGradient) {
+        map.print();
+        cout << endl;
+    }
+
     // adjust the filters according to some learning rate
     for (size_t filterIndex = 0; filterIndex < filters.size(); filterIndex++) {
         for(size_t filterRow = 0; filterRow < filters[filterIndex].size(); filterRow++) {
             for (size_t filterCol = 0; filterCol < filters[filterIndex][filterRow].size(); filterCol++) {
-                updateFilterAdj(filterIndex, filterRow, filterCol);
+                updateFilterAdj(filterIndex, filterRow, filterCol, errorGradient);
             }
         }
 
+        // update the weighs themselves
         // THINK: worth overloading '+=' for Filters?
         filters[filterIndex] = filters[filterIndex] + filterAdjustments[filterIndex];
+    }
+
+    // be recursive
+    if (parent != nullptr) {
+        parent->backPropagate(prevErrorGradient);
     }
 
     // remap the error to the previous layer
@@ -123,10 +135,18 @@ void ConvolutionalLayer::mapError(vector<FeatureMap>& mapping, double error, siz
     }
 }
 
-void ConvolutionalLayer::updateFilterAdj(size_t filterIndex, size_t filterRow, size_t filterCol) {
-    const static double learningRate = 0.001;
-    const static double momentum = 0.9;
+void ConvolutionalLayer::updateFilterAdj(size_t filterIndex, size_t filterRow, size_t filterCol, const vector<FeatureMap>& error) {
+    const static double learningRate = 00.1;
+    const static double momentum = 0.85;
 
     // one weight is used for multiple outputs, get the sum of these b_i's and delta_i's
+    double sum = 0.0;
+    for (size_t r = 0; r < outputHeight - filterHeight + 1; r++) {
+        for (size_t c = 0; c < outputWidth - filterWidth + 1; c++) {
+            sum += outputMaps[filterIndex][r+filterRow][c+filterCol] * error[filterIndex][r+filterRow][c+filterCol];
+        }
+    }
+
+    filterAdjustments[filterIndex][filterRow][filterCol] = (learningRate * sum) + (momentum * filterAdjustments[filterIndex][filterRow][filterCol]);
 
 }
