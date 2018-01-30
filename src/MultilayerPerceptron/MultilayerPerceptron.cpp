@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <ProgressBar.h>
 #include "MultilayerPerceptron/MultilayerPerceptron.h"
 
 MultilayerPerceptron::MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes) {
@@ -17,7 +18,6 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
 
     // TODO - if there's a filename as parameter, read the neural net weights from a file
     if (!possibleInputFilename.empty() && readFromFile(possibleInputFilename)) {
-        readFromFile(possibleInputFilename);
     } else {
         cout << "initializing network normally..." << endl;
         layers.reserve(layerSizes.size());
@@ -108,16 +108,20 @@ void MultilayerPerceptron::train() {
         tallyAndReportAccuracy(false);
         history[i] = accuracy;
 
-        writeToFile();
+//        writeToFile();
     }
 }
 
 void MultilayerPerceptron::runEpoch(){
-    for (int i = 0; i < MNISTReader::getInstance()->trainingData.size(); i++) {
+    cout << "training ..." << endl;
+    auto data = MNISTReader::getInstance()->trainingData;
+
+    ProgressBar progressBar(data.size());
+    for (int i = 0; i < data.size(); i++) {
         // set the "true" values
         vector<double> networkOutput = loadImageAndGetOutput(i);
         vector<double> desired(10, 0);
-        desired[MNISTReader::getInstance()->trainingData[i].getLabel()] = 1.0;
+        desired[data[i].getLabel()] = 1.0;
 
         for (unsigned int j = 0; j < desired.size(); j++) {
             desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
@@ -126,11 +130,7 @@ void MultilayerPerceptron::runEpoch(){
         // back-propagate!
         backPropagateError(desired);
 
-        cout.precision(3);
-        cout << fixed;
-        if (!(i%5000) || i == MNISTReader::getInstance()->trainingData.size()-1) {
-            cout << double(i) / double(MNISTReader::getInstance()->trainingData.size()) * 100 << "% of epoch done" << endl;
-        }
+        progressBar.updateProgress(i);
     }
 }
 

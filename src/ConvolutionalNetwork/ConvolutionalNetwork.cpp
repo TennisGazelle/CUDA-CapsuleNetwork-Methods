@@ -5,6 +5,7 @@
 #include <ConvolutionalNetwork/ConvolutionalLayer.h>
 #include <ConvolutionalNetwork/PoolingLayer.h>
 #include <iostream>
+#include <ProgressBar.h>
 #include "ConvolutionalNetwork/ConvolutionalNetwork.h"
 
 ConvolutionalNetwork::~ConvolutionalNetwork() {
@@ -47,8 +48,8 @@ vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool 
 
 void ConvolutionalNetwork::train() {
     vector<double> history;
-    history.reserve(10);
-    for (size_t i = 0; i < 10; i++) {
+    history.reserve(200);
+    for (size_t i = 0; i < 200; i++) {
         cout << "EPOCH ITERATION:" << i << endl;
         runEpoch();
         history.push_back(tally(false));
@@ -73,10 +74,13 @@ void ConvolutionalNetwork::writeToFile() {
 
 void ConvolutionalNetwork::runEpoch() {
     cout << "training ... " << endl;
-    for (int i = 0; i < MNISTReader::getInstance()->trainingData.size(); i++) {
-        vector<double> networkOutput = loadImageAndGetOutput(i);
+    auto data = MNISTReader::getInstance()->testingData;
+
+    ProgressBar progressBar(data.size());
+    for (int i = 0; i < data.size(); i++) {
+        vector<double> networkOutput = loadImageAndGetOutput(i, false);
         vector<double> desired(10, 0);
-        desired[MNISTReader::getInstance()->trainingData[i].getLabel()] = 1.0;
+        desired[data[i].getLabel()] = 1.0;
         for (unsigned int j = 0; j < desired.size(); j++) {
             desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
         }
@@ -91,16 +95,12 @@ void ConvolutionalNetwork::runEpoch() {
                 mlpError
         ));
 
-        cout.precision(3);
-        cout << fixed;
-        if (!(i%5000) || i == MNISTReader::getInstance()->trainingData.size()-1) {
-            cout << double(i) / double(MNISTReader::getInstance()->trainingData.size()) * 100 << "% of epoch done" << endl;
-        }
+        progressBar.updateProgress(i);
     }
 }
 
 double ConvolutionalNetwork::tally(bool useTraining) {
-    cout << "tallying..." << endl;
+    cout << "tallying ..." << endl;
     int numCorrectlyClassified = 0;
     auto tallyData = MNISTReader::getInstance()->trainingData;
     if (!useTraining) {

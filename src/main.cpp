@@ -7,7 +7,7 @@ int main() {
     cnn.init();
     cnn.train();
 
-//    MultilayerPerceptron mp(784, 10, {});
+//    MultilayerPerceptron mp(784, 10, {10});
 //    mp.init();
 //    mp.train();
 //    mp.tallyAndReportAccuracy(false);

@@ -17,7 +17,7 @@ public:
     void backPropagate(const vector<FeatureMap>& errorGradient);
 private:
     double dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const;
-    void mapError(vector<FeatureMap>& mapping, double error, size_t beginRow, size_t beginCol);
+    void mapError(FeatureMap& mapping, const vector<FeatureMap>& prevErrorGradient, size_t beginRow, size_t beginCol);
     void updateFilterAdj(size_t filterIndex, size_t filterRow, size_t filterCol, const vector<FeatureMap>& error);
     // filters (constructor should include how many of them to have)
     vector<Filter> filters, filterAdjustments; // Note: THESE ARE THE WEIGHTS TO UPDATE
