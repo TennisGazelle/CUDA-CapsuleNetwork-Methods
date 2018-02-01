@@ -119,13 +119,15 @@ double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int f
     for (auto& map : inputMaps) {
         for (int row = beginRow; row < beginRow + filterHeight; row++) {
             for (int col = beginCol; col < beginCol + filterWidth; col++) {
-                sum += map[row][col] * filters[filterIndex][row - beginRow][col - beginCol];
+                if (!(row >= inputHeight || col >= inputWidth)) {
+                    sum += map[row][col] * filters[filterIndex][row - beginRow][col - beginCol];
+                }
                 count++;
             }
         }
     }
 
-    return sum / double(count);
+    return sum;
 }
 
 void ConvolutionalLayer::mapError(FeatureMap& prevErrorGradient, const vector<FeatureMap>& errorGradient, size_t beginRow, size_t beginCol) {

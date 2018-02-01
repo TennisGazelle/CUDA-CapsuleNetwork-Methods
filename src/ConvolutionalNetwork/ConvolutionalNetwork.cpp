@@ -23,12 +23,12 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 }
 
 void ConvolutionalNetwork::init() {
-    layers.push_back(new ConvolutionalLayer(28, 28, 20));
-    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 5, 5));
-    layers.push_back(new ConvolutionalLayer(layers[1], 10));
+    layers.push_back(new ConvolutionalLayer(28, 28, 32));
+    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 2, 2));
+    layers.push_back(new ConvolutionalLayer(layers[1], 64));
     layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
 
-    finalLayers = new MultilayerPerceptron(layers[layers.size()-1]->getOutputSize1D(), 10, {10});
+    finalLayers = new MultilayerPerceptron(layers[layers.size()-1]->getOutputSize1D(), 10, {});
     finalLayers->init();
 }
 
