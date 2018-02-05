@@ -53,7 +53,7 @@ void ConvolutionalNetwork::train() {
         cout << "EPOCH ITERATION:" << i << endl;
         runEpoch();
         history.push_back(tally(false));
-
+        cout << endl;
         // write to File
     }
 
@@ -121,7 +121,6 @@ double ConvolutionalNetwork::tally(bool useTraining) {
             numCorrectlyClassified++;
         }
     }
-    cout << endl;
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
     cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
     return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
