@@ -45,7 +45,7 @@ void Image::setLabel(unsigned char l) {
     label = l;
 }
 
-FeatureMap Image::to2DImage() const {
+FeatureMap Image::toFeatureMap() const {
     FeatureMap pixels;
     pixels.reserve(28);
     for (unsigned int r = 0; r < 28; r++) {

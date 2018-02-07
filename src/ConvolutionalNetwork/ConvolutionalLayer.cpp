@@ -6,6 +6,7 @@
 #include <Utils.h>
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 
 #include "ConvolutionalNetwork/ConvolutionalLayer.h"
 
@@ -34,7 +35,8 @@ void ConvolutionalLayer::init() {
             row.resize(filterWidth);
             // depth
             for (auto& pixel : row) {
-                pixel = Utils::getWeightRand(28*28); // TODO Random function here on normal dist.interval [-1, 1]
+                pixel = Utils::getRandBetween(-1, 1);
+//                pixel = Utils::getWeightRand(28*28);
             }
         }
     }
@@ -72,7 +74,7 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
         desired.clearOut();
     }
 
-    const static double learningRate = 0.1;
+    const static double learningRate = 0.01;
     const static double momentum = 0.85;
 
     // for every weight per output node (which is shared amongst them)
@@ -147,35 +149,29 @@ double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int f
     return sum;
 }
 
-void ConvolutionalLayer::mapError(FeatureMap& prevErrorGradient, const vector<FeatureMap>& errorGradient, size_t beginRow, size_t beginCol) {
-    for (size_t filterChannel = 0; filterChannel < filters.size(); filterChannel++) {
-        for (size_t row = beginRow; row < beginRow + filterHeight; row++) {
-            for (size_t col = beginCol; col < beginCol + filterWidth; col++) {
-                double prevError = 0;
-                if (beginRow < outputHeight && beginCol < outputWidth) {
-                    prevError = errorGradient[0][beginRow][beginCol];
-                }
-                double w_ab = filters[filterChannel][row-beginRow][col-beginCol];
-
-                prevErrorGradient[beginRow][beginCol] += prevError * w_ab;
-            }
+void ConvolutionalLayer::printKernel(int channel) {
+    cout << "filter: " << channel << endl;
+    cout << setprecision(3);
+    cout << fixed;
+    for (int r = 0; r < filterHeight; r++) {
+        for (int c = 0; c < filterWidth; c++) {
+            cout << filters[channel][r][c] << "\t";
         }
+        cout << endl;
     }
 }
 
-void ConvolutionalLayer::updateFilterAdj(size_t filterIndex, size_t filterRow, size_t filterCol, const vector<FeatureMap>& error) {
-    const static double learningRate = 0.1;
-    const static double momentum = 0.85;
-
-    // one weight is used for multiple outputs, get the sum of these b_i's and delta_i's
-    double sum = 0.0;
-    for (size_t inputIndex = 0; inputIndex < inputMaps.size(); inputIndex++) {
-        for (size_t r = 0; r < outputHeight - filterHeight + 1; r++) {
-            for (size_t c = 0; c < outputWidth - filterWidth + 1; c++) {
-                sum += error[inputIndex][r][c] * inputMaps[inputIndex][r+filterRow][c+filterCol];
+void ConvolutionalLayer::printOutput(int channel) {
+    for (int r = 0; r < outputHeight; r++) {
+        for (int c = 0; c < outputWidth; c++) {
+            if (outputMaps[channel][r][c] < 100) {
+                cout << "0";
             }
+            if (outputMaps[channel][r][c] < 10) {
+                cout << "0";
+            }
+            cout << outputMaps[channel][r][c] << "\t";
         }
+        cout << endl;
     }
-
-    filterAdjustments[filterIndex][filterRow][filterCol] += (learningRate * sum) + (momentum * filterAdjustments[filterIndex][filterRow][filterCol]);
 }
