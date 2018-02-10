@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <ProgressBar.h>
+#include <Config.h>
 #include "MultilayerPerceptron/MultilayerPerceptron.h"
 
 MultilayerPerceptron::MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes) {
@@ -18,6 +19,7 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
 
     // TODO - if there's a filename as parameter, read the neural net weights from a file
     if (!possibleInputFilename.empty() && readFromFile(possibleInputFilename)) {
+
     } else {
         cout << "initializing network normally..." << endl;
         layers.reserve(layerSizes.size());
@@ -105,10 +107,14 @@ void MultilayerPerceptron::train() {
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
         double accuracy = tallyAndReportAccuracy();
-        tallyAndReportAccuracy(false);
+//        tallyAndReportAccuracy(false);
         history[i] = accuracy;
 
 //        writeToFile();
+    }
+
+    for (int i = 0; i < history.size(); i++) {
+        cout << i+1 << " " << history[i] << endl;
     }
 }
 
@@ -129,6 +135,8 @@ void MultilayerPerceptron::runEpoch(){
 
         // back-propagate!
         backPropagateError(desired);
+        // exponential decay update
+        Config::getInstance()->updateLearningRate();
 
         progressBar.updateProgress(i);
     }

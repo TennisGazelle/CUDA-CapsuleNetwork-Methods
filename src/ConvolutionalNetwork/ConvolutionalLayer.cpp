@@ -74,7 +74,7 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
         desired.clearOut();
     }
 
-    const static double learningRate = 0.01;
+    const static double learningRate = 0.1;
     const static double momentum = 0.85;
 
     // for every weight per output node (which is shared amongst them)
@@ -85,8 +85,8 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
                     for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
                         for (size_t inputChannel = 0; inputChannel < inputMaps.size(); inputChannel++) {
                             // adjust the weights by going through the outputs and have each one voice their output
-                            double adjustment = (learningRate * inputMaps[inputChannel][filterRow+outputRow][filterCol + outputCol] * errorGradient[outputChannel][outputRow][outputCol])
-                                                * (momentum * filters[outputChannel][filterRow][filterCol]);
+                            double adjustment = (learningRate * inputMaps[inputChannel][filterRow+outputRow][filterCol + outputCol] * errorGradient[outputChannel][outputRow][outputCol]);
+                                                //+ (momentum * filters[outputChannel][filterRow][filterCol]);
                             filterAdjustments[outputChannel][filterRow][filterCol] += adjustment;
 
                             // calculate the desires that every weight says the "input" should be for the gradient
@@ -126,7 +126,6 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
                 }
             }
         }
-
         parent->backPropagate(expandedPrevErrorGradient);
     }
 }

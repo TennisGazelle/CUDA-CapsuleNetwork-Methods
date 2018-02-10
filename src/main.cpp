@@ -61,7 +61,6 @@ void test() {
 int main() {
 //    test();
 
-
     ConvolutionalNetwork cnn;
     cnn.init();
     cnn.train();

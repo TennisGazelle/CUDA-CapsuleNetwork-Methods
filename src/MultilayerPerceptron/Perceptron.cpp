@@ -5,6 +5,7 @@
 #include <Utils.h>
 #include <cassert>
 #include <cmath>
+#include <Config.h>
 #include "MultilayerPerceptron/Perceptron.h"
 
 Perceptron::Perceptron(ActivationType at) : activationType(at), bias(0.0) {
@@ -40,6 +41,7 @@ double Perceptron::evaluate(const vector<double> &input) const {
     for (unsigned int i = 0; i < input.size(); i++) {
         sum += weights[i] * input[i];
     }
+    // activation function from all the weights
     return 1.0 / (1.0 + exp(-sum));
 }
 
@@ -55,8 +57,8 @@ void Perceptron::adjustBias() {
 
 void Perceptron::recordWeightAdjustment(const double error, const vector<double> prevInput) {
     // change w_i by factor of a_i
-    const static double learningRate = .001;
-    const static double momentum = 0.9;
+    double learningRate = 0.001;//Config::getInstance()->getLearningRate();
+    double momentum = 0.9;//Config::getInstance()->getMomentum();
 
     for (unsigned int i = 0; i < weights.size(); i++) {
         // by a factor of the previous input for this neuron...

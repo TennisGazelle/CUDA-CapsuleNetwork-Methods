@@ -19,7 +19,6 @@ PerceptronLayer::PerceptronLayer(PerceptronLayer *parentLayer, size_t numNodes) 
 
 void PerceptronLayer::init() {
     input.resize(inputSize);
-    sumNudges.resize(inputSize);
     output.resize(outputSize);
 
     perceptrons.resize(outputSize);
@@ -55,20 +54,12 @@ void PerceptronLayer::populateOutput() {
 }
 
 vector<double> PerceptronLayer::backPropagate(const vector<double> errorGradient) {
-    // clear out the nudges
-    for (auto& d : sumNudges)
-        d = 0.0;
     // error check
     assert(errorGradient.size() == outputSize);
 
     // collect the nudges reported by every perceptron
     for (unsigned int pIndex = 0; pIndex < perceptrons.size(); pIndex++) {
         perceptrons[pIndex].selfAdjust(errorGradient[pIndex], input);
-        auto nudge = perceptrons[pIndex].reportDesire();
-
-        for (int i = 0; i < nudge.size(); i++) {
-            sumNudges[i] += nudge[i];
-        }
     }
 
     vector<double> previousErrorGradient = calculateErrorGradients(errorGradient);

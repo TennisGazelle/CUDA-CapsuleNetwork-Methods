@@ -51,8 +51,8 @@ vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool 
 
 void ConvolutionalNetwork::train() {
     vector<double> history;
-    history.reserve(200);
-    for (size_t i = 0; i < 200; i++) {
+    history.reserve(500);
+    for (size_t i = 0; i < 500; i++) {
         cout << "EPOCH ITERATION:" << i << endl;
         runEpoch();
         history.push_back(tally(false));

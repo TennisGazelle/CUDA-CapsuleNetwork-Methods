@@ -29,7 +29,7 @@ private:
     PerceptronLayer* parent;
 
     vector<Perceptron> perceptrons;
-    vector<double> sumNudges;
+    double learningRate, momentum;
 };
 
 
