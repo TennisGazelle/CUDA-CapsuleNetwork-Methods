@@ -14,6 +14,7 @@ public:
     ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, size_t fHeight = 5, size_t fWidth = 5);
     void init();
     void calculateOutput();
+    void outputLayerToFile(ofstream &fout) const;
     void backPropagate(const vector<FeatureMap>& errorGradient);
 
     void printKernel(int channel);

@@ -177,20 +177,32 @@ bool MultilayerPerceptron::readFromFile(const string& filename) {
         return false;
     }
 
-    int numLayers = 0;
-    fin >> numLayers;
-
-    layers.clear();
-    for (int i = 0; i < numLayers; i++) {
-        // get layer
-        getLayerFromFile(fin);
+    if (!readFromFile(fin)) {
+        cerr << "reading error";
+        return false;
     }
 
     fin.close();
     return true;
 }
 
-void MultilayerPerceptron::getLayerFromFile(ifstream &fin) {
+bool MultilayerPerceptron::readFromFile(ifstream &fin) {
+    int numLayers = 0;
+    fin >> numLayers;
+
+    layers.clear();
+    for (int i = 0; i < numLayers; i++) {
+        // get layer
+        if (!getLayerFromFile(fin)) {
+            cerr << "MLP-File-ReadingError: " << endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+bool MultilayerPerceptron::getLayerFromFile(ifstream &fin) {
+    // TODO: error checking, and return failure when needed
     // get the first two, which define the input and outputs of the layer
     size_t layerInputSize, layerOutputSize;
     fin >> layerInputSize >> layerOutputSize;
@@ -215,4 +227,10 @@ void MultilayerPerceptron::getLayerFromFile(ifstream &fin) {
     layer.prePopulateLayer(layerWeights);
 
     layers.push_back(layer);
+
+    return true;
+}
+
+vector<size_t> MultilayerPerceptron::getSizes() const {
+    return layerSizes;
 }

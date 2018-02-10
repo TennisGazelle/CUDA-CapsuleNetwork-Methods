@@ -26,7 +26,9 @@ public:
     void writeToFile();
     void writeToFile(ofstream &fout);
     bool readFromFile(const string& filename);
-    void getLayerFromFile(ifstream& fin);
+    bool readFromFile(ifstream &fin);
+    bool getLayerFromFile(ifstream& fin);
+    vector<size_t> getSizes() const;
 
 private:
     vector<PerceptronLayer> layers;

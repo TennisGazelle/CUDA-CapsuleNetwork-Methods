@@ -23,7 +23,7 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 }
 
 void ConvolutionalNetwork::init() {
-    layers.push_back(new ConvolutionalLayer(28, 28, 32));
+    layers.push_back(new ConvolutionalLayer(28, 28, 5, 10, 10));
 //    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 2, 2));
 //    layers.push_back(new ConvolutionalLayer(layers[1], 64));
 //    layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
@@ -56,8 +56,9 @@ void ConvolutionalNetwork::train() {
         cout << "EPOCH ITERATION:" << i << endl;
         runEpoch();
         history.push_back(tally(false));
+        writeToFile();
+
         cout << endl;
-        // write to File
     }
 
     for (int i = 0; i < history.size(); i++) {
@@ -66,14 +67,61 @@ void ConvolutionalNetwork::train() {
     cout << "DONE!" << endl;
 }
 
-void ConvolutionalNetwork::writeToFile() {
-    // TODO finish file name creation
+void ConvolutionalNetwork::writeToFile() const {
+    cout << "saving..." << endl;
+    string outputfileName = "../bin/layer_weights/cnn";
+    for (auto ptr : layers) {
+        if (typeid(*ptr) == typeid(ConvolutionalLayer)) {
+            outputfileName += "-c" + to_string(ptr->outputMaps.size());
+        } else if (typeid(*ptr) == typeid(PoolingLayer)) {
+            outputfileName += "-p";
+        }
+    }
+    for (auto num : finalLayers->getSizes()) {
+        outputfileName += "-" + to_string(num);
+    }
+    outputfileName += ".nnet";
+
     // make an fout
     ofstream fout;
     // output your own stuff
-    finalLayers->writeToFile(fout);
+    fout.open(outputfileName);
+    writeToFile(fout);
     fout.close();
 }
+
+void ConvolutionalNetwork::writeToFile(ofstream &fout) const {
+    // layer metadata
+    fout << layers.size();
+    for (auto ptr : layers) {
+        if (typeid(*ptr) == typeid(ConvolutionalLayer)) {
+            fout << " c";
+        } else if (typeid(*ptr) == typeid(PoolingLayer)) {
+            fout << " p";
+        }
+    }
+    if (finalLayers) {
+        fout << " mlp";
+    }
+    fout << endl;
+
+    // layer data
+    for (auto ptr : layers) {
+        ptr->outputLayerToFile(fout);
+    }
+
+    if (finalLayers) {
+        finalLayers->writeToFile(fout);
+    }
+}
+
+bool ConvolutionalNetwork::readFromFile(const string &filename) {
+    // go through, read and give to layers
+    // if I reach MLP, give that to the finaLayers
+    // finish
+    return true;
+}
+
 
 void ConvolutionalNetwork::runEpoch() {
     cout << "training ... " << endl;

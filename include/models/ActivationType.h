@@ -7,7 +7,8 @@
 
 enum ActivationType {
     SIGMOID,
-    TANGENTAL
+    TANGENTAL,
+    RELU
 };
 
 #endif //NEURALNETS_ACTIVATIONTYPE_H

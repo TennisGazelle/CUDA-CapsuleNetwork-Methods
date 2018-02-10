@@ -35,6 +35,7 @@ void ConvolutionalLayer::init() {
             row.resize(filterWidth);
             // depth
             for (auto& pixel : row) {
+//                pixel = 0;
                 pixel = Utils::getRandBetween(-1, 1);
 //                pixel = Utils::getWeightRand(28*28);
             }
@@ -57,11 +58,17 @@ void ConvolutionalLayer::calculateOutput() {
     for (int outputIndex = 0; outputIndex < filters.size(); outputIndex++) {
         for (int outputRow = 0; outputRow < inputHeight - filterHeight; outputRow++) {
             for (int outputCol = 0; outputCol < inputWidth - filterWidth; outputCol++) {
-                outputMaps[outputIndex][outputRow][outputCol] = dotMatrixWithFilter(outputRow, outputCol, outputIndex);
+                double dotProduct = dotMatrixWithFilter(outputRow, outputCol, outputIndex);
                 // ReLu
-                if (outputMaps[outputIndex][outputRow][outputCol] < 0) {
+                if (dotProduct > 0) {
+                    outputMaps[outputIndex][outputRow][outputCol] = dotProduct;
+                } else {
                     outputMaps[outputIndex][outputRow][outputCol] = 0;
                 }
+//                // Tangental Activation
+//                double e_z = exp(dotProduct);
+//                double e_zn = exp(-dotProduct);
+//                outputMaps[outputIndex][outputRow][outputCol] = (e_z - e_zn) / (e_z + e_zn);
             }
         }
     }
@@ -101,6 +108,10 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
         filters[outputChannel] = filters[outputChannel] + filterAdjustments[outputChannel];
     }
 
+//    for (auto& fAdj : filterAdjustments) {
+//        fAdj.clearOut();
+//    }
+
     // be recursive
     if (parent != nullptr) {
         vector<FeatureMap> expandedPrevErrorGradient = inputMaps;
@@ -126,6 +137,7 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
                 }
             }
         }
+
         parent->backPropagate(expandedPrevErrorGradient);
     }
 }
@@ -172,5 +184,19 @@ void ConvolutionalLayer::printOutput(int channel) {
             cout << outputMaps[channel][r][c] << "\t";
         }
         cout << endl;
+    }
+}
+
+void ConvolutionalLayer::outputLayerToFile(ofstream& fout) const {
+    // specs of convolutional layers
+    fout << filters.size() << " " << filterHeight << " " << filterWidth << endl;
+    for (int filterIndex = 0; filterIndex < filters.size(); filterIndex++) {
+        for (int r = 0; r < filterHeight; r++) {
+            for (int c = 0; c < filterWidth; c++) {
+                fout << filters[filterIndex][r][c] << "\t";
+            }
+            fout << endl;
+        }
+        fout << endl;
     }
 }
