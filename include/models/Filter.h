@@ -9,8 +9,9 @@
 
 using namespace std;
 
-class Filter : public vector< vector<double> > {
+class Filter : public vector< vector< vector<double> > > {
 public:
+    void init(size_t depth, size_t height, size_t width);
     void clearOut();
     Filter operator+(const Filter& right);
 };

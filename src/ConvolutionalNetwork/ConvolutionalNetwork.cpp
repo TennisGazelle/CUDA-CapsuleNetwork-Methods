@@ -125,6 +125,7 @@ bool ConvolutionalNetwork::readFromFile(const string &filename) {
 
 void ConvolutionalNetwork::runEpoch() {
     cout << "training ... " << endl;
+    const unsigned int batchSize = 100;
 
     ProgressBar progressBar(MNISTReader::getInstance()->testingData.size());
     for (int i = 0; i < MNISTReader::getInstance()->testingData.size(); i++) {
@@ -153,8 +154,17 @@ void ConvolutionalNetwork::runEpoch() {
                 mlpError
         ));
 
+        if (i % batchSize == 0 || i == MNISTReader::getInstance()->testingData.size()-1) {
+            batchUpdate();
+        }
+
         progressBar.updateProgress(i);
     }
+}
+
+void ConvolutionalNetwork::batchUpdate() {
+    finalLayers->batchUpdate();
+    layers[layers.size()-1]->updateError();
 }
 
 double ConvolutionalNetwork::tally(bool useTraining) {

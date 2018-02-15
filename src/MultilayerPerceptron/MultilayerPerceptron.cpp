@@ -120,6 +120,7 @@ void MultilayerPerceptron::train() {
 
 void MultilayerPerceptron::runEpoch(){
     cout << "training ..." << endl;
+    const unsigned int batchSize = 100;
     auto data = MNISTReader::getInstance()->trainingData;
 
     ProgressBar progressBar(data.size());
@@ -138,8 +139,16 @@ void MultilayerPerceptron::runEpoch(){
         // exponential decay update
         Config::getInstance()->updateLearningRate();
 
+        if (i % batchSize == 0 || data.size()-1) {
+            batchUpdate();
+        }
+
         progressBar.updateProgress(i);
     }
+}
+
+void MultilayerPerceptron::batchUpdate() {
+    layers[layers.size()-1].updateError();
 }
 
 vector<double> MultilayerPerceptron::backPropagateError(const vector<double> &error) {

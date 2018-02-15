@@ -11,7 +11,7 @@
 #include "ConvolutionalNetwork/ConvolutionalLayer.h"
 
 ConvolutionalLayer::ConvolutionalLayer(size_t iHeight, size_t iWidth, size_t numFilters, size_t fHeight, size_t fWidth)
-        : filterHeight(fHeight), filterWidth(fWidth) {
+        : filterDepth(1), filterHeight(fHeight), filterWidth(fWidth) {
     filters.resize(numFilters);
     // no parent, we are just setting inputs here (start of network)
     setInputDimension(1, iHeight, iWidth);
@@ -19,7 +19,7 @@ ConvolutionalLayer::ConvolutionalLayer(size_t iHeight, size_t iWidth, size_t num
 }
 
 ConvolutionalLayer::ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, size_t fHeight, size_t fWidth)
-        : filterHeight(fHeight), filterWidth(fWidth) {
+        : filterDepth(parent->outputMaps.size()), filterHeight(fHeight), filterWidth(fWidth) {
     filters.resize(numFilters);
     setParentLayer(pParent);
     setInputDimension(parent->outputMaps.size(), parent->outputHeight, parent->outputWidth);
@@ -27,19 +27,8 @@ ConvolutionalLayer::ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, siz
 }
 
 void ConvolutionalLayer::init() {
-    // height
     for (auto& filter : filters) {
-        filter.resize(filterHeight);
-        // width
-        for (auto& row : filter) {
-            row.resize(filterWidth);
-            // depth
-            for (auto& pixel : row) {
-//                pixel = 0;
-                pixel = Utils::getRandBetween(-1, 1);
-//                pixel = Utils::getWeightRand(28*28);
-            }
-        }
+        filter.init(filterDepth, filterHeight, filterWidth);
     }
     filterAdjustments = filters;
     for (auto& fAdj : filterAdjustments) {
@@ -86,6 +75,7 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
 
     // for every weight per output node (which is shared amongst them)
     for (size_t outputChannel = 0; outputChannel < outputMaps.size(); outputChannel++) {
+        // for every weight, go through all the output values that use it
         for (size_t outputRow = 0; outputRow < outputHeight; outputRow++) {
             for (size_t outputCol = 0; outputCol < outputWidth; outputCol++) {
                 for (size_t filterRow = 0; filterRow < filterHeight; filterRow++) {
@@ -94,23 +84,16 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
                             // adjust the weights by going through the outputs and have each one voice their output
                             double adjustment = (learningRate * inputMaps[inputChannel][filterRow+outputRow][filterCol + outputCol] * errorGradient[outputChannel][outputRow][outputCol]);
                                                 //+ (momentum * filters[outputChannel][filterRow][filterCol]);
-                            filterAdjustments[outputChannel][filterRow][filterCol] += adjustment;
+//                            filterAdjustments[outputChannel][filterRow][filterCol] += adjustment;
 
                             // calculate the desires that every weight says the "input" should be for the gradient
-                            inputDesiredChange[inputChannel][filterRow+outputRow][filterCol+outputCol] += (filters[outputChannel][filterRow][filterCol] > 1) ? 1 : 0;
+//                            inputDesiredChange[inputChannel][filterRow+outputRow][filterCol+outputCol] += (filters[outputChannel][filterRow][filterCol] > 1) ? 1 : 0;
                         }
                     }
                 }
             }
         }
-        // update the weighs themselves
-        // THINK: worth overloading '+=' for Filters?
-        filters[outputChannel] = filters[outputChannel] + filterAdjustments[outputChannel];
     }
-
-//    for (auto& fAdj : filterAdjustments) {
-//        fAdj.clearOut();
-//    }
 
     // be recursive
     if (parent != nullptr) {
@@ -128,7 +111,7 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
                             for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
                                 if ((inputRow + filterRow > 0 && inputRow + filterRow < outputHeight) &&
                                     (inputCol + filterCol > 0 && inputCol + filterCol < outputWidth)) {
-                                    weightedSum += filters[filterChannel][filterRow][filterCol] * errorGradient[filterChannel][inputRow+filterRow][inputCol+filterCol];
+//                                    weightedSum += filters[filterChannel][filterRow][filterCol] * errorGradient[filterChannel][inputRow+filterRow][inputCol+filterCol];
                                 }
                             }
                         }
@@ -146,29 +129,30 @@ double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int f
     double sum = 0.0;
     size_t count = 0;
 
-    for (auto& map : inputMaps) {
+    for (int inputChannel = 0; inputChannel < filterDepth; inputChannel++) {
         for (int row = beginRow; row < beginRow + filterHeight; row++) {
             for (int col = beginCol; col < beginCol + filterWidth; col++) {
-                if (row < inputHeight && col < inputWidth) {
-                    sum += map[row][col] * filters[filterIndex][row - beginRow][col - beginCol];
-                }
+                sum += inputMaps[inputChannel][row][col] * filters[filterIndex][inputChannel][row - beginCol][col - beginCol];
                 count++;
             }
         }
     }
 
-    return sum;
+    return sum/count;
 }
 
 void ConvolutionalLayer::printKernel(int channel) {
     cout << "filter: " << channel << endl;
     cout << setprecision(3);
     cout << fixed;
-    for (int r = 0; r < filterHeight; r++) {
-        for (int c = 0; c < filterWidth; c++) {
-            cout << filters[channel][r][c] << "\t";
+    for (int ch = 0; ch < filterDepth; ch++) {
+        cout << "filter depth : " << ch << endl;
+        for (int r = 0; r < filterHeight; r++) {
+            for (int c = 0; c < filterWidth; c++) {
+                cout << filters[channel][ch][r][c] << "\t";
+            }
+            cout << endl;
         }
-        cout << endl;
     }
 }
 
@@ -191,12 +175,26 @@ void ConvolutionalLayer::outputLayerToFile(ofstream& fout) const {
     // specs of convolutional layers
     fout << filters.size() << " " << filterHeight << " " << filterWidth << endl;
     for (int filterIndex = 0; filterIndex < filters.size(); filterIndex++) {
-        for (int r = 0; r < filterHeight; r++) {
-            for (int c = 0; c < filterWidth; c++) {
-                fout << filters[filterIndex][r][c] << "\t";
+        for (int ch = 0; ch < filterDepth; ch++) {
+            for (int r = 0; r < filterHeight; r++) {
+                for (int c = 0; c < filterWidth; c++) {
+                    fout << filters[filterIndex][ch][r][c] << "\t";
+                }
+                fout << endl;
             }
             fout << endl;
         }
-        fout << endl;
+    }
+}
+
+void ConvolutionalLayer::updateError() {
+    // apply the adjustments
+    for (int i = 0; i < filters.size(); i++) {
+        filters[i] = filters[i] + filterAdjustments[i];
+        filterAdjustments[i].clearOut();
+    }
+
+    if (parent != nullptr) {
+        parent->updateError();
     }
 }

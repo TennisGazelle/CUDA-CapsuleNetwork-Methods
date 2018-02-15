@@ -70,7 +70,7 @@ void Perceptron::recordWeightAdjustment(const double error, const vector<double>
 void Perceptron::adjustWeight(const double total) {
     for (unsigned int i = 0; i < weights.size(); i++) {
         weights[i] += weightAdjustment[i];
-//        weightAdjustment[i] = 0.0;
+        weightAdjustment[i] = 0.0;
     }
 }
 

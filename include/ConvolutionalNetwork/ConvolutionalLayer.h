@@ -16,6 +16,7 @@ public:
     void calculateOutput();
     void outputLayerToFile(ofstream &fout) const;
     void backPropagate(const vector<FeatureMap>& errorGradient);
+    void updateError();
 
     void printKernel(int channel);
     void printOutput(int channel);
@@ -25,7 +26,7 @@ private:
     // filters (constructor should include how many of them to have)
     vector<Filter> filters, filterAdjustments; // Note: THESE ARE THE WEIGHTS TO UPDATE
     vector<FeatureMap> inputDesiredChange;
-    size_t filterHeight, filterWidth;
+    size_t filterDepth, filterHeight, filterWidth;
 };
 
 

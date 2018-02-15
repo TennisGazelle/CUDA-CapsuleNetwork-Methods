@@ -64,9 +64,6 @@ vector<double> PerceptronLayer::backPropagate(const vector<double> errorGradient
 
     vector<double> previousErrorGradient = calculateErrorGradients(errorGradient);
 
-    // now that I have the "error", tell the parent to do the same
-    updateWeights(60000.0);
-
     if (parent != nullptr) {
         return parent->backPropagate(previousErrorGradient);
     }
@@ -88,10 +85,6 @@ vector<double> PerceptronLayer::calculateErrorGradients(const vector<double> &pr
 
 void PerceptronLayer::updateWeights(const double total) {
     // tell perceptrons to update weight
-// TODO: THIS DOESN'T WORK, FIGURE OUT WHY
-//    for (auto& p : perceptrons) {
-//        p.adjustWeight(total);
-//    }
     for (unsigned int i = 0; i < perceptrons.size(); i++) {
         perceptrons[i].adjustWeight(total);
     }
@@ -107,5 +100,13 @@ void PerceptronLayer::outputLayerToFile(ofstream& fout) const {
             fout << perceptrons[i].getWeightAt(j) << "\t";
         }
         fout << endl;
+    }
+}
+
+void PerceptronLayer::updateError() {
+    updateWeights(60000.0);
+    // if there's a parent, do it too
+    if (parent != nullptr) {
+        parent->updateError();
     }
 }

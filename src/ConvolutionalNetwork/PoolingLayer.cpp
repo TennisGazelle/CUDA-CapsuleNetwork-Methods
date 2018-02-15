@@ -99,3 +99,10 @@ double PoolingLayer::findPoolValue(size_t rowBegin, size_t colBegin, size_t chan
         return sum/double(count);
     }
 }
+
+void PoolingLayer::updateError() {
+    // this layer has no weights to update with mini-batching, just skipping
+    assert(parent != nullptr);
+
+    parent->updateError();
+}

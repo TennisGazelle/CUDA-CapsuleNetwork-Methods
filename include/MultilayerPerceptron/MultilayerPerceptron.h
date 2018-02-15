@@ -29,6 +29,7 @@ public:
     bool readFromFile(ifstream &fin);
     bool getLayerFromFile(ifstream& fin);
     vector<size_t> getSizes() const;
+    void batchUpdate();
 
 private:
     vector<PerceptronLayer> layers;
