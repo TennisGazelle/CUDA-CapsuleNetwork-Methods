@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <ProgressBar.h>
+#include <Config.h>
 #include "MultilayerPerceptron/MultilayerPerceptron.h"
 
 MultilayerPerceptron::MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes) {
@@ -18,6 +19,7 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
 
     // TODO - if there's a filename as parameter, read the neural net weights from a file
     if (!possibleInputFilename.empty() && readFromFile(possibleInputFilename)) {
+
     } else {
         cout << "initializing network normally..." << endl;
         layers.reserve(layerSizes.size());
@@ -105,15 +107,20 @@ void MultilayerPerceptron::train() {
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
         double accuracy = tallyAndReportAccuracy();
-        tallyAndReportAccuracy(false);
+//        tallyAndReportAccuracy(false);
         history[i] = accuracy;
 
 //        writeToFile();
+    }
+
+    for (int i = 0; i < history.size(); i++) {
+        cout << i+1 << " " << history[i] << endl;
     }
 }
 
 void MultilayerPerceptron::runEpoch(){
     cout << "training ..." << endl;
+    const unsigned int batchSize = 100;
     auto data = MNISTReader::getInstance()->trainingData;
 
     ProgressBar progressBar(data.size());
@@ -129,9 +136,19 @@ void MultilayerPerceptron::runEpoch(){
 
         // back-propagate!
         backPropagateError(desired);
+        // exponential decay update
+        Config::getInstance()->updateLearningRate();
+
+        if (i % batchSize == 0 || data.size()-1) {
+            batchUpdate();
+        }
 
         progressBar.updateProgress(i);
     }
+}
+
+void MultilayerPerceptron::batchUpdate() {
+    layers[layers.size()-1].updateError();
 }
 
 vector<double> MultilayerPerceptron::backPropagateError(const vector<double> &error) {
@@ -169,20 +186,32 @@ bool MultilayerPerceptron::readFromFile(const string& filename) {
         return false;
     }
 
-    int numLayers = 0;
-    fin >> numLayers;
-
-    layers.clear();
-    for (int i = 0; i < numLayers; i++) {
-        // get layer
-        getLayerFromFile(fin);
+    if (!readFromFile(fin)) {
+        cerr << "reading error";
+        return false;
     }
 
     fin.close();
     return true;
 }
 
-void MultilayerPerceptron::getLayerFromFile(ifstream &fin) {
+bool MultilayerPerceptron::readFromFile(ifstream &fin) {
+    int numLayers = 0;
+    fin >> numLayers;
+
+    layers.clear();
+    for (int i = 0; i < numLayers; i++) {
+        // get layer
+        if (!getLayerFromFile(fin)) {
+            cerr << "MLP-File-ReadingError: " << endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+bool MultilayerPerceptron::getLayerFromFile(ifstream &fin) {
+    // TODO: error checking, and return failure when needed
     // get the first two, which define the input and outputs of the layer
     size_t layerInputSize, layerOutputSize;
     fin >> layerInputSize >> layerOutputSize;
@@ -207,4 +236,10 @@ void MultilayerPerceptron::getLayerFromFile(ifstream &fin) {
     layer.prePopulateLayer(layerWeights);
 
     layers.push_back(layer);
+
+    return true;
+}
+
+vector<size_t> MultilayerPerceptron::getSizes() const {
+    return layerSizes;
 }

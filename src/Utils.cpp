@@ -40,17 +40,3 @@ int Utils::reverseInt(int i) {
            ((int) c3 << 8) +
            ((int) c4);
 }
-
-double Utils::clampPerceptron(double in) {
-    if (in < 0.0)
-        return -in;
-    else
-        return in;
-
-    if (in < 0.1)
-        return 0.0;
-    else if (in > 0.9)
-        return 1.0;
-    else
-        return -1;
-}

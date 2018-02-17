@@ -14,15 +14,19 @@ public:
     ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, size_t fHeight = 5, size_t fWidth = 5);
     void init();
     void calculateOutput();
+    void outputLayerToFile(ofstream &fout) const;
     void backPropagate(const vector<FeatureMap>& errorGradient);
+    void updateError();
+
+    void printKernel(int channel);
+    void printOutput(int channel);
+
 private:
     double dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const;
-    void mapError(FeatureMap& mapping, const vector<FeatureMap>& prevErrorGradient, size_t beginRow, size_t beginCol);
-    void updateFilterAdj(size_t filterIndex, size_t filterRow, size_t filterCol, const vector<FeatureMap>& error);
     // filters (constructor should include how many of them to have)
     vector<Filter> filters, filterAdjustments; // Note: THESE ARE THE WEIGHTS TO UPDATE
     vector<FeatureMap> inputDesiredChange;
-    size_t filterHeight, filterWidth;
+    size_t filterDepth, filterHeight, filterWidth;
 };
 
 

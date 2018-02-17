@@ -19,7 +19,10 @@ public:
     void train();
     double tally(bool useTraining = true);
 
-    void writeToFile();
+    void batchUpdate();
+    void writeToFile() const;
+    void writeToFile(ofstream& fout) const;
+    bool readFromFile(const string& filename);
 
 private:
     // contents

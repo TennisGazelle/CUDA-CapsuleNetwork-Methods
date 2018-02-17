@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <iomanip>
 #include "models/FeatureMap.h"
 
 vector<double> FeatureMap::toOneDim() const {
@@ -53,6 +54,7 @@ void FeatureMap::clearOut() {
 }
 
 void FeatureMap::print() const {
+//    cout << fixed << setprecision(7);
     for (auto row : (*this)) {
         for (auto col : row) {
             cout << col << " ";

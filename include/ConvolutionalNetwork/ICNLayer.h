@@ -5,8 +5,8 @@
 #ifndef NEURALNETS_ICNLAYER_H
 #define NEURALNETS_ICNLAYER_H
 
-#include <ILayer.h>
 #include <models/FeatureMap.h>
+#include <fstream>
 
 class ICNLayer {
 public:
@@ -19,8 +19,10 @@ public:
     vector<double> getOutputAsOneDimensional() const;
 
     virtual void calculateOutput() = 0;
-    // TODO: this func must be called recursively for all parent layers; change design pattern later
+    virtual void outputLayerToFile(ofstream &fout) const = 0;
+    // TODO: this func must be called recursively for propagation through layers; change design pattern later
     virtual void backPropagate(const vector<FeatureMap>& errorGradient) = 0;
+    virtual void updateError() = 0;
     void collectInput();
     void process();
 

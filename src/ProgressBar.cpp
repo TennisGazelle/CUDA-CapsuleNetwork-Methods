@@ -72,7 +72,7 @@ void ProgressBar::startWait() {
         delete waitingThread;
     }
 
-    waitingThread = new thread(&ProgressBar::waitHandler, this);
+//    waitingThread = new thread(&ProgressBar::waitHandler, this);
 }
 
 void ProgressBar::waitHandler() {

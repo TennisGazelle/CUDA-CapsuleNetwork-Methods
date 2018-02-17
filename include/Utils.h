@@ -11,7 +11,6 @@ public:
     static double getRandBetween(double lowerBound, double upperBound);
     static double getWeightRand(double n);
     static int reverseInt(int i);
-    static double clampPerceptron(double in);
 };
 
 

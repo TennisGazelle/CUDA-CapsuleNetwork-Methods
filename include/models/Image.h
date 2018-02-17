@@ -16,7 +16,7 @@ public:
     void addRow(const vector<unsigned char> &row);
     void print() const;
     vector<double> toVectorOfDoubles() const;
-    FeatureMap to2DImage() const;
+    FeatureMap toFeatureMap() const;
 
     size_t getLabel() const;
     void setLabel(unsigned char l);
