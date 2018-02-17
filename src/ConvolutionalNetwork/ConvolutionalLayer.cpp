@@ -14,12 +14,12 @@ ConvolutionalLayer::ConvolutionalLayer(size_t iHeight, size_t iWidth, size_t num
         : filterDepth(1), filterHeight(fHeight), filterWidth(fWidth) {
     filters.resize(numFilters);
     // no parent, we are just setting inputs here (start of network)
-    setInputDimension(1, iHeight, iWidth);
+    setInputDimension(1, iHeight, iWidth);  // no RGB either, so just 1 input channel
     init();
 }
 
 ConvolutionalLayer::ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, size_t fHeight, size_t fWidth)
-        : filterDepth(parent->outputMaps.size()), filterHeight(fHeight), filterWidth(fWidth) {
+        : filterDepth(pParent->outputMaps.size()), filterHeight(fHeight), filterWidth(fWidth) {
     filters.resize(numFilters);
     setParentLayer(pParent);
     setInputDimension(parent->outputMaps.size(), parent->outputHeight, parent->outputWidth);
@@ -66,28 +66,27 @@ void ConvolutionalLayer::calculateOutput() {
 void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
     // error check
     assert (errorGradient.size() == outputMaps.size());
+    const static double learningRate = 0.1;
+    const static double momentum = 0.85;
+    double mostDesiredInput = 0.0;
+
+    // clear the nudges desired for the previous layers
     for (auto& desired : inputDesiredChange) {
         desired.clearOut();
     }
-
-    const static double learningRate = 0.1;
-    const static double momentum = 0.85;
 
     // for every weight per output node (which is shared amongst them)
     for (size_t outputChannel = 0; outputChannel < outputMaps.size(); outputChannel++) {
         // for every weight, go through all the output values that use it
         for (size_t outputRow = 0; outputRow < outputHeight; outputRow++) {
             for (size_t outputCol = 0; outputCol < outputWidth; outputCol++) {
-                for (size_t filterRow = 0; filterRow < filterHeight; filterRow++) {
-                    for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
-                        for (size_t inputChannel = 0; inputChannel < inputMaps.size(); inputChannel++) {
-                            // adjust the weights by going through the outputs and have each one voice their output
-                            double adjustment = (learningRate * inputMaps[inputChannel][filterRow+outputRow][filterCol + outputCol] * errorGradient[outputChannel][outputRow][outputCol]);
-                                                //+ (momentum * filters[outputChannel][filterRow][filterCol]);
-//                            filterAdjustments[outputChannel][filterRow][filterCol] += adjustment;
-
-                            // calculate the desires that every weight says the "input" should be for the gradient
-//                            inputDesiredChange[inputChannel][filterRow+outputRow][filterCol+outputCol] += (filters[outputChannel][filterRow][filterCol] > 1) ? 1 : 0;
+                for (size_t filterChannel = 0; filterChannel < filterDepth; filterChannel++) {
+                    for (size_t filterRow = 0; filterRow < filterHeight; filterRow++) {
+                        for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
+                            double adjustment = learningRate * inputMaps[filterChannel][outputRow+filterRow][outputCol+filterCol] * errorGradient[outputChannel][outputRow][outputCol];
+                            filterAdjustments[outputChannel][filterChannel][filterRow][filterCol] += adjustment;
+                            inputDesiredChange[filterChannel][outputRow+filterRow][outputCol+filterCol] += (filters[outputChannel][filterChannel][filterRow][filterCol] > 0) ? 1 : 0;
+                            mostDesiredInput = max(mostDesiredInput, inputDesiredChange[filterChannel][outputRow+filterRow][outputCol+filterCol]);
                         }
                     }
                 }
@@ -97,31 +96,17 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
 
     // be recursive
     if (parent != nullptr) {
-        vector<FeatureMap> expandedPrevErrorGradient = inputMaps;
-        // for each input
-        for (size_t inputChannel = 0; inputChannel < inputMaps.size(); inputChannel++) {
-            expandedPrevErrorGradient[inputChannel].clearOut();
-            for (size_t inputRow = 0; inputRow < inputHeight-filterHeight; inputRow++) {
-                for (size_t inputCol = 0; inputCol < inputWidth-filterWidth; inputCol++) {
-                    // the weight times the output error gradient for this input node
-                    double weightedSum = 0.0;
-                    // go through the output nodes associated with this one
-                    for (size_t filterChannel = 0; filterChannel < filters.size(); filterChannel++) {
-                        for (size_t filterRow = 0; filterRow < filterHeight; filterRow++) {
-                            for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
-                                if ((inputRow + filterRow > 0 && inputRow + filterRow < outputHeight) &&
-                                    (inputCol + filterCol > 0 && inputCol + filterCol < outputWidth)) {
-//                                    weightedSum += filters[filterChannel][filterRow][filterCol] * errorGradient[filterChannel][inputRow+filterRow][inputCol+filterCol];
-                                }
-                            }
-                        }
-                    }
-                    expandedPrevErrorGradient[inputChannel][inputRow][inputCol] = inputMaps[inputChannel][inputRow][inputChannel] * (1-inputMaps[inputChannel][inputRow][inputChannel]) * (weightedSum);
+        // go through that new desired output (which is the same dimensions as the input)
+        // and calculate the error function for it (from ConvolutionalNetwork::runEpoch())
+        for (size_t ch = 0; ch < inputMaps.size(); ch++) {
+            for (size_t r = 0; r < inputHeight; r++) {
+                for (size_t c = 0; c < inputWidth; c++) {
+                    double target = inputDesiredChange[ch][r][c] / mostDesiredInput;
+                    inputDesiredChange[ch][r][c] = inputMaps[ch][r][c] * (1 - inputMaps[ch][r][c]) * (target - inputMaps[ch][r][c]);
                 }
             }
         }
-
-        parent->backPropagate(expandedPrevErrorGradient);
+        parent->backPropagate(inputDesiredChange);
     }
 }
 
@@ -129,10 +114,10 @@ double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int f
     double sum = 0.0;
     size_t count = 0;
 
-    for (int inputChannel = 0; inputChannel < filterDepth; inputChannel++) {
-        for (int row = beginRow; row < beginRow + filterHeight; row++) {
-            for (int col = beginCol; col < beginCol + filterWidth; col++) {
-                sum += inputMaps[inputChannel][row][col] * filters[filterIndex][inputChannel][row - beginCol][col - beginCol];
+    for (int channel = 0; channel < filterDepth; channel++) {
+        for (int row = 0; row < filterHeight; row++) {
+            for (int col = 0; col < filterWidth; col++) {
+                sum += inputMaps[channel][row + beginRow][col + beginCol] * filters[filterIndex][channel][row][col];
                 count++;
             }
         }

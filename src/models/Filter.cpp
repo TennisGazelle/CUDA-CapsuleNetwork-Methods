@@ -9,9 +9,9 @@
 void Filter::init(size_t depth, size_t height, size_t width) {
     resize(depth);
     for (auto& channel : (*this)) {
-        resize(height);
+        channel.resize(height);
         for (auto& row : channel) {
-            resize(width);
+            row.resize(width);
             for (auto& col : row) {
                 col = Utils::getRandBetween(-1, 1);
             }
@@ -32,11 +32,12 @@ void Filter::clearOut() {
 Filter Filter::operator+(const Filter &right) {
     assert (size() == right.size());
     assert (at(0).size() == right.at(0).size());
+    assert (at(0).at(0).size() == right.at(0).at(0).size());
 
     Filter result = right;
     for (size_t ch = 0; ch < size(); ch++) {
         for (size_t r = 0; r < at(ch).size(); r++) {
-            for (size_t c = 0; c < at(c).at(r).size(); c++) {
+            for (size_t c = 0; c < at(ch).at(r).size(); c++) {
                 result[ch][r][c] += at(ch).at(r).at(c);
             }
         }

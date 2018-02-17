@@ -13,7 +13,6 @@ class MultilayerPerceptron {
 public:
     MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes);
     void init(const string& possibleInputFilename = "");
-    void run();
     vector<double> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     vector<double> loadInputAndGetOutput(const vector<double>& input);
     void train();
@@ -33,7 +32,6 @@ public:
 
 private:
     vector<PerceptronLayer> layers;
-    unsigned int numTrainingEpochs = 200;
 
     vector<size_t> layerSizes;
 };
