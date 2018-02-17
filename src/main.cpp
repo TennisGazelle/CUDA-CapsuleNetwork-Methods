@@ -69,7 +69,5 @@ int main() {
 //    mp.init();
 //    mp.train();
 //    mp.tallyAndReportAccuracy(false);
-
-
     return 0;
 }

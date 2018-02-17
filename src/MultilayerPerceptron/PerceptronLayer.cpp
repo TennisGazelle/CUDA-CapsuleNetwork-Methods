@@ -68,7 +68,6 @@ vector<double> PerceptronLayer::backPropagate(const vector<double> errorGradient
         return parent->backPropagate(previousErrorGradient);
     }
     return previousErrorGradient;
-
 }
 
 vector<double> PerceptronLayer::calculateErrorGradients(const vector<double> &previousErrorGradient) {

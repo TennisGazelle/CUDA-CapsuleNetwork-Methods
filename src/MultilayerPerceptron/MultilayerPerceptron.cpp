@@ -35,12 +35,6 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
     }
 }
 
-void MultilayerPerceptron::run() {
-    // train
-    train();
-    tallyAndReportAccuracy(false);
-}
-
 double MultilayerPerceptron::tallyAndReportAccuracy(bool useTraining) {
     cout << "tallying..." << endl;
     int numCorrectlyClassified = 0;
@@ -99,10 +93,10 @@ vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool 
 }
 
 void MultilayerPerceptron::train() {
-    cout << "training with " << numTrainingEpochs << " epochs..." << endl;
+    cout << "training with " << Config::getInstance()->getNumEpochs() << " epochs..." << endl;
 
-    vector<double> history(numTrainingEpochs);
-    for (unsigned int i = 0; i < numTrainingEpochs; i++) {
+    vector<double> history(Config::getInstance()->getNumEpochs());
+    for (unsigned int i = 0; i < Config::getInstance()->getNumEpochs(); i++) {
         cout << "=================" << endl;
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
