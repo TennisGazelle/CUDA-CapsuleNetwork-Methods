@@ -5,10 +5,12 @@
 #include <iostream>
 #include <cmath>
 #include <ProgressBar.h>
+#include <CapsuleNetwork/Capsule.h>
+#include <Utils.h>
 
-void test() {
+void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
-    ConvolutionalLayer layer(28, 28, 32, 5, 5);
+    ConvolutionalLayer layer(28, 28, 256, 9, 9);
     MultilayerPerceptron mp(layer.getOutputSize1D(), 10, {});
 
     mp.init();
@@ -58,8 +60,23 @@ void test() {
     layer.printOutput(1);
 }
 
+void test_CapsuleNetSquishing() {
+    int dim = 3;
+    int num = 10;
+    Capsule capsule(dim, num);
+    arma::vec testInput(dim, arma::fill::randn);
+    testInput.print("test input...");
+
+    capsule.squish(testInput).print("output is...");
+}
+
+void test_CapsuleNetPredictions() {
+
+}
+
 int main() {
-//    test();
+//    test_SingleLayerCNN();
+//    test_CapsuleNetSquishing();
 
     ConvolutionalNetwork cnn;
     cnn.init();

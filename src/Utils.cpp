@@ -40,3 +40,11 @@ int Utils::reverseInt(int i) {
            ((int) c3 << 8) +
            ((int) c4);
 }
+
+double Utils::square_length(const arma::vec &vn) {
+    double sum = 0.0;
+    for (auto& v : vn) {
+        sum += pow(v, 2);
+    }
+    return sum;
+}

@@ -24,9 +24,9 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 }
 
 void ConvolutionalNetwork::init() {
-    layers.push_back(new ConvolutionalLayer(28, 28, 8, 10, 10));
+    layers.push_back(new ConvolutionalLayer(28, 28, 16, 10, 10));
 //    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 2, 2));
-    layers.push_back(new ConvolutionalLayer(layers[0], 32));
+//    layers.push_back(new ConvolutionalLayer(layers[0], 32));
 //    layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
 
     finalLayers = new MultilayerPerceptron(layers[layers.size()-1]->getOutputSize1D(), 10, {16});
@@ -128,10 +128,18 @@ bool ConvolutionalNetwork::readFromFile(const string &filename) {
 void ConvolutionalNetwork::runEpoch() {
     cout << "training ... " << endl;
     const unsigned int batchSize = 100;
+    const bool useTraining = false;
+    vector<Image> tallyData;
 
-    ProgressBar progressBar(MNISTReader::getInstance()->testingData.size());
-    for (int i = 0; i < MNISTReader::getInstance()->testingData.size(); i++) {
-        auto image = MNISTReader::getInstance()->testingData[i];
+    if (useTraining) {
+        tallyData = MNISTReader::getInstance()->trainingData;
+    } else {
+        tallyData = MNISTReader::getInstance()->testingData;
+    }
+
+    ProgressBar progressBar(tallyData.size());
+    for (int i = 0; i < tallyData.size(); i++) {
+        auto image = tallyData[i];
 
         // forward propagation
         layers[0]->setInput({image.toFeatureMap()});
@@ -143,14 +151,7 @@ void ConvolutionalNetwork::runEpoch() {
         );
 
         // calc error for back-propagation (target loss func.)
-        vector<double> error(mlpOutput.size());
-        for (int j = 0; j < mlpOutput.size(); j++) {
-            double target = 0;
-            if (j == image.getLabel()) {
-                target = 1;
-            }
-            error[j] = mlpOutput[j] * (1-mlpOutput[j]) * (target - mlpOutput[j]);
-        }
+        vector<double> error = getErrorGradientVector(image.getLabel(), mlpOutput);
 
         // back-propagation
         auto mlpError = finalLayers->backPropagateError(error);
@@ -160,11 +161,23 @@ void ConvolutionalNetwork::runEpoch() {
                 mlpError
         ));
 
-        if (i % batchSize == 0 || i == MNISTReader::getInstance()->testingData.size()-1) {
+        if (i % batchSize == 0 || i == tallyData.size()-1) {
             batchUpdate();
         }
         progressBar.updateProgress(i);
     }
+}
+
+vector<double> ConvolutionalNetwork::getErrorGradientVector(int targetLabel, const vector<double>& receivedOutput) const {
+    vector<double> result(receivedOutput.size());
+    for (int j = 0; j < receivedOutput.size(); j++) {
+        double target = 0;
+        if (j == targetLabel) {
+            target = 1;
+        }
+        result[j] = receivedOutput[j] * (1-receivedOutput[j]) * (target - receivedOutput[j]);
+    }
+    return result;
 }
 
 void ConvolutionalNetwork::batchUpdate() {

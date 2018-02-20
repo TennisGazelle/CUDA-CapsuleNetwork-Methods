@@ -5,12 +5,17 @@
 #ifndef NEURALNETS_UTILS_H
 #define NEURALNETS_UTILS_H
 
+#include <string>
+#include <armadillo>
+
+using namespace std;
 
 class Utils {
 public:
     static double getRandBetween(double lowerBound, double upperBound);
     static double getWeightRand(double n);
     static int reverseInt(int i);
+    static double square_length(const arma::vec &vn);
 };
 
 
