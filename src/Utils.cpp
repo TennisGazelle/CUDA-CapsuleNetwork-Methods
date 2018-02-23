@@ -48,3 +48,9 @@ double Utils::square_length(const arma::vec &vn) {
     }
     return sum;
 }
+
+arma::vec Utils::squish(const arma::vec &input) {
+    auto lengthSquared = Utils::square_length(input);
+    auto squishingScalar = lengthSquared / (1 + lengthSquared);
+    return squishingScalar * normalise(input, 1);
+}

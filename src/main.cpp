@@ -9,6 +9,7 @@
 #include <Utils.h>
 #include <models/VectorMap.h>
 #include <cassert>
+#include <CapsuleNetwork/CapsuleNetwork.h>
 
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
@@ -64,16 +65,10 @@ void test_SingleLayerCNN() {
 
 void test_CapsuleNetSquishing() {
     int dim = 3;
-    int num = 10;
-    Capsule capsule(dim, num);
     arma::vec testInput(dim, arma::fill::randn);
+
     testInput.print("test input...");
-
-    capsule.squish(testInput).print("output is...");
-}
-
-void test_CapsuleNetPredictions() {
-
+    Utils::squish(testInput).print("output is....");
 }
 
 void fillFeatureMapWithRandom(FeatureMap& featureMap) {
@@ -88,7 +83,7 @@ void fillFeatureMapWithRandom(FeatureMap& featureMap) {
 void test_VectorMapFromFeatureMaps() {
     vector<FeatureMap> inputs;
     size_t inputsDepth = 256, outputVectorLength = 8, outputsDepth = 32;
-    size_t row = 5, col = 5;
+    size_t row = 6, col = 6;
 
     // create and fill inputs with garbage
     for (int i = 0; i < inputsDepth; i++) {
@@ -98,20 +93,36 @@ void test_VectorMapFromFeatureMaps() {
         inputs.push_back(fm);
     }
 
-    vector<VectorMap> vectorMaps = VectorMap::toVectorMap(outputVectorLength, inputs);
+    vector<VectorMap> vectorMaps = VectorMap::toSquishedVectorMap(outputVectorLength, inputs);
     assert (vectorMaps.size() == outputsDepth);
 
     // just check the first vector
-    auto singleVector = vectorMaps[0][0][0];
+    arma::vec singleVector = vectorMaps[0][0][0];
+    arma::vec originalVector(outputVectorLength);
     for (int i = 0; i < outputVectorLength; i++) {
-        assert (singleVector[i] == inputs[i][0][0]);
+        originalVector[i] = inputs[i][0][0];
+    }
+
+    originalVector = Utils::squish(originalVector);
+    for (int i = 0; i < outputVectorLength; i++) {
+        assert (singleVector[i] == originalVector[i]);
+    }
+}
+
+void test_CapsuleNetwork() {
+    CapsuleNetwork capsuleNetwork;
+    vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
+
+    for (int i = 0; i < 10; i++) {
+        output[i].print("vector number: " + to_string(i));
     }
 }
 
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
-    test_VectorMapFromFeatureMaps();
+//    test_VectorMapFromFeatureMaps();
+    test_CapsuleNetwork();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

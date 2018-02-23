@@ -12,18 +12,19 @@ using namespace std;
 
 class Capsule {
 public:
-    Capsule(int d, int numInputs);
+    Capsule(int iD, int oD, int inputs, int outputs);
     void init();
     void softmax();
     // squishification function
-    arma::vec routingIteration(vector<arma::vec> inputs) const;
-    arma::vec squish(arma::vec input) const;
+    arma::vec calculateOutput(vector<arma::vec> inputs) const;
     vector<arma::mat> weightMatricies;
     vector<double> c;
     vector<double> b;
 
-    int dim;
-    int expectedNumInputs;
+    int inputDim;
+    int outputDim;
+    int numInputs;
+    int numOutputs;
 };
 
 

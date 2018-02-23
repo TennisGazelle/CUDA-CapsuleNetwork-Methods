@@ -15,8 +15,8 @@ class VectorMap : public vector< vector<arma::vec> > {
 public:
     VectorMap(size_t height, size_t width);
     // from a set of feature maps
-    static vector<VectorMap> toVectorMap(size_t vectorLength, const vector<FeatureMap> inputMaps);
-    static vector<arma::vec> to1DArrayOfVecs();
+    static vector<VectorMap> toSquishedVectorMap(size_t vectorLength, const vector<FeatureMap> inputMaps);
+    static vector<arma::vec> toSquishedArrayOfVecs(size_t vectorLength, const vector<FeatureMap> inputMaps);
 };
 
 

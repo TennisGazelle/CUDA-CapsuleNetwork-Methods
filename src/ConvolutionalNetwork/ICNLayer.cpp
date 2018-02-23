@@ -52,6 +52,10 @@ vector<double> ICNLayer::getOutputAsOneDimensional() const {
     return oneDOutput;
 }
 
+vector<FeatureMap> ICNLayer::getOutput() const {
+    return outputMaps;
+}
+
 void ICNLayer::process() {
     collectInput();
     calculateOutput();

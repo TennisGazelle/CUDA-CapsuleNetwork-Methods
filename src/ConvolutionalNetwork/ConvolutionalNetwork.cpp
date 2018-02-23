@@ -24,7 +24,7 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 }
 
 void ConvolutionalNetwork::init() {
-    layers.push_back(new ConvolutionalLayer(28, 28, 16, 10, 10));
+    layers.push_back(new ConvolutionalLayer(Config::inputHeight, Config::inputHeight, 16, 10, 10));
 //    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 2, 2));
 //    layers.push_back(new ConvolutionalLayer(layers[0], 32));
 //    layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));

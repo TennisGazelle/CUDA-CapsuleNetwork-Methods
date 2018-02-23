@@ -17,6 +17,7 @@ public:
     void setOutputDimension(size_t numOutputs, size_t height, size_t width);
     size_t getOutputSize1D() const;
     vector<double> getOutputAsOneDimensional() const;
+    vector<FeatureMap> getOutput() const;
 
     virtual void calculateOutput() = 0;
     virtual void outputLayerToFile(ofstream &fout) const = 0;

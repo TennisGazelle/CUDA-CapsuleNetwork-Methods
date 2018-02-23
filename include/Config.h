@@ -13,6 +13,7 @@ public:
     double getMomentum() const;
     int getNumEpochs() const;
 
+    static const int inputHeight = 28, inputWidth = 28;
 private:
     Config();
     static Config* instance;
