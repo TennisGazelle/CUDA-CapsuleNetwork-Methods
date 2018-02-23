@@ -30,7 +30,6 @@ private:
     PerceptronLayer* parent;
 
     vector<Perceptron> perceptrons;
-    double learningRate, momentum;
 };
 
 
