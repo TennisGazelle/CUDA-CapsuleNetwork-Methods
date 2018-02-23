@@ -7,6 +7,8 @@
 #include <ProgressBar.h>
 #include <CapsuleNetwork/Capsule.h>
 #include <Utils.h>
+#include <models/VectorMap.h>
+#include <cassert>
 
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
@@ -74,13 +76,46 @@ void test_CapsuleNetPredictions() {
 
 }
 
+void fillFeatureMapWithRandom(FeatureMap& featureMap) {
+    for (auto& row : featureMap) {
+        for (auto& col : row) {
+            col = Utils::getWeightRand(10) + 10;
+        }
+    }
+}
+
+
+void test_VectorMapFromFeatureMaps() {
+    vector<FeatureMap> inputs;
+    size_t inputsDepth = 256, outputVectorLength = 8, outputsDepth = 32;
+    size_t row = 5, col = 5;
+
+    // create and fill inputs with garbage
+    for (int i = 0; i < inputsDepth; i++) {
+        FeatureMap fm;
+        fm.setSize(row, col);
+        fillFeatureMapWithRandom(fm);
+        inputs.push_back(fm);
+    }
+
+    vector<VectorMap> vectorMaps = VectorMap::toVectorMap(outputVectorLength, inputs);
+    assert (vectorMaps.size() == outputsDepth);
+
+    // just check the first vector
+    auto singleVector = vectorMaps[0][0][0];
+    for (int i = 0; i < outputVectorLength; i++) {
+        assert (singleVector[i] == inputs[i][0][0]);
+    }
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
+    test_VectorMapFromFeatureMaps();
 
-    ConvolutionalNetwork cnn;
-    cnn.init();
-    cnn.train();
+//    ConvolutionalNetwork cnn;
+//    cnn.init();
+//    cnn.train();
 
 //    MultilayerPerceptron mp(784, 10, {10});
 //    mp.init();

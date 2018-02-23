@@ -6,11 +6,9 @@
 #define NEURALNETS_FULLYCONNECTEDLAYER_H
 
 
-
 class FullyConnectedLayer {
-
+   
 };
-
 
 
 #endif //NEURALNETS_FULLYCONNECTEDLAYER_H
