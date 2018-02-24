@@ -11,14 +11,15 @@ Capsule::Capsule(int iD, int oD, int inputs, int outputs) : inputDim(iD), output
 }
 
 void Capsule::init() {
-    weightMatricies.reserve(numInputs);
-    c.reserve(numInputs);
-    b.reserve(numInputs);
+    weightMatricies.resize(numInputs);
+    c.resize(numInputs);
+    b.resize(numInputs);
 
     for (int i = 0; i < numInputs; i++) {
-        b.emplace_back(1.0/double(numInputs));
-        weightMatricies.emplace_back(arma::mat(inputDim, outputDim, arma::fill::randu));
+        b[i] = 1.0/double(numInputs);
+        weightMatricies[i] = arma::mat(outputDim, inputDim, arma::fill::randu);
     }
+    softmax();
 }
 
 void Capsule::softmax() {
@@ -36,16 +37,15 @@ arma::vec Capsule::calculateOutput(vector<arma::vec> inputs) const {
     // we have as many inputs as we have weights for
     assert (inputs.size() == numInputs);
     // all inputs have the same dimensions
-    auto vec_size = inputs[0].size();
     for (auto const& v : inputs) {
-        assert (v.size() == vec_size);
+        assert (v.size() == inputDim);
     }
     // TODO: also make sure the dimensions of the vec match the weightMatricies dimensions
 
-    arma::vec sum(vec_size, arma::fill::zeros);
+    arma::vec sum(outputDim, arma::fill::zeros);
     for (size_t i = 0; i < weightMatricies.size(); i++) {
         // go multiply each by the weight matrix
-        inputs[i] = inputs[i] * weightMatricies[i];
+        inputs[i] = weightMatricies[i] * inputs[i];
         // then with the c values,
         inputs[i] = c[i] * inputs[i];
         sum += inputs[i];

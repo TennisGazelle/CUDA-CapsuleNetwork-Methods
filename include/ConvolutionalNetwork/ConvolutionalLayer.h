@@ -15,7 +15,7 @@ public:
     void init();
     void calculateOutput();
     void outputLayerToFile(ofstream &fout) const;
-    void backPropagate(const vector<FeatureMap>& errorGradient);
+    vector<FeatureMap> backPropagate(const vector<FeatureMap>& errorGradient);
     void updateError();
 
     void printKernel(int channel);

@@ -63,7 +63,7 @@ void ConvolutionalLayer::calculateOutput() {
     }
 }
 
-void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
+vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
     // error check
     assert (errorGradient.size() == outputMaps.size());
     const static double learningRate = 0.1;
@@ -94,20 +94,21 @@ void ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) 
         }
     }
 
-    // be recursive
-    if (parent != nullptr) {
-        // go through that new desired output (which is the same dimensions as the input)
-        // and calculate the error function for it (from ConvolutionalNetwork::runEpoch())
-        for (size_t ch = 0; ch < inputMaps.size(); ch++) {
-            for (size_t r = 0; r < inputHeight; r++) {
-                for (size_t c = 0; c < inputWidth; c++) {
-                    double target = inputDesiredChange[ch][r][c] / mostDesiredInput;
-                    inputDesiredChange[ch][r][c] = inputMaps[ch][r][c] * (1 - inputMaps[ch][r][c]) * (target - inputMaps[ch][r][c]);
-                }
+    // go through that new desired output (which is the same dimensions as the input)
+    // and calculate the error function for it (from ConvolutionalNetwork::runEpoch())
+    for (size_t ch = 0; ch < inputMaps.size(); ch++) {
+        for (size_t r = 0; r < inputHeight; r++) {
+            for (size_t c = 0; c < inputWidth; c++) {
+                double target = inputDesiredChange[ch][r][c] / mostDesiredInput;
+                inputDesiredChange[ch][r][c] = inputMaps[ch][r][c] * (1 - inputMaps[ch][r][c]) * (target - inputMaps[ch][r][c]);
             }
         }
+    }
+    if (parent != nullptr) {
+        // be recursive
         parent->backPropagate(inputDesiredChange);
     }
+    return inputDesiredChange;
 }
 
 double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const {

@@ -153,6 +153,8 @@ void ConvolutionalNetwork::runEpoch() {
         // calc error for back-propagation (target loss func.)
         vector<double> error = getErrorGradientVector(image.getLabel(), mlpOutput);
 
+        backPropagate(error);
+
         // back-propagation
         auto mlpError = finalLayers->backPropagateError(error);
         layers[layers.size()-1]->backPropagate(FeatureMap::toFeatureMaps(
@@ -212,4 +214,13 @@ double ConvolutionalNetwork::tally(bool useTraining) {
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
     cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
     return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
+}
+
+vector<FeatureMap> ConvolutionalNetwork::backPropagate(const vector<double> &error) {
+    auto mlpError = finalLayers->backPropagateError(error);
+    layers[layers.size()-1]->backPropagate(FeatureMap::toFeatureMaps(
+            layers[layers.size()-1]->outputHeight,
+            layers[layers.size()-1]->outputWidth,
+            mlpError
+    ));
 }

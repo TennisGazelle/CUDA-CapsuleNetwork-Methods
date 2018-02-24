@@ -23,7 +23,7 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
 
     primaryCaps.setInput({image});
     primaryCaps.calculateOutput();
-    auto primaryCapsOutput = primaryCaps.getOutput();
+    const vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
     auto vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
 
     // for each of the digitCaps, make them accept this as input
@@ -32,4 +32,13 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
         outputs[i] = digitCaps[i].calculateOutput(vectorMapOutput);
     }
     return outputs;
+}
+
+vector<arma::vec> CapsuleNetwork::getErrorGradient(int targetLabel, const vector<arma::vec> &output) {
+    vector<arma::vec> error(output.size(), arma::vec(output[0].size(), arma::fill::zeros));
+    error[targetLabel] = arma::vec(output[0].size(), arma::fill::ones);
+}
+
+void CapsuleNetwork::backPropagate(const vector<arma::vec> &error) {
+
 }

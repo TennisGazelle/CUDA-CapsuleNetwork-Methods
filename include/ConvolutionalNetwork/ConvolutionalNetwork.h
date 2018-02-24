@@ -19,6 +19,7 @@ public:
     void train();
     double tally(bool useTraining = true);
     vector<double> getErrorGradientVector(int targetLabel, const vector<double>& receivedOutput) const;
+    vector<FeatureMap> backPropagate(const vector<double>& error);
 
     void batchUpdate();
     void writeToFile() const;

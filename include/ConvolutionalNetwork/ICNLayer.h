@@ -22,7 +22,7 @@ public:
     virtual void calculateOutput() = 0;
     virtual void outputLayerToFile(ofstream &fout) const = 0;
     // TODO: this func must be called recursively for propagation through layers; change design pattern later
-    virtual void backPropagate(const vector<FeatureMap>& errorGradient) = 0;
+    virtual vector<FeatureMap> backPropagate(const vector<FeatureMap>& errorGradient) = 0;
     virtual void updateError() = 0;
     void collectInput();
     void process();

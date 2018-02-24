@@ -109,12 +109,23 @@ void test_VectorMapFromFeatureMaps() {
     }
 }
 
-void test_CapsuleNetwork() {
+void test_CapsuleNetwork_ForwardPropagation() {
     CapsuleNetwork capsuleNetwork;
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
 
     for (int i = 0; i < 10; i++) {
-        output[i].print("vector number: " + to_string(i));
+        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(output[i])) << endl;
+    }
+}
+
+void test_CapsuleNetwork_BackPropagation() {
+    CapsuleNetwork capsuleNetwork;
+    vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
+    vector<arma::vec> error = capsuleNetwork.getErrorGradient(MNISTReader::getInstance()->trainingData[0].getLabel(), output);
+//    capsuleNetwork.backPropagate
+
+    for (int i = 0; i < 10; i++) {
+        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(output[i])) << endl;
     }
 }
 
@@ -122,7 +133,8 @@ int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
 //    test_VectorMapFromFeatureMaps();
-    test_CapsuleNetwork();
+//    test_CapsuleNetwork_ForwardPropagation();
+    test_CapsuleNetwork_BackPropagation();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();
