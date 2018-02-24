@@ -122,19 +122,28 @@ void test_CapsuleNetwork_BackPropagation() {
     CapsuleNetwork capsuleNetwork;
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
     vector<arma::vec> error = capsuleNetwork.getErrorGradient(MNISTReader::getInstance()->trainingData[0].getLabel(), output);
-//    capsuleNetwork.backPropagate
+    capsuleNetwork.backPropagate(error);
 
     for (int i = 0; i < 10; i++) {
         cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(output[i])) << endl;
     }
 }
 
+void test_CapsuleNetwork_getMarginLoss() {
+    CapsuleNetwork capsuleNetwork;
+    vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
+    double totalLoss = capsuleNetwork.getTotalMarginLoss(MNISTReader::getInstance()->trainingData[0].getLabel(), output);
+
+    cout << "total loss is: " << totalLoss << endl;
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
 //    test_VectorMapFromFeatureMaps();
-//    test_CapsuleNetwork_ForwardPropagation();
-    test_CapsuleNetwork_BackPropagation();
+    test_CapsuleNetwork_ForwardPropagation();
+//    test_CapsuleNetwork_BackPropagation();
+    test_CapsuleNetwork_getMarginLoss();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

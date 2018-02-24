@@ -32,12 +32,12 @@ void Capsule::softmax() {
     }
 }
 
-arma::vec Capsule::calculateOutput(vector<arma::vec> inputs) const {
+arma::vec Capsule::calculateOutput(vector<arma::vec> u, const int numIterations) const {
     // error check
     // we have as many inputs as we have weights for
-    assert (inputs.size() == numInputs);
+    assert (u.size() == numInputs);
     // all inputs have the same dimensions
-    for (auto const& v : inputs) {
+    for (auto const& v : u) {
         assert (v.size() == inputDim);
     }
     // TODO: also make sure the dimensions of the vec match the weightMatricies dimensions
@@ -45,12 +45,60 @@ arma::vec Capsule::calculateOutput(vector<arma::vec> inputs) const {
     arma::vec sum(outputDim, arma::fill::zeros);
     for (size_t i = 0; i < weightMatricies.size(); i++) {
         // go multiply each by the weight matrix
-        inputs[i] = weightMatricies[i] * inputs[i];
+        u[i] = weightMatricies[i] * u[i];
         // then with the c values,
-        inputs[i] = c[i] * inputs[i];
-        sum += inputs[i];
+        u[i] = c[i] * u[i];
+        sum += u[i];
     }
 
     // activation function
     return Utils::squish(sum);
+}
+
+arma::vec Capsule::backPropagate(const arma::vec &error) {
+
+}
+
+arma::vec Capsule::routingAlgorithm(const vector<arma::vec> u, const int numIterations) {
+    // error check
+    // we have as many inputs as we have weights for
+    assert (u.size() == numInputs);
+    // all inputs have the same dimensions
+    for (auto const& v : u) {
+        assert (v.size() == inputDim);
+    }
+
+    // calculate the u_hats
+    vector<arma::vec> u_hat(u.size());
+    for (size_t i = 0; i < weightMatricies.size(); i++) {
+        // go multiply each by the weight matrix
+        u_hat[i] = weightMatricies[i] * u[i];
+    }
+
+    // routing algorithm on page 3 starts here //
+    // set all the b's to 0
+    for (auto& b_val : b) {
+        b_val = 0;
+    }
+    arma::vec v;
+    for (int r = 0; r < numIterations; r++) {
+        v = arma::vec(outputDim, arma::fill::zeros);
+        softmax();
+
+        // calculate s
+        for (size_t i = 0; i < numInputs; i++) {
+            // then with the c values,
+            v += c[i] * u_hat[i];
+        }
+
+        // squash it
+        v = Utils::squish(v);
+
+        // update b's for everyone
+        for (int i = 0; i < numInputs; i++) {
+            b[i] += dot(u_hat[i], v);
+        }
+    }
+
+    return v;
 }

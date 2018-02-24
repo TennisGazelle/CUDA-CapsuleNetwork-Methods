@@ -16,6 +16,9 @@ public:
     vector<arma::vec> getErrorGradient(int targetLabel, const vector<arma::vec>& output);
     void backPropagate(const vector<arma::vec>& error);
 
+    double getTotalMarginLoss(int targetLabel, const vector<arma::vec>& output) const;
+    double getMarginLoss(bool isPresent, const arma::vec& v_k) const;
+
 private:
     ConvolutionalLayer primaryCaps; // this is basicaly the primary caps in a different form
     // PrimaryCaps -> DigitCaps;
