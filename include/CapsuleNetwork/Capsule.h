@@ -16,12 +16,15 @@ public:
     void init();
     void softmax();
     // squishification function
-    arma::vec calculateOutput(vector<arma::vec> inputs, const int numIterations) const;
-    arma::vec backPropagate(const arma::vec& error);
-    arma::vec routingAlgorithm(const vector<arma::vec> u_hat, const int r);
+    arma::vec calculateOutput(vector<arma::vec> inputs) const;
+    vector<arma::vec> backPropagate(const arma::vec& error);
+    arma::vec forwardPropagate(const vector<arma::vec>& u);
+    void updateWeights();
 
 private:
-    vector<arma::mat> weightMatricies;
+    arma::vec routingAlgorithm();
+
+    vector<arma::mat> weightMatrices, weightDeltas;
     vector<double> c;
     vector<double> b;
 
@@ -29,6 +32,9 @@ private:
     int outputDim;
     int numInputs;
     int numOutputs;
+
+    const int numIterations = 3;
+    vector<arma::vec> prevInput;
 };
 
 

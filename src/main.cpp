@@ -82,7 +82,7 @@ void fillFeatureMapWithRandom(FeatureMap& featureMap) {
 
 void test_VectorMapFromFeatureMaps() {
     vector<FeatureMap> inputs;
-    size_t inputsDepth = 256, outputVectorLength = 8, outputsDepth = 32;
+    size_t inputsDepth = 256, outputVectorDim = 8, outputsDepth = 32;
     size_t row = 6, col = 6;
 
     // create and fill inputs with garbage
@@ -93,20 +93,35 @@ void test_VectorMapFromFeatureMaps() {
         inputs.push_back(fm);
     }
 
-    vector<VectorMap> vectorMaps = VectorMap::toSquishedVectorMap(outputVectorLength, inputs);
+    vector<VectorMap> vectorMaps = VectorMap::toSquishedVectorMap(outputVectorDim, inputs);
     assert (vectorMaps.size() == outputsDepth);
 
     // just check the first vector
     arma::vec singleVector = vectorMaps[0][0][0];
-    arma::vec originalVector(outputVectorLength);
-    for (int i = 0; i < outputVectorLength; i++) {
+    arma::vec originalVector(outputVectorDim);
+    for (int i = 0; i < outputVectorDim; i++) {
         originalVector[i] = inputs[i][0][0];
     }
 
     originalVector = Utils::squish(originalVector);
-    for (int i = 0; i < outputVectorLength; i++) {
+    for (int i = 0; i < outputVectorDim; i++) {
         assert (singleVector[i] == originalVector[i]);
     }
+}
+
+void test_FeatureMapsFromVectorMap() {
+    size_t inputsDepth = 32, vectorDim = 8, outputsDepth = 256;
+    size_t row = 6, col = 6;
+    vector<arma::vec> inputs(row*col*inputsDepth, arma::vec(vectorDim, arma::fill::randu));
+
+    for (auto& v : inputs) {
+        for (auto& val : v) {
+            val = Utils::getWeightRand(10) + 10;
+        }
+    }
+
+    vector<FeatureMap> maps = VectorMap::toArrayOfFeatureMaps(row, col, inputsDepth, inputs);
+
 }
 
 void test_CapsuleNetwork_ForwardPropagation() {
@@ -123,9 +138,30 @@ void test_CapsuleNetwork_BackPropagation() {
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
     vector<arma::vec> error = capsuleNetwork.getErrorGradient(MNISTReader::getInstance()->trainingData[0].getLabel(), output);
     capsuleNetwork.backPropagate(error);
+    output = capsuleNetwork.loadImageAndGetOutput(0);
 
     for (int i = 0; i < 10; i++) {
         cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(output[i])) << endl;
+    }
+}
+
+void test_CapsuleNetwork_Epoch() {
+    CapsuleNetwork capsuleNetwork;
+
+    auto& data = MNISTReader::getInstance()->trainingData;
+    const size_t batchSize = 250;
+
+    ProgressBar pb(data.size());
+    for (size_t i = 0; i < data.size(); i++) {
+        vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(i);
+        vector<arma::vec> error = capsuleNetwork.getErrorGradient(data[i].getLabel(), output);
+        capsuleNetwork.backPropagate(error);
+
+        if (i%batchSize == batchSize-1) {
+            capsuleNetwork.updateWeights();
+            capsuleNetwork.loadImageAndPrintOutput(i);
+        }
+        pb.updateProgress(i);
     }
 }
 
@@ -141,9 +177,15 @@ int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
 //    test_VectorMapFromFeatureMaps();
-    test_CapsuleNetwork_ForwardPropagation();
+//    test_FeatureMapsFromVectorMap();
+
+//    test_CapsuleNetwork_ForwardPropagation();
 //    test_CapsuleNetwork_BackPropagation();
-    test_CapsuleNetwork_getMarginLoss();
+//    test_CapsuleNetwork_getMarginLoss();
+
+    test_CapsuleNetwork_Epoch();
+
+
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

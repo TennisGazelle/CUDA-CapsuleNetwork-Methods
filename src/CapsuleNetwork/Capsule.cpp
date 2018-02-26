@@ -11,13 +11,15 @@ Capsule::Capsule(int iD, int oD, int inputs, int outputs) : inputDim(iD), output
 }
 
 void Capsule::init() {
-    weightMatricies.resize(numInputs);
+    weightMatrices.resize(numInputs);
+    weightDeltas.resize(numInputs);
     c.resize(numInputs);
     b.resize(numInputs);
 
     for (int i = 0; i < numInputs; i++) {
         b[i] = 1.0/double(numInputs);
-        weightMatricies[i] = arma::mat(outputDim, inputDim, arma::fill::randu);
+        weightMatrices[i] = arma::mat(outputDim, inputDim, arma::fill::randu);
+        weightDeltas[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
     }
     softmax();
 }
@@ -32,7 +34,7 @@ void Capsule::softmax() {
     }
 }
 
-arma::vec Capsule::calculateOutput(vector<arma::vec> u, const int numIterations) const {
+arma::vec Capsule::calculateOutput(vector<arma::vec> u) const {
     // error check
     // we have as many inputs as we have weights for
     assert (u.size() == numInputs);
@@ -40,12 +42,12 @@ arma::vec Capsule::calculateOutput(vector<arma::vec> u, const int numIterations)
     for (auto const& v : u) {
         assert (v.size() == inputDim);
     }
-    // TODO: also make sure the dimensions of the vec match the weightMatricies dimensions
+    // TODO: also make sure the dimensions of the vec match the weightMatrices dimensions
 
     arma::vec sum(outputDim, arma::fill::zeros);
-    for (size_t i = 0; i < weightMatricies.size(); i++) {
+    for (size_t i = 0; i < weightMatrices.size(); i++) {
         // go multiply each by the weight matrix
-        u[i] = weightMatricies[i] * u[i];
+        u[i] = weightMatrices[i] * u[i];
         // then with the c values,
         u[i] = c[i] * u[i];
         sum += u[i];
@@ -55,11 +57,20 @@ arma::vec Capsule::calculateOutput(vector<arma::vec> u, const int numIterations)
     return Utils::squish(sum);
 }
 
-arma::vec Capsule::backPropagate(const arma::vec &error) {
+vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
+    vector<arma::vec> delta_u;
+    for (int i = 0; i < numInputs; i++) {
+        arma::vec delta_u_hat = trans(weightMatrices[i]) * error;
+        delta_u_hat = c[i] * delta_u_hat;
+        delta_u.push_back(delta_u_hat);
 
+        // calculate your damn deltas
+        weightDeltas[i] += (error * trans(prevInput[i]));
+    }
+    return delta_u;
 }
 
-arma::vec Capsule::routingAlgorithm(const vector<arma::vec> u, const int numIterations) {
+arma::vec Capsule::forwardPropagate(const vector<arma::vec>& u) {
     // error check
     // we have as many inputs as we have weights for
     assert (u.size() == numInputs);
@@ -68,11 +79,17 @@ arma::vec Capsule::routingAlgorithm(const vector<arma::vec> u, const int numIter
         assert (v.size() == inputDim);
     }
 
+    prevInput = u;
+
+    return routingAlgorithm();
+}
+
+arma::vec Capsule::routingAlgorithm() {
     // calculate the u_hats
-    vector<arma::vec> u_hat(u.size());
-    for (size_t i = 0; i < weightMatricies.size(); i++) {
+    vector<arma::vec> u_hat(prevInput.size());
+    for (size_t i = 0; i < weightMatrices.size(); i++) {
         // go multiply each by the weight matrix
-        u_hat[i] = weightMatricies[i] * u[i];
+        u_hat[i] = weightMatrices[i] * prevInput[i];
     }
 
     // routing algorithm on page 3 starts here //
@@ -101,4 +118,11 @@ arma::vec Capsule::routingAlgorithm(const vector<arma::vec> u, const int numIter
     }
 
     return v;
+}
+
+void Capsule::updateWeights() {
+    for (int i = 0; i < numInputs; i++) {
+        weightMatrices[i] += weightDeltas[i];
+        weightDeltas[i].zeros();
+    }
 }

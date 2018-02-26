@@ -16,7 +16,9 @@ public:
     VectorMap(size_t height, size_t width);
     // from a set of feature maps
     static vector<VectorMap> toSquishedVectorMap(size_t vectorLength, const vector<FeatureMap> inputMaps);
-    static vector<arma::vec> toSquishedArrayOfVecs(size_t vectorLength, const vector<FeatureMap> inputMaps);
+    static vector<arma::vec> toSquishedArrayOfVecs(size_t vectorDim, vector<FeatureMap> inputMaps);
+    static vector<FeatureMap> toArrayOfFeatureMaps(size_t desiredRow, size_t desiredCol, size_t desiredDepth,
+                                                   const vector<arma::vec> &arrayOfVecs);
 };
 
 

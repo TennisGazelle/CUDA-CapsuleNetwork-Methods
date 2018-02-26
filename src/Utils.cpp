@@ -41,8 +41,8 @@ int Utils::reverseInt(int i) {
            ((int) c4);
 }
 
-double Utils::square_length(const arma::vec &vn) {
-    double sum = 0.0;
+long double Utils::square_length(const arma::vec &vn) {
+    long double sum = 0.0;
     for (auto& v : vn) {
         sum += pow(v, 2);
     }
@@ -50,7 +50,7 @@ double Utils::square_length(const arma::vec &vn) {
 }
 
 double Utils::length(const arma::vec &vn) {
-    return sqrt(square_length(vn));
+    return (double) sqrt(square_length(vn));
 }
 
 arma::vec Utils::squish(const arma::vec &input) {
