@@ -7,7 +7,12 @@
 #include <iostream>
 #include <ProgressBar.h>
 #include <Config.h>
+#include <HostTimer.h>
 #include "ConvolutionalNetwork/ConvolutionalNetwork.h"
+
+ConvolutionalNetwork::ConvolutionalNetwork() {
+    // TODO flesh this out
+}
 
 ConvolutionalNetwork::~ConvolutionalNetwork() {
     for (auto& ptr : layers) {
@@ -54,8 +59,7 @@ vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool 
 
 void ConvolutionalNetwork::train() {
     vector<double> history;
-    history.reserve(Config::getInstance()->getNumEpochs());
-    for (size_t i = 0; i < Config::getInstance()->getNumEpochs(); i++) {
+    for (size_t i = 0; i < Config::numEpochs; i++) {
         cout << "EPOCH ITERATION:" << i << endl;
         runEpoch();
         history.push_back(tally(false));
@@ -127,43 +131,18 @@ bool ConvolutionalNetwork::readFromFile(const string &filename) {
 
 void ConvolutionalNetwork::runEpoch() {
     cout << "training ... " << endl;
-    const unsigned int batchSize = 100;
-    const bool useTraining = false;
-    vector<Image> tallyData;
-
-    if (useTraining) {
-        tallyData = MNISTReader::getInstance()->trainingData;
-    } else {
-        tallyData = MNISTReader::getInstance()->testingData;
-    }
+    auto& tallyData = MNISTReader::getInstance()->trainingData;
 
     ProgressBar progressBar(tallyData.size());
     for (int i = 0; i < tallyData.size(); i++) {
-        auto image = tallyData[i];
-
-        // forward propagation
-        layers[0]->setInput({image.toFeatureMap()});
-        for (auto& l : layers) {
-            l->process();
-        }
-        vector<double> mlpOutput = finalLayers->loadInputAndGetOutput(
-                layers[layers.size()-1]->getOutputAsOneDimensional()
-        );
+        vector<double> mlpOutput = loadImageAndGetOutput(i);
 
         // calc error for back-propagation (target loss func.)
-        vector<double> error = getErrorGradientVector(image.getLabel(), mlpOutput);
+        vector<double> error = getErrorGradientVector(tallyData[i].getLabel(), mlpOutput);
 
         backPropagate(error);
 
-        // back-propagation
-        auto mlpError = finalLayers->backPropagateError(error);
-        layers[layers.size()-1]->backPropagate(FeatureMap::toFeatureMaps(
-                layers[layers.size()-1]->outputHeight,
-                layers[layers.size()-1]->outputWidth,
-                mlpError
-        ));
-
-        if (i % batchSize == 0 || i == tallyData.size()-1) {
+        if (i % Config::batchSize == 0 || i == tallyData.size()-1) {
             batchUpdate();
         }
         progressBar.updateProgress(i);
@@ -190,15 +169,16 @@ void ConvolutionalNetwork::batchUpdate() {
 double ConvolutionalNetwork::tally(bool useTraining) {
     cout << "tallying ..." << endl;
     int numCorrectlyClassified = 0;
-    vector<Image> tallyData;
-    if (useTraining) {
-        tallyData = MNISTReader::getInstance()->trainingData;
-    } else {
+    auto& tallyData = MNISTReader::getInstance()->trainingData;
+    if (!useTraining) {
         tallyData = MNISTReader::getInstance()->testingData;
     }
 
+    HostTimer timer;
+    timer.start();
     for (int i = 0; i < tallyData.size(); i++) {
         auto output = loadImageAndGetOutput(i, useTraining);
+
         size_t guess = 0;
         double highest = 0.0;
         for (size_t j = 0; j < output.size(); j++) {
@@ -211,16 +191,19 @@ double ConvolutionalNetwork::tally(bool useTraining) {
             numCorrectlyClassified++;
         }
     }
+    timer.stop();
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
     cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
+    cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
     return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
 }
 
 vector<FeatureMap> ConvolutionalNetwork::backPropagate(const vector<double> &error) {
     auto mlpError = finalLayers->backPropagateError(error);
-    layers[layers.size()-1]->backPropagate(FeatureMap::toFeatureMaps(
+    auto errorAsFeatureMap = FeatureMap::toFeatureMaps(
             layers[layers.size()-1]->outputHeight,
             layers[layers.size()-1]->outputWidth,
             mlpError
-    ));
+    );
+    return layers[layers.size()-1]->backPropagate(errorAsFeatureMap);
 }

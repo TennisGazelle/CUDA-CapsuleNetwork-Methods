@@ -173,6 +173,25 @@ void test_CapsuleNetwork_getMarginLoss() {
     cout << "total loss is: " << totalLoss << endl;
 }
 
+void test_NetworkTallyingTiming() {
+    MultilayerPerceptron mp(784, 10, {10});
+    ConvolutionalNetwork cnn;
+    CapsuleNetwork capsNet;
+
+//    mp.init();
+//    cnn.init();
+
+//    mp.runEpoch();
+//    cnn.runEpoch();
+//    capsNet.runEpoch();
+
+//    mp.tally(true);
+//    cnn.tally(true);
+//    capsNet.tally(true); // true for training set, false for testing set
+
+    capsNet.train();
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
@@ -183,8 +202,8 @@ int main() {
 //    test_CapsuleNetwork_BackPropagation();
 //    test_CapsuleNetwork_getMarginLoss();
 
-    test_CapsuleNetwork_Epoch();
-
+//    test_CapsuleNetwork_Epoch();
+    test_NetworkTallyingTiming();
 
 
 //    ConvolutionalNetwork cnn;
@@ -194,6 +213,9 @@ int main() {
 //    MultilayerPerceptron mp(784, 10, {10});
 //    mp.init();
 //    mp.train();
-//    mp.tallyAndReportAccuracy(false);
+//    mp.tally(false);
+
+    // TODO have all Networks derive from a master 'Network' class
+
     return 0;
 }

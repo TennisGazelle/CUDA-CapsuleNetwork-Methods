@@ -12,10 +12,14 @@
 class CapsuleNetwork {
 public:
     CapsuleNetwork();
+    void init();
     vector<arma::vec> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     void loadImageAndPrintOutput(int imageIndex, bool useTraining = true);
+    double tally(bool useTraining = true);
     vector<arma::vec> getErrorGradient(int targetLabel, const vector<arma::vec>& output);
     void backPropagate(vector<arma::vec> error);
+    void runEpoch();
+    void train();
     void updateWeights();
 
     double getTotalMarginLoss(int targetLabel, const vector<arma::vec>& output) const;

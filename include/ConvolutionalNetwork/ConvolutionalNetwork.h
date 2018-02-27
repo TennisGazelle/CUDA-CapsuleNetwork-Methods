@@ -11,6 +11,7 @@
 
 class ConvolutionalNetwork {
 public:
+    ConvolutionalNetwork();
     ~ConvolutionalNetwork();
 
     void init();

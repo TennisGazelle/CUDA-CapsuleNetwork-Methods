@@ -6,6 +6,7 @@
 #include <fstream>
 #include <ProgressBar.h>
 #include <Config.h>
+#include <HostTimer.h>
 #include "MultilayerPerceptron/MultilayerPerceptron.h"
 
 MultilayerPerceptron::MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes) {
@@ -19,7 +20,11 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
 
     // TODO - if there's a filename as parameter, read the neural net weights from a file
     if (!possibleInputFilename.empty() && readFromFile(possibleInputFilename)) {
-
+        cout << "initializing from file..." << endl;
+        if (!readFromFile(possibleInputFilename)) {
+            cerr << "something fucked up!!!" << endl;
+            exit(1);
+        }
     } else {
         cout << "initializing network normally..." << endl;
         layers.reserve(layerSizes.size());
@@ -35,14 +40,16 @@ void MultilayerPerceptron::init(const string& possibleInputFilename) {
     }
 }
 
-double MultilayerPerceptron::tallyAndReportAccuracy(bool useTraining) {
+double MultilayerPerceptron::tally(bool useTraining) {
     cout << "tallying..." << endl;
     int numCorrectlyClassified = 0;
 
-    auto tallyData = MNISTReader::getInstance()->trainingData;
+    auto& tallyData = MNISTReader::getInstance()->trainingData;
     if (!useTraining)
         tallyData = MNISTReader::getInstance()->testingData;
 
+    HostTimer timer;
+    timer.start();
     for (int i = 0; i < tallyData.size(); i++) {
         auto output = loadImageAndGetOutput(i, useTraining);
 
@@ -53,20 +60,16 @@ double MultilayerPerceptron::tallyAndReportAccuracy(bool useTraining) {
                 highest = output[j];
                 guess = j;
             }
-//            cout << j << "--" << output[j] * 100 << endl;
         }
-//        cout << "Guess  : " << guess << endl;
-//        cout << "Actual : " << tallyData[i].getLabel() << endl;
-//        cout << endl;
         if (guess == tallyData[i].getLabel()) {
             numCorrectlyClassified++;
-        } else {
-//            tallyData[i].print();
         }
     }
-    cout << endl;
+    timer.stop();
+
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
     cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
+    cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
     return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
 }
 
@@ -93,15 +96,15 @@ vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool 
 }
 
 void MultilayerPerceptron::train() {
-    cout << "training with " << Config::getInstance()->getNumEpochs() << " epochs..." << endl;
+    cout << "training with " << Config::numEpochs << " epochs..." << endl;
 
-    vector<double> history(Config::getInstance()->getNumEpochs());
-    for (unsigned int i = 0; i < Config::getInstance()->getNumEpochs(); i++) {
+    vector<double> history(Config::numEpochs);
+    for (unsigned int i = 0; i < Config::numEpochs; i++) {
         cout << "=================" << endl;
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
-        double accuracy = tallyAndReportAccuracy();
-//        tallyAndReportAccuracy(false);
+        double accuracy = tally();
+//        tally(false);
         history[i] = accuracy;
 
 //        writeToFile();
@@ -114,8 +117,7 @@ void MultilayerPerceptron::train() {
 
 void MultilayerPerceptron::runEpoch(){
     cout << "training ..." << endl;
-    const unsigned int batchSize = 100;
-    auto data = MNISTReader::getInstance()->trainingData;
+    auto& data = MNISTReader::getInstance()->trainingData;
 
     ProgressBar progressBar(data.size());
     for (int i = 0; i < data.size(); i++) {
@@ -130,10 +132,7 @@ void MultilayerPerceptron::runEpoch(){
 
         // back-propagate!
         backPropagateError(desired);
-        // exponential decay update
-        Config::getInstance()->updateLearningRate();
-
-        if (i % batchSize == 0 || data.size()-1) {
+        if (i % Config::batchSize == 0 || data.size()-1) {
             batchUpdate();
         }
 

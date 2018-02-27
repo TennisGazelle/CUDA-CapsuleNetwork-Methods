@@ -27,7 +27,3 @@ double Config::getLearningRate() const {
 double Config::getMomentum() const {
     return momentum;
 }
-
-int Config::getNumEpochs() const {
-    return numEpochs;
-}

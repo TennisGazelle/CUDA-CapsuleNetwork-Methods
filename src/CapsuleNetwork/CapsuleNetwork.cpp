@@ -8,12 +8,14 @@
 #include <Utils.h>
 #include <cassert>
 #include <cfloat>
+#include <HostTimer.h>
+#include <ProgressBar.h>
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
 CapsuleNetwork::CapsuleNetwork() :
         primaryCaps(Config::inputHeight, Config::inputWidth, 256, 22, 22),
         digitCaps(10, Capsule(8, 16, 1152, 1)) {
-
+    // TODO extrapolate this for varying inputs and outputs
 }
 
 vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool useTraining) {
@@ -59,12 +61,18 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
     for (int i = 0; i < digitCaps.size(); i++) {
         auto output = digitCaps[i].forwardPropagate(vectorMapOutput);
         long double length = Utils::square_length(output);
-        cout << i << " vector length: " << length << endl;
+        cout << i << " vector length: " << length;
 
         if (bestLength < length) {
             bestLength = length;
             bestGuess = i;
+            cout << "*";
         }
+        if (i == label) {
+            cout << "<==";
+        }
+
+        cout << endl;
     }
     cout << "best guess is: " << bestGuess << endl;
     cout << "actual value : " << label << endl;
@@ -75,10 +83,69 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
     cout << endl;
 }
 
+double CapsuleNetwork::tally(bool useTraining) {
+    cout << "tallying..." << endl;
+    int numCorrectlyClassified = 0;
+
+    auto& tallyData = MNISTReader::getInstance()->trainingData;
+    if (!useTraining) {
+        tallyData = MNISTReader::getInstance()->testingData;
+    }
+
+    // go through all the datum
+    HostTimer timer;
+    timer.start();
+    for (int i = 0; i < tallyData.size(); i++) {
+        auto output = loadImageAndGetOutput(i, useTraining);
+
+        int guess = 0;
+        long double longestVector = 0.0;
+
+        // find the longest vector
+        for (int j = 0; j < output.size(); j++) {
+            long double length = Utils::square_length(output[j]);
+            if (longestVector < length) {
+                longestVector = length;
+                guess = j;
+            }
+        }
+
+        // if this matches the label, success for image
+        if (guess == tallyData[i].getLabel()) {
+            numCorrectlyClassified++;
+        }
+    }
+    timer.stop();
+
+    cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
+    cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
+    cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
+    return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
+}
+
 vector<arma::vec> CapsuleNetwork::getErrorGradient(int targetLabel, const vector<arma::vec> &output) {
     vector<arma::vec> error(output.size(), arma::vec(output[0].size(), arma::fill::zeros));
-    error[targetLabel] = normalise(output[targetLabel]);
+//    error[targetLabel] = normalise(output[targetLabel]);
+    error[targetLabel] = normalise(arma::vec(output[0].size(), arma::fill::ones));
     return error;
+}
+
+void CapsuleNetwork::runEpoch() {
+    auto& data = MNISTReader::getInstance()->trainingData;
+
+    ProgressBar pb(data.size());
+    for (size_t i = 0; i < data.size(); i++) {
+        vector<arma::vec> output = loadImageAndGetOutput(i);
+        vector<arma::vec> error = getErrorGradient(data[i].getLabel(), output);
+
+        backPropagate(error);
+
+        if (i%Config::batchSize == Config::batchSize-1) {
+            updateWeights();
+            loadImageAndPrintOutput(i);
+        }
+        pb.updateProgress(i);
+    }
 }
 
 void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
@@ -128,4 +195,22 @@ void CapsuleNetwork::updateWeights() {
     for (auto& cap : digitCaps) {
         cap.updateWeights();
     }
+}
+
+void CapsuleNetwork::train() {
+    vector<double> history;
+    for (size_t i = 0; i < Config::numEpochs; i++) {
+        cout << "EPOCH ITERATION: " << i << endl;
+        runEpoch();
+        history.push_back(tally(false));
+
+        // TODO file writing (and eventual reading)
+
+        cout << endl;
+    }
+
+    for (int i = 0; i < history.size(); i++) {
+        cout << i << "," << history[i] << endl;
+    }
+    cout << "DONE!" << endl;
 }

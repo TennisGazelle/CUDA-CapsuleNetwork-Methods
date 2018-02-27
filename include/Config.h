@@ -11,15 +11,15 @@ public:
     void updateLearningRate();
     double getLearningRate() const;
     double getMomentum() const;
-    int getNumEpochs() const;
 
     static const int inputHeight = 28, inputWidth = 28;
+    static const int batchSize = 250;
+    static const int numEpochs = 200;
 private:
     Config();
     static Config* instance;
     const double learningRate_alpha = 0.9;
     int learningRate_t = 0;
-    int numEpochs = 200;
     double learningRate = 0.001;
     double momentum = 0.9;
 };
