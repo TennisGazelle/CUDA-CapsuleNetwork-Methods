@@ -10,8 +10,8 @@ Image::Image() {
     reserve(28*28);
 }
 
-Image::Image(unsigned char label, const vector<double> &input) {
-    this->label = label;
+Image::Image(size_t label, const vector<double> &input) {
+    this->label = (unsigned char) label;
     resize(28*28);
     assert (size() == input.size());
     for (int i = 0; i < size(); i++) {

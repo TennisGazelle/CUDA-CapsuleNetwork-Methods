@@ -18,7 +18,10 @@ public:
     static long double square_length(const arma::vec &vn);
     static double length(const arma::vec &vn);
     static arma::vec squish(const arma::vec& input);
+
+    // the following are inverses of one another // not tested yet
     static vector<double> getAsOneDim(const vector<arma::vec>& input);
+    static vector<arma::vec> asCapsuleVectors(int dim, int numVectors, const vector<double>& data);
 };
 
 

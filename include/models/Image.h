@@ -13,7 +13,7 @@ using namespace std;
 class Image : public vector<unsigned char> {
 public:
     Image();
-    Image(unsigned char label, const vector<double>& input);
+    Image(size_t label, const vector<double>& input);
     void addRow(const vector<unsigned char> &row);
     void print() const;
     vector<double> toVectorOfDoubles() const;

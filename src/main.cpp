@@ -136,7 +136,7 @@ void test_CapsuleNetwork_ForwardPropagation() {
 void test_CapsuleNetwork_BackPropagation() {
     CapsuleNetwork capsuleNetwork;
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
-    vector<arma::vec> error = capsuleNetwork.getErrorGradient(MNISTReader::getInstance()->trainingData[0].getLabel(), output);
+    vector<arma::vec> error = capsuleNetwork.getErrorGradient(output, MNISTReader::getInstance()->trainingData[0].getLabel());
     capsuleNetwork.backPropagate(error);
     output = capsuleNetwork.loadImageAndGetOutput(0);
 
@@ -154,7 +154,7 @@ void test_CapsuleNetwork_Epoch() {
     ProgressBar pb(data.size());
     for (size_t i = 0; i < data.size(); i++) {
         vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(i);
-        vector<arma::vec> error = capsuleNetwork.getErrorGradient(data[i].getLabel(), output);
+        vector<arma::vec> error = capsuleNetwork.getErrorGradient(output, data[i].getLabel());
         capsuleNetwork.backPropagate(error);
 
         if (i%batchSize == batchSize-1) {
@@ -194,10 +194,26 @@ void test_NetworkTallyingTiming() {
 
 void test_CapsuleNetwork_reconstruction() {
     CapsuleNetwork capsuleNetwork;
-    auto image = capsuleNetwork.loadImageAndGetReconstruction(0, true);
-    image.print();
+    int targetLabel = (int) MNISTReader::getInstance()->trainingData[0].getLabel();
 
+    vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
+    for (int i = 0; i < 10; i++) {
+        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(output[i])) << endl;
+    }
+    cout << endl;
 
+    vector<arma::vec> capsuleError = capsuleNetwork.getErrorGradient(output, targetLabel);
+    vector<arma::vec> mlpError = capsuleNetwork.getReconstructionError(output, 0);
+
+    capsuleNetwork.backPropagate(capsuleError);
+    capsuleNetwork.backPropagate(mlpError);
+    capsuleNetwork.updateWeights();
+
+    vector<arma::vec> updatedOutput = capsuleNetwork.loadImageAndGetOutput(0);
+
+    for (int i = 0; i < 10; i++) {
+        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(updatedOutput[i])) << endl;
+    }
 }
 
 int main() {
@@ -209,10 +225,10 @@ int main() {
 //    test_CapsuleNetwork_ForwardPropagation();
 //    test_CapsuleNetwork_BackPropagation();
 //    test_CapsuleNetwork_getMarginLoss();
-//    test_CapsuleNetwork_reconstruction();
+    test_CapsuleNetwork_reconstruction();
 
 //    test_CapsuleNetwork_Epoch();
-    test_NetworkTallyingTiming();
+//    test_NetworkTallyingTiming();
 
 
 //    ConvolutionalNetwork cnn;

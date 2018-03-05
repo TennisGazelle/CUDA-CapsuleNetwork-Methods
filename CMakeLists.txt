@@ -5,7 +5,7 @@ project(NeuralNets)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules")
 set(CXX11_FLAGS -std=gnu++11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread -Wall -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread -Wall -O0")
 
 # find the dependencies
 find_package(Armadillo REQUIRED)

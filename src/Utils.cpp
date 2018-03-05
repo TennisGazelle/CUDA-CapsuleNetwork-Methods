@@ -3,6 +3,7 @@
 //
 
 #include <random>
+#include <cassert>
 
 #include "Utils.h"
 
@@ -65,6 +66,17 @@ vector<double> Utils::getAsOneDim(const vector<arma::vec> &input) {
     for (int i = 0; i < input.size(); i++) {
         for (int j = 0; j < input[i].size(); j++) {
             result.push_back(input[i][j]);
+        }
+    }
+    return result;
+}
+
+vector<arma::vec> Utils::asCapsuleVectors(int dim, int numVectors, const vector<double> &data) {
+    assert (data.size() <= dim*numVectors);
+    vector<arma::vec> result(numVectors, arma::vec(dim, arma::fill::zeros));
+    for (int v = 0; v < numVectors; v++) {
+        for (int d = 0; d < dim; d++) {
+            result[v][d] = data[(v*dim)+d];
         }
     }
     return result;

@@ -2,6 +2,7 @@
 // Created by Daniel Lopez on 1/4/18.
 //
 
+#include <typeinfo>
 #include <ConvolutionalNetwork/ConvolutionalLayer.h>
 #include <ConvolutionalNetwork/PoolingLayer.h>
 #include <iostream>

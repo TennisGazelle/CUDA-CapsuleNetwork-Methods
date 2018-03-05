@@ -53,41 +53,18 @@ void CapsuleNetwork::loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma
     digitCaps[capsuleIndex].forwardPropagate(input);
 }
 
-Image CapsuleNetwork::loadImageAndGetReconstruction(int imageIndex, bool useTraining) {
+vector<arma::vec> CapsuleNetwork::getReconstructionError(const vector<arma::vec>& digitCapsOutput, int imageIndex, bool useTraining) {
     Image image;
-    FeatureMap imageFM;
-    unsigned char label;
     if (useTraining) {
         image = MNISTReader::getInstance()->getTrainingImage(imageIndex);
     } else {
         image = MNISTReader::getInstance()->getTestingImage(imageIndex);
     }
 
-    imageFM = image.toFeatureMap();
-    label = image.getLabel();
-
-
-    primaryCaps.setInput({imageFM});
-    primaryCaps.calculateOutput();
-    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
-    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
-
-    // for each of the digitCaps, make them accept this as input
-    vector<arma::vec> digitCapsOutput(digitCaps.size());
-    static thread workers[10];
-    for (int i = 0; i < digitCaps.size(); i++) {
-        workers[i] = thread(&CapsuleNetwork::loadCapsuleAndGetOutput, this, i, vectorMapOutput);
-    }
-
-    // allocate a thread for each one of these
-    for (int i = 0; i < digitCaps.size(); i++) {
-        workers[i].join();
-        digitCapsOutput[i] = digitCaps[i].getOutput();
-    }
-
     auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
-//    auto reconstructionGradient = getErrorGradientImage()
-    return Image(label, reconstructionImage);
+    auto reconstructionGradient = getErrorGradientImage(image, reconstructionImage);
+    auto mlpError = Utils::asCapsuleVectors(16, 10, reconstructionLayers.backPropagateError(reconstructionGradient));
+    return mlpError;
 }
 
 void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
@@ -174,7 +151,7 @@ double CapsuleNetwork::tally(bool useTraining) {
     return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
 }
 
-vector<arma::vec> CapsuleNetwork::getErrorGradient(int targetLabel, const vector<arma::vec> &output) {
+vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &output, int targetLabel) {
     const static double lambda = 0.5, m_plus = 0.9, m_minus = (1 - m_plus);
     vector<arma::vec> error(output);
     for (int i = 0; i < error.size(); i++) {
@@ -213,7 +190,7 @@ void CapsuleNetwork::runEpoch() {
     ProgressBar pb(data.size());
     for (size_t i = 0; i < data.size(); i++) {
         vector<arma::vec> output = loadImageAndGetOutput(i);
-        vector<arma::vec> error = getErrorGradient(data[i].getLabel(), output);
+        vector<arma::vec> error = getErrorGradient(output, data[i].getLabel());
 
         backPropagate(error);
 
@@ -292,9 +269,10 @@ void CapsuleNetwork::train() {
     cout << "DONE!" << endl;
 }
 
-vector<double> CapsuleNetwork::getErrorGradientImage(const Image &truth, const Image &networkOutput) {
+vector<double> CapsuleNetwork::getErrorGradientImage(const Image& truth, const vector<double>& networkOutput) {
     vector<double> gradient(truth.size());
     for (int i = 0; i < gradient.size(); i++) {
         gradient[i] = networkOutput[i] - truth[i];
     }
+    return gradient;
 }
