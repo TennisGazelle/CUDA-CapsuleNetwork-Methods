@@ -58,3 +58,14 @@ arma::vec Utils::squish(const arma::vec &input) {
     auto squishingScalar = lengthSquared / (1 + lengthSquared);
     return squishingScalar * normalise(input, 1);
 }
+
+vector<double> Utils::getAsOneDim(const vector<arma::vec> &input) {
+    vector<double> result;
+    result.reserve(input.size() * input[0].size());
+    for (int i = 0; i < input.size(); i++) {
+        for (int j = 0; j < input[i].size(); j++) {
+            result.push_back(input[i][j]);
+        }
+    }
+    return result;
+}

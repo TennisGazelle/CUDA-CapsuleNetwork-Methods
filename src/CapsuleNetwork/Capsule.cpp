@@ -34,29 +34,6 @@ void Capsule::softmax() {
     }
 }
 
-arma::vec Capsule::calculateOutput(vector<arma::vec> u) const {
-    // error check
-    // we have as many inputs as we have weights for
-    assert (u.size() == numInputs);
-    // all inputs have the same dimensions
-    for (auto const& v : u) {
-        assert (v.size() == inputDim);
-    }
-    // TODO: also make sure the dimensions of the vec match the weightMatrices dimensions
-
-    arma::vec sum(outputDim, arma::fill::zeros);
-    for (size_t i = 0; i < weightMatrices.size(); i++) {
-        // go multiply each by the weight matrix
-        u[i] = weightMatrices[i] * u[i];
-        // then with the c values,
-        u[i] = c[i] * u[i];
-        sum += u[i];
-    }
-
-    // activation function
-    return Utils::squish(sum);
-}
-
 vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
     vector<arma::vec> delta_u;
     for (int i = 0; i < numInputs; i++) {
@@ -81,7 +58,8 @@ arma::vec Capsule::forwardPropagate(const vector<arma::vec>& u) {
 
     prevInput = u;
 
-    return routingAlgorithm();
+    output = routingAlgorithm();
+    return output;
 }
 
 arma::vec Capsule::routingAlgorithm() {
@@ -113,7 +91,7 @@ arma::vec Capsule::routingAlgorithm() {
 
         // update b's for everyone
         for (int i = 0; i < numInputs; i++) {
-            b[i] += dot(u_hat[i], v);
+            b[i] += as_scalar(trans(u_hat[i]) * v);
         }
     }
 
@@ -125,4 +103,8 @@ void Capsule::updateWeights() {
         weightMatrices[i] += weightDeltas[i];
         weightDeltas[i].zeros();
     }
+}
+
+arma::vec Capsule::getOutput() const {
+    return output;
 }

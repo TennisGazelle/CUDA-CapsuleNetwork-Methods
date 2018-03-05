@@ -10,16 +10,10 @@
 ProgressBar::ProgressBar(int pSize) :
         size(pSize),
         currentIndex(0),
-        waitFlag(false),
-        waitingThread(nullptr)
+        waitFlag(false)
 {}
 
 ProgressBar::~ProgressBar() {
-    if (waitingThread != nullptr) {
-        if (waitingThread->joinable());
-            waitingThread->join();
-        delete waitingThread;
-    }
 }
 
 void ProgressBar::updateProgress(const int cIndex) {
@@ -59,38 +53,4 @@ void ProgressBar::updateProgress(const int cIndex) {
 
 void ProgressBar::setSize(int pSize) {
     size = pSize;
-}
-
-void ProgressBar::startWait() {
-    // start thread for the wait handler
-    waitFlag = true;
-
-    if (waitingThread) {
-        if (waitingThread->joinable()) {
-            waitingThread->join();
-        }
-        delete waitingThread;
-    }
-
-//    waitingThread = new thread(&ProgressBar::waitHandler, this);
-}
-
-void ProgressBar::waitHandler() {
-    const static int waitTime = 200;
-
-    auto characters = {".", "o", "O", "@", "*"};
-
-    while (waitFlag){
-        for (auto& c : characters) {
-            cout << " " << c << "\r" << flush;
-            std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
-        }
-    }
-}
-
-void ProgressBar::endWait() {
-    // join the thread
-    waitFlag = false;
-    waitingThread->join();
-    cout << "Done!" << endl;
 }

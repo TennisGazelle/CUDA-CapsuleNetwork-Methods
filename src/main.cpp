@@ -192,6 +192,14 @@ void test_NetworkTallyingTiming() {
     capsNet.train();
 }
 
+void test_CapsuleNetwork_reconstruction() {
+    CapsuleNetwork capsuleNetwork;
+    auto image = capsuleNetwork.loadImageAndGetReconstruction(0, true);
+    image.print();
+
+
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
@@ -201,6 +209,7 @@ int main() {
 //    test_CapsuleNetwork_ForwardPropagation();
 //    test_CapsuleNetwork_BackPropagation();
 //    test_CapsuleNetwork_getMarginLoss();
+//    test_CapsuleNetwork_reconstruction();
 
 //    test_CapsuleNetwork_Epoch();
     test_NetworkTallyingTiming();

@@ -6,7 +6,6 @@
 #define NEURALNETS_PROGRESSBAR_H
 
 #include <string>
-#include <thread>
 
 using namespace std;
 
@@ -19,20 +18,13 @@ public:
     void updateProgress(const int cIndex);
     void setSize(int pSize);
 
-    // for waiting ticker with no percentage
-    void startWait();
-    void endWait();
-
 private:
-    void waitHandler();
 
     int size;
     int currentIndex;
     float percent;
 
     bool waitFlag;
-
-    thread* waitingThread;
 };
 
 

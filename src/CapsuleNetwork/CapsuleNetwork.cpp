@@ -10,12 +10,15 @@
 #include <cfloat>
 #include <HostTimer.h>
 #include <ProgressBar.h>
+#include <thread>
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
 CapsuleNetwork::CapsuleNetwork() :
         primaryCaps(Config::inputHeight, Config::inputWidth, 256, 22, 22),
-        digitCaps(10, Capsule(8, 16, 1152, 1)) {
+        digitCaps(10, Capsule(8, 16, 1152, 1)),
+        reconstructionLayers(10*16, 28*28, {}) {
     // TODO extrapolate this for varying inputs and outputs
+    reconstructionLayers.init();
 }
 
 vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool useTraining) {
@@ -29,14 +32,62 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
     primaryCaps.setInput({image});
     primaryCaps.calculateOutput();
     vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
-    auto vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
+    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
 
     // for each of the digitCaps, make them accept this as input
     vector<arma::vec> outputs(digitCaps.size());
+    static thread workers[10];
     for (int i = 0; i < digitCaps.size(); i++) {
-        outputs[i] = digitCaps[i].forwardPropagate(vectorMapOutput);
+        workers[i] = thread(&CapsuleNetwork::loadCapsuleAndGetOutput, this, i, vectorMapOutput);
+    }
+
+    // allocate a thread for each one of these
+    for (int i = 0; i < digitCaps.size(); i++) {
+        workers[i].join();
+        outputs[i] = digitCaps[i].getOutput();
     }
     return outputs;
+}
+
+void CapsuleNetwork::loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> input) {
+    digitCaps[capsuleIndex].forwardPropagate(input);
+}
+
+Image CapsuleNetwork::loadImageAndGetReconstruction(int imageIndex, bool useTraining) {
+    Image image;
+    FeatureMap imageFM;
+    unsigned char label;
+    if (useTraining) {
+        image = MNISTReader::getInstance()->getTrainingImage(imageIndex);
+    } else {
+        image = MNISTReader::getInstance()->getTestingImage(imageIndex);
+    }
+
+    imageFM = image.toFeatureMap();
+    label = image.getLabel();
+
+
+    primaryCaps.setInput({imageFM});
+    primaryCaps.calculateOutput();
+    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
+    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
+
+    // for each of the digitCaps, make them accept this as input
+    vector<arma::vec> digitCapsOutput(digitCaps.size());
+    static thread workers[10];
+    for (int i = 0; i < digitCaps.size(); i++) {
+        workers[i] = thread(&CapsuleNetwork::loadCapsuleAndGetOutput, this, i, vectorMapOutput);
+    }
+
+    // allocate a thread for each one of these
+    for (int i = 0; i < digitCaps.size(); i++) {
+        workers[i].join();
+        digitCapsOutput[i] = digitCaps[i].getOutput();
+    }
+
+    auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
+//    auto reconstructionGradient = getErrorGradientImage()
+    return Image(label, reconstructionImage);
 }
 
 void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
@@ -124,9 +175,35 @@ double CapsuleNetwork::tally(bool useTraining) {
 }
 
 vector<arma::vec> CapsuleNetwork::getErrorGradient(int targetLabel, const vector<arma::vec> &output) {
-    vector<arma::vec> error(output.size(), arma::vec(output[0].size(), arma::fill::zeros));
+    const static double lambda = 0.5, m_plus = 0.9, m_minus = (1 - m_plus);
+    vector<arma::vec> error(output);
+    for (int i = 0; i < error.size(); i++) {
+        auto l = Utils::length(error[i]);
+
+        if (i == targetLabel) {
+            // T_k == 1
+            // is the length of this vector's negative bigger than 0?
+            auto mid = pow(max(0.0, m_plus - l), 2);
+            if (l > 0 && mid > 0.0) {
+                error[i] = 2 * mid * error[i];
+            } else {
+                error[i] = arma::vec(output[0].size(), arma::fill::zeros);
+            }
+        } else {
+            // T_k == 0
+            // is the length of this vector bigger than 0?
+            auto mid = pow(max(0.0, l - m_minus), 2);
+            if (l > 0 && mid > 0) {
+                error[i] = 2 * lambda * mid * -error[i];
+            } else {
+                error[i] = arma::vec(output[0].size(), arma::fill::zeros);
+            }
+        }
+    }
+
+//    vector<arma::vec> error(output.size(), arma::vec(output[0].size(), arma::fill::zeros));
 //    error[targetLabel] = normalise(output[targetLabel]);
-    error[targetLabel] = normalise(arma::vec(output[0].size(), arma::fill::ones));
+//    error[targetLabel] = normalise(arma::vec(output[0].size(), arma::fill::ones));
     return error;
 }
 
@@ -213,4 +290,11 @@ void CapsuleNetwork::train() {
         cout << i << "," << history[i] << endl;
     }
     cout << "DONE!" << endl;
+}
+
+vector<double> CapsuleNetwork::getErrorGradientImage(const Image &truth, const Image &networkOutput) {
+    vector<double> gradient(truth.size());
+    for (int i = 0; i < gradient.size(); i++) {
+        gradient[i] = networkOutput[i] - truth[i];
+    }
 }
