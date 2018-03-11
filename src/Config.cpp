@@ -17,13 +17,9 @@ Config* Config::getInstance() {
 }
 
 void Config::updateLearningRate() {
-    learningRate = 0.001 * pow(learningRate_alpha, ++learningRate_t);
+    learningRate = 10 * pow(learningRate_alpha, ++learningRate_t);
 }
 
 double Config::getLearningRate() const {
     return learningRate;
-}
-
-double Config::getMomentum() const {
-    return momentum;
 }

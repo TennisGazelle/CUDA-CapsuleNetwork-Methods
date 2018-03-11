@@ -51,13 +51,18 @@ long double Utils::square_length(const arma::vec &vn) {
 }
 
 double Utils::length(const arma::vec &vn) {
-    return (double) sqrt(square_length(vn));
+    return (double) sqrt(square_length(vn) + 1e-4);
 }
 
 arma::vec Utils::squish(const arma::vec &input) {
     auto lengthSquared = Utils::square_length(input);
     auto squishingScalar = lengthSquared / (1 + lengthSquared);
-    return squishingScalar * normalise(input, 1);
+//    return squishingScalar * normalise(input, 1);
+    return squishingScalar * safe_normalize(input);
+}
+
+arma::vec Utils::safe_normalize(arma::vec input) {
+    return input / length(input);
 }
 
 vector<double> Utils::getAsOneDim(const vector<arma::vec> &input) {

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 #include <thread>
+#include <zconf.h>
 #include "ProgressBar.h"
 
 ProgressBar::ProgressBar(int pSize) :
@@ -17,6 +18,11 @@ ProgressBar::~ProgressBar() {
 }
 
 void ProgressBar::updateProgress(const int cIndex) {
+    // If this is redirected to a file or something that may/may not reinterpret
+    // the '\r's that are being printed, stop.
+    if (!stdoutHasTerminal()) {
+        return;
+    }
     assert (size > 0);
 
     // update internal state
@@ -30,7 +36,7 @@ void ProgressBar::updateProgress(const int cIndex) {
      */
 
     const int numSubDiv = 50;
-    int numTicks = numSubDiv * percent;
+    auto numTicks = (int) (numSubDiv * percent);
 
     cout << "|";
     for (int i = 0; i < numSubDiv; i++) {
@@ -53,4 +59,8 @@ void ProgressBar::updateProgress(const int cIndex) {
 
 void ProgressBar::setSize(int pSize) {
     size = pSize;
+}
+
+bool ProgressBar::stdoutHasTerminal() const {
+    return nullptr != ttyname(STDOUT_FILENO);
 }

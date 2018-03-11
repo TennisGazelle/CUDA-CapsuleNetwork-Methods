@@ -17,6 +17,7 @@ public:
     // for progress bar with percentage
     void updateProgress(const int cIndex);
     void setSize(int pSize);
+    bool stdoutHasTerminal() const;
 
 private:
 

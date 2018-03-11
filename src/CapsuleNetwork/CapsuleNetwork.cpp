@@ -16,7 +16,7 @@
 CapsuleNetwork::CapsuleNetwork() :
         primaryCaps(Config::inputHeight, Config::inputWidth, 256, 22, 22),
         digitCaps(10, Capsule(8, 16, 1152, 1)),
-        reconstructionLayers(10*16, 28*28, {}) {
+        reconstructionLayers(10*16, 28*28, {512}) {
     // TODO extrapolate this for varying inputs and outputs
     reconstructionLayers.init();
 }
@@ -53,12 +53,19 @@ void CapsuleNetwork::loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma
     digitCaps[capsuleIndex].forwardPropagate(input);
 }
 
-vector<arma::vec> CapsuleNetwork::getReconstructionError(const vector<arma::vec>& digitCapsOutput, int imageIndex, bool useTraining) {
+vector<arma::vec> CapsuleNetwork::getReconstructionError(vector<arma::vec> digitCapsOutput, int imageIndex, bool useTraining) {
     Image image;
     if (useTraining) {
         image = MNISTReader::getInstance()->getTrainingImage(imageIndex);
     } else {
         image = MNISTReader::getInstance()->getTestingImage(imageIndex);
+    }
+
+    // check the label, and zero out all the other capsule outputs
+    for (int i = 0; i < digitCapsOutput.size(); i++) {
+        if (i != image.getLabel()) {
+            digitCapsOutput[i] = arma::vec(digitCapsOutput[0].size(), arma::fill::zeros);
+        }
     }
 
     auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
@@ -86,9 +93,10 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
     // for each of the digitCaps, make them accept this as input
     int bestGuess = 0;
     long double bestLength = 0.0;
+    vector<arma::vec> digitCapsOutput(10);
     for (int i = 0; i < digitCaps.size(); i++) {
-        auto output = digitCaps[i].forwardPropagate(vectorMapOutput);
-        long double length = Utils::square_length(output);
+        digitCapsOutput[i] = digitCaps[i].forwardPropagate(vectorMapOutput);
+        long double length = Utils::square_length(digitCapsOutput[i]);
         cout << i << " vector length: " << length;
 
         if (bestLength < length) {
@@ -101,6 +109,7 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
         }
 
         cout << endl;
+        // get the reconstruction and print it out
     }
     cout << "best guess is: " << bestGuess << endl;
     cout << "actual value : " << label << endl;
@@ -108,7 +117,16 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
         cout << "WE GOT ONE!!!" << endl;
     }
 
-    cout << endl;
+//    cout << endl;
+//    auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
+//    cout.precision(3);
+//    cout << fixed;
+//    for (int r = 0; r < 28; r++) {
+//        for (int c = 0; c < 28; c++) {
+//            cout << reconstructionImage[r*28 + c] << " ";
+//        }
+//        cout << endl;
+//    }
 }
 
 double CapsuleNetwork::tally(bool useTraining) {
@@ -153,28 +171,18 @@ double CapsuleNetwork::tally(bool useTraining) {
 
 vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &output, int targetLabel) {
     const static double lambda = 0.5, m_plus = 0.9, m_minus = (1 - m_plus);
-    vector<arma::vec> error(output);
+    vector<arma::vec> error = output;
     for (int i = 0; i < error.size(); i++) {
         auto l = Utils::length(error[i]);
 
         if (i == targetLabel) {
             // T_k == 1
             // is the length of this vector's negative bigger than 0?
-            auto mid = pow(max(0.0, m_plus - l), 2);
-            if (l > 0 && mid > 0.0) {
-                error[i] = 2 * mid * error[i];
-            } else {
-                error[i] = arma::vec(output[0].size(), arma::fill::zeros);
-            }
+            error[i] *= - pow(max(0.0, m_plus - l), 2);
         } else {
             // T_k == 0
             // is the length of this vector bigger than 0?
-            auto mid = pow(max(0.0, l - m_minus), 2);
-            if (l > 0 && mid > 0) {
-                error[i] = 2 * lambda * mid * -error[i];
-            } else {
-                error[i] = arma::vec(output[0].size(), arma::fill::zeros);
-            }
+            error[i] *= - lambda * pow(max(0.0, l - m_minus), 2);
         }
     }
 
@@ -191,12 +199,14 @@ void CapsuleNetwork::runEpoch() {
     for (size_t i = 0; i < data.size(); i++) {
         vector<arma::vec> output = loadImageAndGetOutput(i);
         vector<arma::vec> error = getErrorGradient(output, data[i].getLabel());
+        vector<arma::vec> imageError = getReconstructionError(output, i);
 
         backPropagate(error);
+        backPropagate(imageError);
 
         if (i%Config::batchSize == Config::batchSize-1) {
             updateWeights();
-            loadImageAndPrintOutput(i);
+//            loadImageAndPrintOutput(i);
         }
         pb.updateProgress(i);
     }
@@ -209,7 +219,7 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
     vector<arma::vec> primaryCapsError(1152, arma::vec(8, arma::fill::zeros));
     // given the error, put this in the last layer and get the error, and give it to the Conv. net
     for (int i = 0; i < error.size(); i++) {
-        auto subset = digitCaps[i].backPropagate(error[i]);
+        vector<arma::vec> subset = digitCaps[i].backPropagate(error[i]);
         for (int j = 0; j < 1152; j++) {
             primaryCapsError[i] += subset[i];
         }
@@ -249,6 +259,7 @@ void CapsuleNetwork::updateWeights() {
     for (auto& cap : digitCaps) {
         cap.updateWeights();
     }
+    reconstructionLayers.batchUpdate();
 }
 
 void CapsuleNetwork::train() {
@@ -261,18 +272,20 @@ void CapsuleNetwork::train() {
         // TODO file writing (and eventual reading)
 
         cout << endl;
+        for (int i = 0; i < history.size(); i++) {
+        	cout << i << "," << history[i] << endl;
+        }
     }
 
-    for (int i = 0; i < history.size(); i++) {
-        cout << i << "," << history[i] << endl;
-    }
     cout << "DONE!" << endl;
 }
 
 vector<double> CapsuleNetwork::getErrorGradientImage(const Image& truth, const vector<double>& networkOutput) {
     vector<double> gradient(truth.size());
     for (int i = 0; i < gradient.size(); i++) {
-        gradient[i] = networkOutput[i] - truth[i];
+//        gradient[i] = truth[i] - networkOutput[i];
+        gradient[i] = networkOutput[i] * (1-networkOutput[i]) * (truth[i] - networkOutput[i]);
+        gradient[i] = pow(networkOutput[i] - truth[i], 2);
     }
     return gradient;
 }

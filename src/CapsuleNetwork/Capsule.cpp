@@ -30,16 +30,15 @@ void Capsule::softmax() {
         sum_b_exps += exp(b_i);
     }
     for (int i = 0; i < numInputs; i++) {
-        c[i] = exp(b[i] / sum_b_exps);
+        c[i] = exp(b[i]) / sum_b_exps;
     }
 }
 
 vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
-    vector<arma::vec> delta_u;
+    vector<arma::vec> delta_u(numInputs);
     for (int i = 0; i < numInputs; i++) {
         arma::vec delta_u_hat = trans(weightMatrices[i]) * error;
-        delta_u_hat = c[i] * delta_u_hat;
-        delta_u.push_back(delta_u_hat);
+        delta_u[i] = c[i] * delta_u_hat;
 
         // calculate your damn deltas
         weightDeltas[i] += (error * trans(prevInput[i]));
@@ -72,15 +71,15 @@ arma::vec Capsule::routingAlgorithm() {
 
     // routing algorithm on page 3 starts here //
     // set all the b's to 0
-    for (auto& b_val : b) {
-        b_val = 0;
+    for (int i = 0; i < b.size(); i++) {
+        b[i] = 0.0;
     }
     arma::vec v;
     for (int r = 0; r < numIterations; r++) {
-        v = arma::vec(outputDim, arma::fill::zeros);
         softmax();
 
         // calculate s
+        v = arma::vec(outputDim, arma::fill::zeros);
         for (size_t i = 0; i < numInputs; i++) {
             // then with the c values,
             v += c[i] * u_hat[i];

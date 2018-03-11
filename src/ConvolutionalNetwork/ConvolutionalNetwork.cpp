@@ -145,6 +145,7 @@ void ConvolutionalNetwork::runEpoch() {
 
         if (i % Config::batchSize == 0 || i == tallyData.size()-1) {
             batchUpdate();
+            Config::getInstance()->updateLearningRate();
         }
         progressBar.updateProgress(i);
     }

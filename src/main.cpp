@@ -189,6 +189,7 @@ void test_NetworkTallyingTiming() {
 //    cnn.tally(true);
 //    capsNet.tally(true); // true for training set, false for testing set
 
+//    cnn.train();
     capsNet.train();
 }
 
@@ -216,6 +217,28 @@ void test_CapsuleNetwork_reconstruction() {
     }
 }
 
+void test_CapsuleNetwork_multipleReconstruction() {
+    CapsuleNetwork capsuleNetwork;
+    for (int i = 0; i < 10; i++) {
+        int targetLabel = (int) MNISTReader::getInstance()->trainingData[0].getLabel();
+
+        vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
+
+        vector<arma::vec> capsuleError = capsuleNetwork.getErrorGradient(output, targetLabel);
+        vector<arma::vec> mlpError = capsuleNetwork.getReconstructionError(output, 0);
+
+        capsuleNetwork.backPropagate(capsuleError);
+        capsuleNetwork.backPropagate(mlpError);
+        capsuleNetwork.updateWeights();
+    }
+
+    vector<arma::vec> updatedOutput = capsuleNetwork.loadImageAndGetOutput(4);
+    cout << "target label: " << MNISTReader::getInstance()->trainingData[4].getLabel() << endl;
+    for (int i = 0; i < 10; i++) {
+        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(updatedOutput[i])) << endl;
+    }
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
@@ -225,10 +248,11 @@ int main() {
 //    test_CapsuleNetwork_ForwardPropagation();
 //    test_CapsuleNetwork_BackPropagation();
 //    test_CapsuleNetwork_getMarginLoss();
-    test_CapsuleNetwork_reconstruction();
+//    test_CapsuleNetwork_reconstruction();
+//    test_CapsuleNetwork_multipleReconstruction();
 
 //    test_CapsuleNetwork_Epoch();
-//    test_NetworkTallyingTiming();
+    test_NetworkTallyingTiming();
 
 
 //    ConvolutionalNetwork cnn;

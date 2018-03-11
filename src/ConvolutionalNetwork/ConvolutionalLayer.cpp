@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iostream>
 #include <iomanip>
+#include <Config.h>
 
 #include "ConvolutionalNetwork/ConvolutionalLayer.h"
 
@@ -66,9 +67,7 @@ void ConvolutionalLayer::calculateOutput() {
 vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
     // error check
     assert (errorGradient.size() == outputMaps.size());
-    const static double learningRate = 0.1;
-    const static double momentum = 0.85;
-    double mostDesiredInput = 0.0;
+    double highestDesiredInput = 0.0;
 
     // clear the nudges desired for the previous layers
     for (auto& desired : inputDesiredChange) {
@@ -83,10 +82,10 @@ vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &e
                 for (size_t filterChannel = 0; filterChannel < filterDepth; filterChannel++) {
                     for (size_t filterRow = 0; filterRow < filterHeight; filterRow++) {
                         for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
-                            double adjustment = learningRate * inputMaps[filterChannel][outputRow+filterRow][outputCol+filterCol] * errorGradient[outputChannel][outputRow][outputCol];
-                            filterAdjustments[outputChannel][filterChannel][filterRow][filterCol] += adjustment;
-                            inputDesiredChange[filterChannel][outputRow+filterRow][outputCol+filterCol] += (filters[outputChannel][filterChannel][filterRow][filterCol] > 0) ? 1 : 0;
-                            mostDesiredInput = max(mostDesiredInput, inputDesiredChange[filterChannel][outputRow+filterRow][outputCol+filterCol]);
+                            double adjustment = Config::getInstance()->getLearningRate() * inputMaps[filterChannel][outputRow+filterRow][outputCol+filterCol] * errorGradient[outputChannel][outputRow][outputCol];
+                            filterAdjustments[outputChannel][filterChannel][filterRow][filterCol] -= adjustment;
+                            inputDesiredChange[filterChannel][outputRow+filterRow][outputCol+filterCol] += (filters[outputChannel][filterChannel][filterRow][filterCol] > 0) ? 1 : -1;
+                            highestDesiredInput = max(highestDesiredInput, inputDesiredChange[filterChannel][outputRow+filterRow][outputCol+filterCol]);
                         }
                     }
                 }
@@ -99,7 +98,8 @@ vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &e
     for (size_t ch = 0; ch < inputMaps.size(); ch++) {
         for (size_t r = 0; r < inputHeight; r++) {
             for (size_t c = 0; c < inputWidth; c++) {
-                double target = inputDesiredChange[ch][r][c] / mostDesiredInput;
+                double target = inputDesiredChange[ch][r][c] / highestDesiredInput;
+//                double target = max(0.0, inputDesiredChange[ch][r][c]);
                 inputDesiredChange[ch][r][c] = inputMaps[ch][r][c] * (1 - inputMaps[ch][r][c]) * (target - inputMaps[ch][r][c]);
             }
         }
