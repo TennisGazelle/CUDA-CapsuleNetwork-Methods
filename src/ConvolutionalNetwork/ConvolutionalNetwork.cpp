@@ -32,7 +32,7 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 void ConvolutionalNetwork::init() {
     layers.push_back(new ConvolutionalLayer(Config::inputHeight, Config::inputHeight, 16, 10, 10));
 //    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 2, 2));
-//    layers.push_back(new ConvolutionalLayer(layers[0], 32));
+    layers.push_back(new ConvolutionalLayer(layers[0], 32, 5, 5));
 //    layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
 
     finalLayers = new MultilayerPerceptron(layers[layers.size()-1]->getOutputSize1D(), 10, {16});

@@ -46,24 +46,21 @@ double Perceptron::evaluate(const vector<double> &input) const {
 }
 
 void Perceptron::selfAdjust(const double error, const vector<double> input) {
-    adjustBias();
+    adjustBias(error);
     recordWeightAdjustment(error, input);
     calculateDesires();
 }
 
-void Perceptron::adjustBias() {
-
+void Perceptron::adjustBias(const double error) {
+//    bias += 0.001 * (error);
 }
 
 void Perceptron::recordWeightAdjustment(const double error, const vector<double> prevInput) {
     // change w_i by factor of a_i
-    double learningRate = 0.001;//Config::getInstance()->getLearningRate();
-    double momentum = 0.9;//Config::getInstance()->getMomentum();
-
     for (unsigned int i = 0; i < weights.size(); i++) {
         // by a factor of the previous input for this neuron...
-        double adjustment = (learningRate * prevInput[i] * error) + (momentum * weightAdjustment[i]);
-        weightAdjustment[i] = adjustment;
+        double adjustment = (Config::getInstance()->getLearningRate() * prevInput[i] * error);// + (momentum * weightAdjustment[i]);
+        weightAdjustment[i] += adjustment;
     }
 }
 

@@ -12,7 +12,7 @@ using namespace std;
 class ProgressBar {
 public:
     ProgressBar(int pSize = 0);
-    ~ProgressBar();
+    ~ProgressBar() = default;
 
     // for progress bar with percentage
     void updateProgress(const int cIndex);

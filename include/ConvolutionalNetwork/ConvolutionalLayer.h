@@ -25,7 +25,7 @@ private:
     double dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const;
     // filters (constructor should include how many of them to have)
     vector<Filter> filters, filterAdjustments; // Note: THESE ARE THE WEIGHTS TO UPDATE
-    vector<FeatureMap> inputDesiredChange;
+    vector<FeatureMap> newErrorGradient;
     size_t filterDepth, filterHeight, filterWidth;
 };
 

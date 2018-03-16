@@ -52,8 +52,7 @@ double MultilayerPerceptron::tally(bool useTraining) {
     timer.start();
     for (int i = 0; i < tallyData.size(); i++) {
         auto output = loadImageAndGetOutput(i, useTraining);
-
-        size_t guess = 0;
+        int guess = 0;
         double highest = 0.0;
         for (int j = 0; j < output.size(); j++) {
             if (highest < output[j]) {
@@ -78,7 +77,6 @@ vector<double> MultilayerPerceptron::loadInputAndGetOutput(const vector<double> 
     for (auto& l : layers) {
         l.populateOutput();
     }
-
     return layers[layers.size()-1].getOutput();
 }
 
@@ -98,20 +96,18 @@ vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool 
 void MultilayerPerceptron::train() {
     cout << "training with " << Config::numEpochs << " epochs..." << endl;
 
-    vector<double> history(Config::numEpochs);
+    vector<double> history;
     for (unsigned int i = 0; i < Config::numEpochs; i++) {
         cout << "=================" << endl;
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
         double accuracy = tally();
-//        tally(false);
-        history[i] = accuracy;
+        history.push_back(accuracy);
 
 //        writeToFile();
-    }
-
-    for (int i = 0; i < history.size(); i++) {
-        cout << i+1 << " " << history[i] << endl;
+        for (int j = 0; j < history.size(); j++) {
+            cout << j+1 << " " << history[j] << endl;
+        }
     }
 }
 
@@ -132,8 +128,9 @@ void MultilayerPerceptron::runEpoch(){
 
         // back-propagate!
         backPropagateError(desired);
-        if (i % Config::batchSize == 0 || data.size()-1) {
+        if (i+1 % Config::batchSize == 0 || data.size()-1) {
             batchUpdate();
+            Config::getInstance()->updateLearningRate();
         }
 
         progressBar.updateProgress(i);

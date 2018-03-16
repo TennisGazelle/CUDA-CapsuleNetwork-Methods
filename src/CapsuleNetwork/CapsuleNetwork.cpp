@@ -186,14 +186,14 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
         }
     }
 
-//    vector<arma::vec> error(output.size(), arma::vec(output[0].size(), arma::fill::zeros));
+//    vector<arma::vec> error = output;
 //    error[targetLabel] = normalise(output[targetLabel]);
 //    error[targetLabel] = normalise(arma::vec(output[0].size(), arma::fill::ones));
     return error;
 }
 
 void CapsuleNetwork::runEpoch() {
-    auto& data = MNISTReader::getInstance()->trainingData;
+    auto& data = MNISTReader::getInstance()->testingData;
 
     ProgressBar pb(data.size());
     for (size_t i = 0; i < data.size(); i++) {

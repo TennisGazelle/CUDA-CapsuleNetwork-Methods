@@ -24,7 +24,7 @@ public:
     double getBias() const;
 
 private:
-    void adjustBias();
+    void adjustBias(const double error);
     void recordWeightAdjustment(const double error, const vector<double> prevInput);
     void calculateDesires();
 

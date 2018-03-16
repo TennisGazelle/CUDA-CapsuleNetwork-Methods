@@ -174,7 +174,7 @@ void test_CapsuleNetwork_getMarginLoss() {
 }
 
 void test_NetworkTallyingTiming() {
-    MultilayerPerceptron mp(784, 10, {10});
+    MultilayerPerceptron mp(784, 10, {16,16});
     ConvolutionalNetwork cnn;
     CapsuleNetwork capsNet;
 
@@ -189,6 +189,7 @@ void test_NetworkTallyingTiming() {
 //    cnn.tally(true);
 //    capsNet.tally(true); // true for training set, false for testing set
 
+//    mp.train();
 //    cnn.train();
     capsNet.train();
 }

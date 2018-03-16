@@ -11,10 +11,7 @@
 ProgressBar::ProgressBar(int pSize) :
         size(pSize),
         currentIndex(0),
-        waitFlag(false)
-{}
-
-ProgressBar::~ProgressBar() {
+        waitFlag(false) {
 }
 
 void ProgressBar::updateProgress(const int cIndex) {

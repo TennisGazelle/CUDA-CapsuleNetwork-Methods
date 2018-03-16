@@ -28,7 +28,6 @@ public:
 
 private:
     PerceptronLayer* parent;
-
     vector<Perceptron> perceptrons;
 };
 

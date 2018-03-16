@@ -3,6 +3,7 @@
 //
 
 #include <cmath>
+#include <iostream>
 #include "Config.h"
 
 Config* Config::instance = nullptr;
@@ -17,9 +18,16 @@ Config* Config::getInstance() {
 }
 
 void Config::updateLearningRate() {
-    learningRate = 10 * pow(learningRate_alpha, ++learningRate_t);
+    std::cout << learningRate << ",";
+//    learningRate = 0.01*pow(learningRate_alpha, ++learningRate_t);
+    learningRate = -1.65e-9 * learningRate_t++ + 0.1;
+}
+
+void Config::resetLearningRate() {
+    learningRate_t = 0;
 }
 
 double Config::getLearningRate() const {
+    return 0.1;
     return learningRate;
 }
