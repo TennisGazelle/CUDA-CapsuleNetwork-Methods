@@ -38,18 +38,22 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
     vector<arma::vec> outputs(digitCaps.size());
     static thread workers[10];
     for (int i = 0; i < digitCaps.size(); i++) {
-        workers[i] = thread(&CapsuleNetwork::loadCapsuleAndGetOutput, this, i, vectorMapOutput);
+        workers[i] = thread(&CapsuleNetwork::m_threading_loadCapsuleAndGetOutput, this, i, vectorMapOutput);
     }
 
     // allocate a thread for each one of these
     for (int i = 0; i < digitCaps.size(); i++) {
         workers[i].join();
         outputs[i] = digitCaps[i].getOutput();
+        // if any value in the output is nan, yell
+        for (auto output_vector : outputs[i]) {
+            assert (!isnan(output_vector));
+        }
     }
     return outputs;
 }
 
-void CapsuleNetwork::loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> input) {
+void CapsuleNetwork::m_threading_loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> input) {
     digitCaps[capsuleIndex].forwardPropagate(input);
 }
 
@@ -196,7 +200,7 @@ void CapsuleNetwork::runEpoch() {
     auto& data = MNISTReader::getInstance()->testingData;
 
     ProgressBar pb(data.size());
-    for (size_t i = 0; i < data.size(); i++) {
+    for (int i = 0; i < data.size(); i++) {
         vector<arma::vec> output = loadImageAndGetOutput(i);
         vector<arma::vec> error = getErrorGradient(output, data[i].getLabel());
         vector<arma::vec> imageError = getReconstructionError(output, i);
@@ -206,7 +210,7 @@ void CapsuleNetwork::runEpoch() {
 
         if (i%Config::batchSize == Config::batchSize-1) {
             updateWeights();
-//            loadImageAndPrintOutput(i);
+            loadImageAndPrintOutput(i);
         }
         pb.updateProgress(i);
     }
@@ -272,8 +276,8 @@ void CapsuleNetwork::train() {
         // TODO file writing (and eventual reading)
 
         cout << endl;
-        for (int i = 0; i < history.size(); i++) {
-        	cout << i << "," << history[i] << endl;
+        for (int j = 0; j < history.size(); j++) {
+        	cout << j << "," << history[j] << endl;
         }
     }
 
