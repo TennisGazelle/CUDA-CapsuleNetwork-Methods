@@ -8,7 +8,7 @@
 #include <Config.h>
 #include "MultilayerPerceptron/Perceptron.h"
 
-Perceptron::Perceptron(ActivationType at) : activationType(at), bias(0.0) {
+Perceptron::Perceptron() : bias(0.0) {
 }
 
 void Perceptron::init(size_t numInputs) {
@@ -42,7 +42,13 @@ double Perceptron::evaluate(const vector<double> &input) const {
         sum += weights[i] * input[i];
     }
     // activation function from all the weights
-    return 1.0 / (1.0 + exp(-sum));
+    switch (Config::getInstance()->at) {
+        case SIGMOID:
+            return 1.0 / (1.0 + exp(-sum));
+        default:
+            cerr << "Perceptron activation type not defined" << endl;
+            exit(1);
+    }
 }
 
 void Perceptron::selfAdjust(const double error, const vector<double> input) {

@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <Utils.h>
+#include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
 Capsule::Capsule(int iD, int oD, int inputs, int outputs) : inputDim(iD), outputDim(oD), numInputs(inputs), numOutputs(outputs) {
@@ -41,7 +42,7 @@ vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
         delta_u[i] = c[i] * delta_u_hat;
 
         // calculate your damn deltas
-        weightDeltas[i] += (error * trans(prevInput[i]));
+        weightDeltas[i] += Config::getInstance()->getLearningRate() * error * trans(prevInput[i]);
     }
     return delta_u;
 }
@@ -54,9 +55,7 @@ arma::vec Capsule::forwardPropagate(const vector<arma::vec>& u) {
     for (auto const& v : u) {
         assert (v.size() == inputDim);
     }
-
     prevInput = u;
-
     output = routingAlgorithm();
     return output;
 }
@@ -71,9 +70,10 @@ arma::vec Capsule::routingAlgorithm() {
 
     // routing algorithm on page 3 starts here //
     // set all the b's to 0
-    for (int i = 0; i < b.size(); i++) {
-        b[i] = 0.0;
+    for (auto& _b : b) {
+        _b = 0.0;
     }
+
     arma::vec v;
     for (int r = 0; r < numIterations; r++) {
         softmax();
@@ -93,7 +93,6 @@ arma::vec Capsule::routingAlgorithm() {
             b[i] += as_scalar(trans(u_hat[i]) * v);
         }
     }
-
     return v;
 }
 

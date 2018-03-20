@@ -123,7 +123,11 @@ void MultilayerPerceptron::runEpoch(){
         desired[data[i].getLabel()] = 1.0;
 
         for (unsigned int j = 0; j < desired.size(); j++) {
-            desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
+            switch (Config::getInstance()->at) {
+                case SIGMOID:
+                default:
+                    desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
+            }
         }
 
         // back-propagate!

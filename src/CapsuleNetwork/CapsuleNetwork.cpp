@@ -68,7 +68,7 @@ vector<arma::vec> CapsuleNetwork::getReconstructionError(vector<arma::vec> digit
     // check the label, and zero out all the other capsule outputs
     for (int i = 0; i < digitCapsOutput.size(); i++) {
         if (i != image.getLabel()) {
-            digitCapsOutput[i] = arma::vec(digitCapsOutput[0].size(), arma::fill::zeros);
+            digitCapsOutput[i].zeros();
         }
     }
 
@@ -91,7 +91,7 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
 
     primaryCaps.setInput({image});
     primaryCaps.calculateOutput();
-    const vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
+    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
     auto vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
 
     // for each of the digitCaps, make them accept this as input
@@ -174,25 +174,14 @@ double CapsuleNetwork::tally(bool useTraining) {
 }
 
 vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &output, int targetLabel) {
-    const static double lambda = 0.5, m_plus = 0.9, m_minus = (1 - m_plus);
     vector<arma::vec> error = output;
+    // generate the derivative of the non-linear vector activation function
     for (int i = 0; i < error.size(); i++) {
+        // TODO: make switch with VectorActivationType to introduce the tangental activation functions
         auto l = Utils::length(error[i]);
-
-        if (i == targetLabel) {
-            // T_k == 1
-            // is the length of this vector's negative bigger than 0?
-            error[i] *= - pow(max(0.0, m_plus - l), 2);
-        } else {
-            // T_k == 0
-            // is the length of this vector bigger than 0?
-            error[i] *= - lambda * pow(max(0.0, l - m_minus), 2);
-        }
+        auto derivativeLength = (2*l) / pow(l*l + 1,2); // Note: this is the first derivative of the activation function
+        error[i] = 100 * derivativeLength * getMarginLoss(i == targetLabel, error[i]) * Utils::safe_normalize(error[i]);
     }
-
-//    vector<arma::vec> error = output;
-//    error[targetLabel] = normalise(output[targetLabel]);
-//    error[targetLabel] = normalise(arma::vec(output[0].size(), arma::fill::ones));
     return error;
 }
 
@@ -203,10 +192,10 @@ void CapsuleNetwork::runEpoch() {
     for (int i = 0; i < data.size(); i++) {
         vector<arma::vec> output = loadImageAndGetOutput(i);
         vector<arma::vec> error = getErrorGradient(output, data[i].getLabel());
-        vector<arma::vec> imageError = getReconstructionError(output, i);
+//        vector<arma::vec> imageError = getReconstructionError(output, i);
 
         backPropagate(error);
-        backPropagate(imageError);
+//        backPropagate(imageError);
 
         if (i%Config::batchSize == Config::batchSize-1) {
             updateWeights();
@@ -246,7 +235,7 @@ double CapsuleNetwork::getTotalMarginLoss(int targetLabel, const vector<arma::ve
 }
 
 double CapsuleNetwork::getMarginLoss(bool isPresent, const arma::vec &v_k) const {
-    double t_k = isPresent ? 1 : 0;
+    double t_k = isPresent ? 1.0 : 0.0;
     const double m_plus = 0.9;
     const double m_minus = 0.1;
     const double lambda = 0.5;
@@ -277,7 +266,7 @@ void CapsuleNetwork::train() {
 
         cout << endl;
         for (int j = 0; j < history.size(); j++) {
-        	cout << j << "," << history[j] << endl;
+            cout << j << "," << history[j] << endl;
         }
     }
 
@@ -287,9 +276,7 @@ void CapsuleNetwork::train() {
 vector<double> CapsuleNetwork::getErrorGradientImage(const Image& truth, const vector<double>& networkOutput) {
     vector<double> gradient(truth.size());
     for (int i = 0; i < gradient.size(); i++) {
-//        gradient[i] = truth[i] - networkOutput[i];
         gradient[i] = networkOutput[i] * (1-networkOutput[i]) * (truth[i] - networkOutput[i]);
-        gradient[i] = pow(networkOutput[i] - truth[i], 2);
     }
     return gradient;
 }
