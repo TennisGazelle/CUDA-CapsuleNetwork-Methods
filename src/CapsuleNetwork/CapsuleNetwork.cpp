@@ -171,7 +171,7 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
     for (int i = 0; i < error.size(); i++) {
         auto l = Utils::length(error[i]);
         auto derivativeLength = (2*l) / pow(l*l + 1,2); // Note: this is the first derivative of the activation function
-        error[i] = derivativeLength + (getMarginLoss(i == targetLabel, error[i]) * Utils::safe_normalize(error[i]));
+        error[i] = (i == targetLabel ? 1 : -1) * getMarginLoss(i == targetLabel, error[i]) * derivativeLength * error[i];
     }
     return error;
 }
