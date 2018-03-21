@@ -7,11 +7,12 @@
 #include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
-Capsule::Capsule(int iD, int oD, int inputs, int outputs) : inputDim(iD), outputDim(oD), numInputs(inputs), numOutputs(outputs) {
-    init();
-}
+void Capsule::init(int iD, int oD, int inputs, int outputs) {
+    inputDim = iD;
+    outputDim = oD;
+    numInputs = inputs;
+    numOutputs = outputs;
 
-void Capsule::init() {
     weightMatrices.resize(numInputs);
     weightDeltas.resize(numInputs);
     c.resize(numInputs);
@@ -19,7 +20,7 @@ void Capsule::init() {
 
     for (int i = 0; i < numInputs; i++) {
         b[i] = 1.0/double(numInputs);
-        weightMatrices[i] = arma::mat(outputDim, inputDim, arma::fill::randu);
+        weightMatrices[i] = arma::mat(outputDim, inputDim, arma::fill::randn);
         weightDeltas[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
     }
     softmax();

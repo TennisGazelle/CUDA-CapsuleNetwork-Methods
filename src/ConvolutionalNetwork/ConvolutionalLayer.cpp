@@ -74,25 +74,6 @@ vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &e
         desired.clearOut();
     }
 
-//    // for every weight per output node (which is shared amongst them)
-//    for (size_t outputChannel = 0; outputChannel < outputMaps.size(); outputChannel++) {
-//        // for every weight, go through all the output values that use it
-//        for (size_t outputRow = 0; outputRow < outputHeight; outputRow++) {
-//            for (size_t outputCol = 0; outputCol < outputWidth; outputCol++) {
-//                for (size_t filterChannel = 0; filterChannel < filterDepth; filterChannel++) {
-//                    for (size_t filterRow = 0; filterRow < filterHeight; filterRow++) {
-//                        for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
-//                            double adjustment = Config::getInstance()->getLearningRate() * inputMaps[filterChannel][outputRow+filterRow][outputCol+filterCol] * errorGradient[outputChannel][outputRow][outputCol];
-//                            filterAdjustments[outputChannel][filterChannel][filterRow][filterCol] -= adjustment;
-//                            newErrorGradient[filterChannel][outputRow+filterRow][outputCol+filterCol] += (filters[outputChannel][filterChannel][filterRow][filterCol] > 0) ? 1 : -1;
-//                            highestDesiredInput = max(highestDesiredInput, newErrorGradient[filterChannel][outputRow+filterRow][outputCol+filterCol]);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-
     for (size_t outputChannel = 0; outputChannel < outputMaps.size(); outputChannel++) {
         for (size_t outputRow = 0; outputRow < outputHeight; outputRow++) {
             for (size_t outputCol = 0; outputCol < outputWidth; outputCol++) {
@@ -115,17 +96,6 @@ vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &e
         }
     }
 
-    // go through that new desired output (which is the same dimensions as the input)
-    // and calculate the error function for it (from ConvolutionalNetwork::runEpoch())
-//    for (size_t ch = 0; ch < inputMaps.size(); ch++) {
-//        for (size_t r = 0; r < inputHeight; r++) {
-//            for (size_t c = 0; c < inputWidth; c++) {
-//                double target = newErrorGradient[ch][r][c] / highestDesiredInput;
-////                double target = max(0.0, newErrorGradient[ch][r][c]);
-//                newErrorGradient[ch][r][c] = inputMaps[ch][r][c] * (1 - inputMaps[ch][r][c]) * (target - inputMaps[ch][r][c]);
-//            }
-//        }
-//    }
     if (parent != nullptr) {
         // be recursive
         parent->backPropagate(newErrorGradient);

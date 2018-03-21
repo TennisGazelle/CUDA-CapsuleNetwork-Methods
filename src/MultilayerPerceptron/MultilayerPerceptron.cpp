@@ -101,8 +101,7 @@ void MultilayerPerceptron::train() {
         cout << "=================" << endl;
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
-        double accuracy = tally();
-        history.push_back(accuracy);
+        history.push_back(tally());
 
 //        writeToFile();
         for (int j = 0; j < history.size(); j++) {

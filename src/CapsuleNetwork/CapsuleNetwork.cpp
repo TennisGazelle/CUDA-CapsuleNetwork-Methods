@@ -14,10 +14,13 @@
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
 CapsuleNetwork::CapsuleNetwork() :
-        primaryCaps(Config::inputHeight, Config::inputWidth, 256, 22, 22),
-        digitCaps(10, Capsule(8, 16, 1152, 1)),
-        reconstructionLayers(10*16, 28*28, {512}) {
+        primaryCaps(Config::inputHeight, Config::inputWidth, 16, 22, 22),
+        digitCaps(10),
+        reconstructionLayers(10*16, 28*28, {28*28}) {
     // TODO extrapolate this for varying inputs and outputs
+    for (auto& capsule : digitCaps) {
+        capsule.init(8, 16, 72, 10);
+    }
     reconstructionLayers.init();
 }
 
@@ -120,17 +123,6 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
     if (bestGuess == label) {
         cout << "WE GOT ONE!!!" << endl;
     }
-
-//    cout << endl;
-//    auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
-//    cout.precision(3);
-//    cout << fixed;
-//    for (int r = 0; r < 28; r++) {
-//        for (int c = 0; c < 28; c++) {
-//            cout << reconstructionImage[r*28 + c] << " ";
-//        }
-//        cout << endl;
-//    }
 }
 
 double CapsuleNetwork::tally(bool useTraining) {
@@ -177,16 +169,15 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
     vector<arma::vec> error = output;
     // generate the derivative of the non-linear vector activation function
     for (int i = 0; i < error.size(); i++) {
-        // TODO: make switch with VectorActivationType to introduce the tangental activation functions
         auto l = Utils::length(error[i]);
         auto derivativeLength = (2*l) / pow(l*l + 1,2); // Note: this is the first derivative of the activation function
-        error[i] = 100 * derivativeLength * getMarginLoss(i == targetLabel, error[i]) * Utils::safe_normalize(error[i]);
+        error[i] = derivativeLength + (getMarginLoss(i == targetLabel, error[i]) * Utils::safe_normalize(error[i]));
     }
     return error;
 }
 
 void CapsuleNetwork::runEpoch() {
-    auto& data = MNISTReader::getInstance()->testingData;
+    auto& data = MNISTReader::getInstance()->trainingData;
 
     ProgressBar pb(data.size());
     for (int i = 0; i < data.size(); i++) {
@@ -209,17 +200,21 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
     assert (error.size() == digitCaps.size());
     assert (error[0].size() == 16);
 
-    vector<arma::vec> primaryCapsError(1152, arma::vec(8, arma::fill::zeros));
+    vector<arma::vec> primaryCapsError(flattenTensorSize, arma::vec(8, arma::fill::zeros));
     // given the error, put this in the last layer and get the error, and give it to the Conv. net
     for (int i = 0; i < error.size(); i++) {
         vector<arma::vec> subset = digitCaps[i].backPropagate(error[i]);
-        for (int j = 0; j < 1152; j++) {
+        for (int j = 0; j < flattenTensorSize; j++) {
             primaryCapsError[i] += subset[i];
         }
     }
-
+    for (auto& delta_u : primaryCapsError) {
+        auto l = Utils::length(delta_u);
+        auto derivativeLength = (2*l) / pow(l*l + 1, 2);
+        delta_u = derivativeLength * Utils::safe_normalize(delta_u);
+    }
     // translate to feature maps
-    vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6, 256, primaryCapsError);
+    vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6, 16, primaryCapsError);
     // give back to the conv net here.
     primaryCaps.backPropagate(convError);
 }
