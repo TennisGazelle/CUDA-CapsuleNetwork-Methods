@@ -28,6 +28,6 @@ void Config::resetLearningRate() {
 }
 
 double Config::getLearningRate() const {
-    return 0.001;
+    return 0.0001;
     return learningRate;
 }

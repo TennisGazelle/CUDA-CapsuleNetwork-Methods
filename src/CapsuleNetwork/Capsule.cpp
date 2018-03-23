@@ -15,24 +15,32 @@ void Capsule::init(int iD, int oD, int inputs, int outputs) {
 
     weightMatrices.resize(numInputs);
     weightDeltas.resize(numInputs);
+    weightVelocities.resize(numInputs);
     c.resize(numInputs);
     b.resize(numInputs);
 
     for (int i = 0; i < numInputs; i++) {
-        b[i] = 1.0/double(numInputs);
+        b[i] = 0.0;
         weightMatrices[i] = arma::mat(outputDim, inputDim, arma::fill::randn);
         weightDeltas[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
+        weightVelocities[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
     }
     softmax();
 }
 
 void Capsule::softmax() {
-    double sum_b_exps = 0.0;
+    long double sum_b_exps = 0.0;
     for (auto b_i : b) {
-        sum_b_exps += exp(b_i);
+        if (!isnan(b_i) && !isinf(sum_b_exps + exp(b_i))) {
+            sum_b_exps += exp(b_i);
+        }
     }
     for (int i = 0; i < numInputs; i++) {
-        c[i] = exp(b[i]) / sum_b_exps;
+        c[i] = double(exp(b[i]) / sum_b_exps);
+        if (isnan(c[i])) {
+            cerr << "c[i] got nan; b[i]: " << b[i] << " exp(b[i]): " << exp(b[i]) << " sum_b_exps: " << sum_b_exps << endl;
+            exit(1);
+        }
     }
 }
 
@@ -43,7 +51,7 @@ vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
         delta_u[i] = c[i] * delta_u_hat;
 
         // calculate your damn deltas
-        weightDeltas[i] += Config::getInstance()->getLearningRate() * error * trans(prevInput[i]);
+        weightDeltas[i] -= error * trans(prevInput[i]);
     }
     return delta_u;
 }
@@ -78,6 +86,10 @@ arma::vec Capsule::routingAlgorithm() {
     arma::vec v;
     for (int r = 0; r < numIterations; r++) {
         softmax();
+        // double check that you don't have any nan's here
+        for (auto _c: c) {
+            assert (!isnan(_c));
+        }
 
         // calculate s
         v = arma::vec(outputDim, arma::fill::zeros);
@@ -99,7 +111,8 @@ arma::vec Capsule::routingAlgorithm() {
 
 void Capsule::updateWeights() {
     for (int i = 0; i < numInputs; i++) {
-        weightMatrices[i] += weightDeltas[i];
+        weightVelocities[i] = 0.9 * weightVelocities[i] + 0.1 * weightDeltas[i];
+        weightMatrices[i] += weightVelocities[i];
         weightDeltas[i].zeros();
     }
 }

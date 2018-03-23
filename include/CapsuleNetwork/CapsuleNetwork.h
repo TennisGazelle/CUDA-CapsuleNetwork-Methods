@@ -18,7 +18,7 @@ public:
     void loadImageAndPrintOutput(int imageIndex, bool useTraining = true);
     vector<arma::vec> getErrorGradient(const vector<arma::vec> &output, int targetLabel);
     vector<arma::vec> getReconstructionError(vector<arma::vec> digitCapsOutput, int imageIndex, bool useTraining = true);
-    double tally(bool useTraining = true);
+    pair<double, double> tally(bool useTraining = true);
     void backPropagate(vector<arma::vec> error);
     void runEpoch();
     void train();

@@ -48,10 +48,6 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
     for (int i = 0; i < digitCaps.size(); i++) {
         workers[i].join();
         outputs[i] = digitCaps[i].getOutput();
-        // if any value in the output is nan, yell
-        for (auto output_vector : outputs[i]) {
-            assert (!isnan(output_vector));
-        }
     }
     return outputs;
 }
@@ -94,7 +90,7 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
 
     primaryCaps.setInput({image});
     primaryCaps.calculateOutput();
-    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
+    auto primaryCapsOutput = primaryCaps.getOutput();
     auto vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
 
     // for each of the digitCaps, make them accept this as input
@@ -125,9 +121,10 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
     }
 }
 
-double CapsuleNetwork::tally(bool useTraining) {
+pair<double, double> CapsuleNetwork::tally(bool useTraining) {
     cout << "tallying..." << endl;
     int numCorrectlyClassified = 0;
+    long double totalLoss = 0;
 
     auto& tallyData = MNISTReader::getInstance()->trainingData;
     if (!useTraining) {
@@ -139,6 +136,7 @@ double CapsuleNetwork::tally(bool useTraining) {
     timer.start();
     for (int i = 0; i < tallyData.size(); i++) {
         auto output = loadImageAndGetOutput(i, useTraining);
+        totalLoss += getTotalMarginLoss(tallyData[i].getLabel(), output);
 
         int guess = 0;
         long double longestVector = 0.0;
@@ -162,7 +160,11 @@ double CapsuleNetwork::tally(bool useTraining) {
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
     cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
     cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
-    return double(numCorrectlyClassified)/double(tallyData.size()) * 100;
+    cout << "                  Average Loss: " << totalLoss << endl;
+    return {
+            double(numCorrectlyClassified) / double(tallyData.size()) * 100,
+            totalLoss
+    };
 }
 
 vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &output, int targetLabel) {
@@ -171,7 +173,7 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
     for (int i = 0; i < error.size(); i++) {
         auto l = Utils::length(error[i]);
         auto derivativeLength = (2*l) / pow(l*l + 1,2); // Note: this is the first derivative of the activation function
-        error[i] = (i == targetLabel ? 1 : -1) * getMarginLoss(i == targetLabel, error[i]) * derivativeLength * error[i];
+        error[i] = - getMarginLoss(i == targetLabel, error[i]) * derivativeLength * error[i];
     }
     return error;
 }
@@ -190,7 +192,7 @@ void CapsuleNetwork::runEpoch() {
 
         if (i%Config::batchSize == Config::batchSize-1) {
             updateWeights();
-            loadImageAndPrintOutput(i);
+//            loadImageAndPrintOutput(i);
         }
         pb.updateProgress(i);
     }
@@ -223,7 +225,6 @@ double CapsuleNetwork::getTotalMarginLoss(int targetLabel, const vector<arma::ve
     double sumOfLosses = 0.0;
     for (int i = 0; i < output.size(); i++) {
         double loss = getMarginLoss(i == targetLabel, output[i]);
-        cout << "loss for " << i << ": " << loss << endl;
         sumOfLosses += loss;
     }
     return sumOfLosses;
@@ -237,9 +238,13 @@ double CapsuleNetwork::getMarginLoss(bool isPresent, const arma::vec &v_k) const
     const double vLength = Utils::length(v_k);
 
     double lhs = t_k * pow(max(0.0, m_plus - vLength), 2);
-    double rhs = lambda * (1 - t_k) * pow(max(0.0, vLength - m_minus), 2);
+    double rhs = lambda * pow(max(0.0, vLength - m_minus), 2);
 
-    return lhs + rhs;
+    if (isPresent) {
+        return lhs;
+    } else {
+        return rhs;
+    }
 }
 
 void CapsuleNetwork::updateWeights() {
@@ -251,7 +256,7 @@ void CapsuleNetwork::updateWeights() {
 }
 
 void CapsuleNetwork::train() {
-    vector<double> history;
+    vector<pair<double, double>> history;
     for (size_t i = 0; i < Config::numEpochs; i++) {
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
@@ -261,7 +266,7 @@ void CapsuleNetwork::train() {
 
         cout << endl;
         for (int j = 0; j < history.size(); j++) {
-            cout << j << "," << history[j] << endl;
+            cout << j << "," << history[j].first << "," << history[j].second << endl;
         }
     }
 

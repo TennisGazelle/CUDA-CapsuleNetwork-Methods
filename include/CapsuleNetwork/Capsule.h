@@ -24,7 +24,7 @@ public:
 private:
     arma::vec routingAlgorithm();
 
-    vector<arma::mat> weightMatrices, weightDeltas;
+    vector<arma::mat> weightMatrices, weightDeltas, weightVelocities;
     vector<double> c;
     vector<double> b;
 
