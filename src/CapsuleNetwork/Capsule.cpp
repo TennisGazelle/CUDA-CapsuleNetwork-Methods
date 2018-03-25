@@ -38,8 +38,10 @@ void Capsule::softmax() {
     for (int i = 0; i < numInputs; i++) {
         c[i] = double(exp(b[i]) / sum_b_exps);
         if (isnan(c[i])) {
-            cerr << "c[i] got nan; b[i]: " << b[i] << " exp(b[i]): " << exp(b[i]) << " sum_b_exps: " << sum_b_exps << endl;
-            exit(1);
+            cerr << "c[i] got nan" << endl;
+            cerr << "       b[i]: " << b[i] << endl;
+            cerr << "  exp(b[i]): " << exp(b[i]) << endl;
+            cerr << " sum_b_exps: " << sum_b_exps << endl;
         }
     }
 }
@@ -86,10 +88,6 @@ arma::vec Capsule::routingAlgorithm() {
     arma::vec v;
     for (int r = 0; r < numIterations; r++) {
         softmax();
-        // double check that you don't have any nan's here
-        for (auto _c: c) {
-            assert (!isnan(_c));
-        }
 
         // calculate s
         v = arma::vec(outputDim, arma::fill::zeros);
