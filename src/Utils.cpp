@@ -62,7 +62,11 @@ arma::vec Utils::squish(const arma::vec &input) {
 }
 
 arma::vec Utils::safe_normalize(arma::vec input) {
-    return input / length(input);
+    auto l = length(input);
+    if (l == 0) {
+        return input;
+    }
+    return input / l;
 }
 
 vector<double> Utils::getAsOneDim(const vector<arma::vec> &input) {
