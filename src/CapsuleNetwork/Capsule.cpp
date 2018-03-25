@@ -42,6 +42,7 @@ void Capsule::softmax() {
             cerr << "       b[i]: " << b[i] << endl;
             cerr << "  exp(b[i]): " << exp(b[i]) << endl;
             cerr << " sum_b_exps: " << sum_b_exps << endl;
+            exit(1);
         }
     }
 }
@@ -101,7 +102,14 @@ arma::vec Capsule::routingAlgorithm() {
 
         // update b's for everyone
         for (int i = 0; i < numInputs; i++) {
-            b[i] += as_scalar(trans(u_hat[i]) * v);
+            auto dot_product = arma::dot(u_hat[i], v);
+            if (isnan(dot_product)) {
+                cerr << "the dot product between the following two vectors is nan" << endl;
+                u_hat[i].print("u_hat[i]");
+                v.print("v");
+                exit(1);
+            }
+            b[i] += dot_product;
         }
     }
     return v;
