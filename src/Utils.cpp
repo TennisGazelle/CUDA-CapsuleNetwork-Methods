@@ -54,6 +54,11 @@ double Utils::length(const arma::vec &vn) {
     return (double) sqrt(square_length(vn) + 1e-4);
 }
 
+double Utils::getSquashDerivativeLength(const arma::vec &input) {
+    auto l = length(input);
+    return (2*l) / pow(l*l + 1,2);
+}
+
 arma::vec Utils::squish(const arma::vec &input) {
     auto lengthSquared = Utils::square_length(input);
     auto squishingScalar = lengthSquared / (1 + lengthSquared);
@@ -63,8 +68,8 @@ arma::vec Utils::squish(const arma::vec &input) {
 
 arma::vec Utils::safe_normalize(arma::vec input) {
     auto l = length(input);
-    if (l == 0) {
-        return input;
+    if (l <= 1e-3) {
+        return input; // a zero vector is itself
     }
     return input / l;
 }

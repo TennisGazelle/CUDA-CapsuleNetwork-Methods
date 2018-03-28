@@ -18,14 +18,15 @@ public:
     void loadImageAndPrintOutput(int imageIndex, bool useTraining = true);
     vector<arma::vec> getErrorGradient(const vector<arma::vec> &output, int targetLabel);
     vector<arma::vec> getReconstructionError(vector<arma::vec> digitCapsOutput, int imageIndex, bool useTraining = true);
-    pair<double, double> tally(bool useTraining = true);
+    pair<double, long double> tally(bool useTraining = true);
     void backPropagate(vector<arma::vec> error);
     void runEpoch();
     void train();
     void updateWeights();
 
-    double getTotalMarginLoss(int targetLabel, const vector<arma::vec>& output) const;
+    long double getTotalMarginLoss(int targetLabel, const vector<arma::vec>& output) const;
     double getMarginLoss(bool isPresent, const arma::vec& v_k) const;
+    double getMarginLossGradient(bool isPresent, const arma::vec& v_k) const;
     vector<double> getErrorGradientImage(const Image& truth, const vector<double>& networkOutput);
 
 private:

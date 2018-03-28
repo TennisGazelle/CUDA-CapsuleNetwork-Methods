@@ -39,16 +39,20 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
 
     // for each of the digitCaps, make them accept this as input
     vector<arma::vec> outputs(digitCaps.size());
-    static thread workers[10];
     for (int i = 0; i < digitCaps.size(); i++) {
-        workers[i] = thread(&CapsuleNetwork::m_threading_loadCapsuleAndGetOutput, this, i, vectorMapOutput);
-    }
-
-    // allocate a thread for each one of these
-    for (int i = 0; i < digitCaps.size(); i++) {
-        workers[i].join();
+        digitCaps[i].forwardPropagate(vectorMapOutput);
         outputs[i] = digitCaps[i].getOutput();
     }
+//    static thread workers[10];
+//    for (int i = 0; i < digitCaps.size(); i++) {
+//        workers[i] = thread(&CapsuleNetwork::m_threading_loadCapsuleAndGetOutput, this, i, vectorMapOutput);
+//    }
+//
+//    // allocate a thread for each one of these
+//    for (int i = 0; i < digitCaps.size(); i++) {
+//        workers[i].join();
+//        outputs[i] = digitCaps[i].getOutput();
+//    }
     return outputs;
 }
 
@@ -121,7 +125,7 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
     }
 }
 
-pair<double, double> CapsuleNetwork::tally(bool useTraining) {
+pair<double, long double> CapsuleNetwork::tally(bool useTraining) {
     cout << "tallying..." << endl;
     int numCorrectlyClassified = 0;
     long double totalLoss = 0;
@@ -158,7 +162,7 @@ pair<double, double> CapsuleNetwork::tally(bool useTraining) {
     timer.stop();
 
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
-    cout << "Accuracy (out of " << tallyData.size() << ")       : " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
+    cout << "       Accuracy (out of " << tallyData.size() << "): " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
     cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
     cout << "                  Average Loss: " << totalLoss << endl;
     return {
@@ -168,12 +172,31 @@ pair<double, double> CapsuleNetwork::tally(bool useTraining) {
 }
 
 vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &output, int targetLabel) {
-    vector<arma::vec> error = output;
+    vector<arma::vec> error(output.size());
     // generate the derivative of the non-linear vector activation function
     for (int i = 0; i < error.size(); i++) {
-        auto l = Utils::length(error[i]);
-        auto derivativeLength = (2*l) / pow(l*l + 1,2); // Note: this is the first derivative of the activation function
-        error[i] = - getMarginLoss(i == targetLabel, error[i]) * derivativeLength * error[i];
+        // d(squash())/dv
+//        auto activationDerivativeLength = Utils::getSquashDerivativeLength(error[i]); // Note: this is the first derivative of the activation function
+
+        // d(loss)/d||v||
+//        auto errorGradient = getMarginLossGradient(i == targetLabel, error[i]);
+
+//        error[i] = activationDerivativeLength * errorGradient * output[i];
+
+        error[i] = (-getMarginLoss(i == targetLabel, output[i])*output[i]) - output[i];
+
+//        auto length = Utils::length(output[i]);
+//        error[i] = output[i];
+//        error[i].zeros();
+//        if (i == targetLabel) {
+//            if (length <= 0.9) {
+//                error[i] = Utils::safe_normalize(output[i]) * 10;
+//            }
+//        } else {
+//            if (length >= 0.1) {
+//                error[i] = -output[i];
+//            }
+//        }
     }
     return error;
 }
@@ -211,8 +234,7 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
         }
     }
     for (auto& delta_u : primaryCapsError) {
-        auto l = Utils::length(delta_u);
-        auto derivativeLength = (2*l) / pow(l*l + 1, 2);
+        auto derivativeLength = Utils::getSquashDerivativeLength(delta_u);
         delta_u = derivativeLength * Utils::safe_normalize(delta_u);
     }
     // translate to feature maps
@@ -221,30 +243,49 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
     primaryCaps.backPropagate(convError);
 }
 
-double CapsuleNetwork::getTotalMarginLoss(int targetLabel, const vector<arma::vec> &output) const {
-    double sumOfLosses = 0.0;
+long double CapsuleNetwork::getTotalMarginLoss(int targetLabel, const vector<arma::vec> &output) const {
+    long double sumOfLosses = 0.0;
     for (int i = 0; i < output.size(); i++) {
-        double loss = getMarginLoss(i == targetLabel, output[i]);
+        long double loss = getMarginLoss(i == targetLabel, output[i]);
         sumOfLosses += loss;
     }
     return sumOfLosses;
 }
 
 double CapsuleNetwork::getMarginLoss(bool isPresent, const arma::vec &v_k) const {
+    const double m_plus = 0.9;
+    const double m_minus = 0.1;
+    const double lambda = 0.5;
+    const double vLength = Utils::length(v_k);
+
+    if (isPresent) {
+        double lhs = pow(max(0.0, m_plus - vLength), 2);
+        return lhs;
+    } else {
+        double rhs = lambda * pow(max(0.0, vLength - m_minus), 2);
+        return rhs;
+    }
+}
+
+double CapsuleNetwork::getMarginLossGradient(bool isPresent, const arma::vec &v_k) const {
     double t_k = isPresent ? 1.0 : 0.0;
     const double m_plus = 0.9;
     const double m_minus = 0.1;
     const double lambda = 0.5;
     const double vLength = Utils::length(v_k);
 
-    double lhs = t_k * pow(max(0.0, m_plus - vLength), 2);
-    double rhs = lambda * pow(max(0.0, vLength - m_minus), 2);
-
-    if (isPresent) {
-        return lhs;
+    double value;
+    if (vLength < m_plus) {
+        if (vLength <= m_minus) {
+            value = -2 * t_k * (m_plus - vLength);
+        } else {
+            value = 2 * ((lambda * (t_k - 1) * (m_minus - vLength)) +
+                         t_k * (vLength - m_plus));
+        }
     } else {
-        return rhs;
+        value = 2 * lambda * (t_k - 1) * (m_minus - vLength);
     }
+    return value;
 }
 
 void CapsuleNetwork::updateWeights() {
@@ -256,7 +297,7 @@ void CapsuleNetwork::updateWeights() {
 }
 
 void CapsuleNetwork::train() {
-    vector<pair<double, double>> history;
+    vector<pair<double, long double>> history;
     for (size_t i = 0; i < Config::numEpochs; i++) {
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
@@ -266,7 +307,7 @@ void CapsuleNetwork::train() {
 
         cout << endl;
         for (int j = 0; j < history.size(); j++) {
-            cout << j << "," << history[j].first << "," << history[j].second << endl;
+            cout << j << ", " << history[j].first << ", " << history[j].second << endl;
         }
     }
 

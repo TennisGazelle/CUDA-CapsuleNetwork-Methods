@@ -104,6 +104,7 @@ arma::vec Capsule::routingAlgorithm() {
         for (int i = 0; i < numInputs; i++) {
             auto dot_product = arma::dot(u_hat[i], v);
             if (isnan(dot_product)) {
+                sleep(1);
                 cerr << "the dot product between the following two vectors is nan" << endl;
                 u_hat[i].print("u_hat[i]");
                 v.print("v");
@@ -118,7 +119,8 @@ arma::vec Capsule::routingAlgorithm() {
 void Capsule::updateWeights() {
     for (int i = 0; i < numInputs; i++) {
         weightVelocities[i] = 0.9 * weightVelocities[i] + 0.1 * weightDeltas[i];
-        weightMatrices[i] += weightVelocities[i];
+//        weightMatrices[i] += weightVelocities[i];
+        weightMatrices[i] += weightDeltas[i];
         weightDeltas[i].zeros();
     }
 }
