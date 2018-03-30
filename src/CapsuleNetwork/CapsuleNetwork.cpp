@@ -185,11 +185,11 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
         // loss(v)
         auto rawMarginLoss = getMarginLoss(i == targetLabel, output[i]);
 
-        //error[i] = activationDerivativeLength * errorGradient * output[i];
-        //error[i] = (-getMarginLoss(i == targetLabel, output[i])*output[i]) - output[i];
-        //error[i] = normalise(output[i]);
-        //error[i] = Utils::safeNormalise(output[i]);
-        error[i] = -activationDerivativeLength * errorGradient * Utils::safeNormalise(output[i]);
+//        error[i] = activationDerivativeLength * errorGradient * output[i];
+//        error[i] = (-rawMarginLoss*output[i]) - output[i];
+//        error[i] = normalise(output[i]);
+//        error[i] = Utils::safeNormalise(output[i]);
+         error[i] = 0.01 * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
     }
     return error;
 }
