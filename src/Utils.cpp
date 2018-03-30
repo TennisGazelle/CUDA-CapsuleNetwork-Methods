@@ -63,12 +63,12 @@ arma::vec Utils::squish(const arma::vec &input) {
     auto lengthSquared = Utils::square_length(input);
     auto squishingScalar = lengthSquared / (1 + lengthSquared);
 //    return squishingScalar * normalise(input, 1);
-    return squishingScalar * safe_normalize(input);
+    return squishingScalar * safeNormalise(input);
 }
 
-arma::vec Utils::safe_normalize(arma::vec input) {
+arma::vec Utils::safeNormalise(arma::vec input) {
     auto l = length(input);
-    if (l <= 1e-3) {
+    if (l == 0.0) {
         return input; // a zero vector is itself
     }
     return input / l;

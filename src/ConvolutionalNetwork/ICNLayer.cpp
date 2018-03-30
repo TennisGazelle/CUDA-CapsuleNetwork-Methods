@@ -3,6 +3,7 @@
 //
 
 #include <cassert>
+#include <Config.h>
 #include "ConvolutionalNetwork/ICNLayer.h"
 
 void ICNLayer::setInput(const vector<FeatureMap> &input) {
@@ -67,5 +68,13 @@ void ICNLayer::collectInput() {
         assert (parent->outputHeight == inputHeight);
         assert (parent->outputWidth  == inputWidth);
         inputMaps = parent->outputMaps;
+    }
+}
+
+vector<FeatureMap> ICNLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
+    if (Config::getInstance()->multithreaded) {
+        return multiThreadedBackPropagation(errorGradient);
+    } else {
+        return singleThreadedBackPropagate(errorGradient);
     }
 }

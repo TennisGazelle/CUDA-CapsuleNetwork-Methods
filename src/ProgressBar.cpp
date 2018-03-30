@@ -32,7 +32,7 @@ void ProgressBar::updateProgress(const int cIndex) {
      * > |//////////[100%]//////////|
      */
 
-    const int numSubDiv = 50;
+    const int numSubDiv = 25;
     auto numTicks = (int) (numSubDiv * percent);
 
     cout << "|";

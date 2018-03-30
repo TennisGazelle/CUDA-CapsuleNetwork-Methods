@@ -18,7 +18,7 @@ public:
     static long double square_length(const arma::vec &vn);
     static double length(const arma::vec &vn);
     static arma::vec squish(const arma::vec& input);
-    static arma::vec safe_normalize(arma::vec input);
+    static arma::vec safeNormalise(arma::vec input);
     static double getSquashDerivativeLength(const arma::vec &input);
 
     // the following are inverses of one another // not tested yet

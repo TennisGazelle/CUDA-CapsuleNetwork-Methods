@@ -119,8 +119,8 @@ arma::vec Capsule::routingAlgorithm() {
 void Capsule::updateWeights() {
     for (int i = 0; i < numInputs; i++) {
         weightVelocities[i] = 0.9 * weightVelocities[i] + 0.1 * weightDeltas[i];
-//        weightMatrices[i] += weightVelocities[i];
-        weightMatrices[i] += weightDeltas[i];
+        weightMatrices[i] += weightVelocities[i];
+        //weightMatrices[i] += weightDeltas[i];
         weightDeltas[i].zeros();
     }
 }

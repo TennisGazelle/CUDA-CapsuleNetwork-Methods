@@ -33,7 +33,7 @@ void PoolingLayer::calculateOutput() {
     }
 }
 
-vector<FeatureMap> PoolingLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
+vector<FeatureMap> PoolingLayer::singleThreadedBackPropagate(const vector<FeatureMap> &errorGradient) {
     // do stuff if it's
     assert (errorGradient.size() == outputMaps.size());
 
@@ -60,7 +60,12 @@ vector<FeatureMap> PoolingLayer::backPropagate(const vector<FeatureMap> &errorGr
     }
 
     // give this error gradient to the previous guys
-    parent->backPropagate(prevErrorGradient);
+    return parent->backPropagate(prevErrorGradient);
+}
+
+// TODO flesh out this function for multi-threaded
+vector<FeatureMap> PoolingLayer::multiThreadedBackPropagation(const vector<FeatureMap> &errorGradient) {
+    return singleThreadedBackPropagate(errorGradient);
 }
 
 pair<size_t, size_t> PoolingLayer::returnCoordinatesOfHighest(size_t rowBegin, size_t colBegin, size_t channel) {

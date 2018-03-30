@@ -39,20 +39,23 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
 
     // for each of the digitCaps, make them accept this as input
     vector<arma::vec> outputs(digitCaps.size());
-    for (int i = 0; i < digitCaps.size(); i++) {
-        digitCaps[i].forwardPropagate(vectorMapOutput);
-        outputs[i] = digitCaps[i].getOutput();
+
+    if (Config::getInstance()->multithreaded) {
+        static thread workers[10];
+        for (int i = 0; i < digitCaps.size(); i++) {
+            workers[i] = thread(&CapsuleNetwork::m_threading_loadCapsuleAndGetOutput, this, i, vectorMapOutput);
+        }
+        // allocate a thread for each one of these
+        for (int i = 0; i < digitCaps.size(); i++) {
+            workers[i].join();
+            outputs[i] = digitCaps[i].getOutput();
+        }
+    } else {
+        for (int i = 0; i < digitCaps.size(); i++) {
+            digitCaps[i].forwardPropagate(vectorMapOutput);
+            outputs[i] = digitCaps[i].getOutput();
+        }
     }
-//    static thread workers[10];
-//    for (int i = 0; i < digitCaps.size(); i++) {
-//        workers[i] = thread(&CapsuleNetwork::m_threading_loadCapsuleAndGetOutput, this, i, vectorMapOutput);
-//    }
-//
-//    // allocate a thread for each one of these
-//    for (int i = 0; i < digitCaps.size(); i++) {
-//        workers[i].join();
-//        outputs[i] = digitCaps[i].getOutput();
-//    }
     return outputs;
 }
 
@@ -128,7 +131,7 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
 pair<double, long double> CapsuleNetwork::tally(bool useTraining) {
     cout << "tallying..." << endl;
     int numCorrectlyClassified = 0;
-    long double totalLoss = 0;
+    long double totalLoss = 0.0;
 
     auto& tallyData = MNISTReader::getInstance()->trainingData;
     if (!useTraining) {
@@ -176,27 +179,17 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
     // generate the derivative of the non-linear vector activation function
     for (int i = 0; i < error.size(); i++) {
         // d(squash())/dv
-//        auto activationDerivativeLength = Utils::getSquashDerivativeLength(error[i]); // Note: this is the first derivative of the activation function
+        auto activationDerivativeLength = Utils::getSquashDerivativeLength(output[i]); // Note: this is the first derivative of the activation function
+        // d(loss(v))/d||v||
+        auto errorGradient = getMarginLossGradient(i == targetLabel, output[i]);
+        // loss(v)
+        auto rawMarginLoss = getMarginLoss(i == targetLabel, output[i]);
 
-        // d(loss)/d||v||
-//        auto errorGradient = getMarginLossGradient(i == targetLabel, error[i]);
-
-//        error[i] = activationDerivativeLength * errorGradient * output[i];
-
-        error[i] = (-getMarginLoss(i == targetLabel, output[i])*output[i]) - output[i];
-
-//        auto length = Utils::length(output[i]);
-//        error[i] = output[i];
-//        error[i].zeros();
-//        if (i == targetLabel) {
-//            if (length <= 0.9) {
-//                error[i] = Utils::safe_normalize(output[i]) * 10;
-//            }
-//        } else {
-//            if (length >= 0.1) {
-//                error[i] = -output[i];
-//            }
-//        }
+        //error[i] = activationDerivativeLength * errorGradient * output[i];
+        //error[i] = (-getMarginLoss(i == targetLabel, output[i])*output[i]) - output[i];
+        //error[i] = normalise(output[i]);
+        //error[i] = Utils::safeNormalise(output[i]);
+        error[i] = -activationDerivativeLength * errorGradient * Utils::safeNormalise(output[i]);
     }
     return error;
 }
@@ -235,7 +228,7 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
     }
     for (auto& delta_u : primaryCapsError) {
         auto derivativeLength = Utils::getSquashDerivativeLength(delta_u);
-        delta_u = derivativeLength * Utils::safe_normalize(delta_u);
+        delta_u = derivativeLength * Utils::safeNormalise(delta_u);
     }
     // translate to feature maps
     vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6, 16, primaryCapsError);

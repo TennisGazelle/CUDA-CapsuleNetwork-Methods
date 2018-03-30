@@ -8,12 +8,15 @@
 #include <iostream>
 #include <iomanip>
 #include <Config.h>
+#include <thread>
 
 #include "ConvolutionalNetwork/ConvolutionalLayer.h"
 
 ConvolutionalLayer::ConvolutionalLayer(size_t iHeight, size_t iWidth, size_t numFilters, size_t fHeight, size_t fWidth)
         : filterDepth(1), filterHeight(fHeight), filterWidth(fWidth) {
     filters.resize(numFilters);
+    filterAdjustments.resize(numFilters);
+    filterVelocities.resize(numFilters);
     // no parent, we are just setting inputs here (start of network)
     setInputDimension(1, iHeight, iWidth);  // no RGB either, so just 1 input channel
     init();
@@ -28,12 +31,10 @@ ConvolutionalLayer::ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, siz
 }
 
 void ConvolutionalLayer::init() {
-    for (auto& filter : filters) {
-        filter.init(filterDepth, filterHeight, filterWidth);
-    }
-    filterAdjustments = filters;
-    for (auto& fAdj : filterAdjustments) {
-        fAdj.clearOut();
+    for (int i = 0; i < filters.size(); i++) {
+        filters[i].init(filterDepth, filterHeight, filterWidth);
+        filterAdjustments[i].clearInit(filterDepth, filterHeight, filterWidth);
+        filterVelocities[i].clearInit(filterDepth, filterHeight, filterWidth);
     }
     newErrorGradient = inputMaps;
     for (auto& iDC : newErrorGradient) {
@@ -64,10 +65,9 @@ void ConvolutionalLayer::calculateOutput() {
     }
 }
 
-vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &errorGradient) {
+vector<FeatureMap> ConvolutionalLayer::singleThreadedBackPropagate(const vector<FeatureMap> &errorGradient) {
     // error check
     assert (errorGradient.size() == outputMaps.size());
-    double highestDesiredInput = 0.0;
 
     // clear the nudges desired for the previous layers
     for (auto& desired : newErrorGradient) {
@@ -98,9 +98,55 @@ vector<FeatureMap> ConvolutionalLayer::backPropagate(const vector<FeatureMap> &e
 
     if (parent != nullptr) {
         // be recursive
-        parent->backPropagate(newErrorGradient);
+        return parent->backPropagate(newErrorGradient);
     }
     return newErrorGradient;
+}
+
+vector<FeatureMap> ConvolutionalLayer::multiThreadedBackPropagation(const vector<FeatureMap> &errorGradient) {
+    // error check
+    assert (errorGradient.size() == outputMaps.size());
+    thread workers[inputMaps.size()];
+
+    for (int i = 0; i < inputMaps.size(); i++) {
+        if (workers[i].joinable()) {
+            workers[i].join();
+        }
+        workers[i] = thread(&ConvolutionalLayer::m_threading_BackPropagation, this, i, errorGradient);
+    }
+    for (auto& w : workers) {
+        w.join();
+    }
+
+    if (parent != nullptr) {
+        // be recursive
+        return parent->backPropagate(newErrorGradient);
+    }
+    return newErrorGradient;
+}
+
+void ConvolutionalLayer::m_threading_BackPropagation(int inputMapIndex, const vector<FeatureMap> &errorGradient) {
+    // clear the nudges desired for the previous layers
+    newErrorGradient[inputMapIndex].clearOut();
+
+    for (size_t outputChannel = 0; outputChannel < outputMaps.size(); outputChannel++) {
+        for (size_t outputRow = 0; outputRow < outputHeight; outputRow++) {
+            for (size_t outputCol = 0; outputCol < outputWidth; outputCol++) {
+                auto dh = errorGradient[outputChannel][outputRow][outputCol];
+
+                for (size_t filterRow = 0; filterRow < filterHeight; filterRow++) {
+                    for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
+                        // add a 'weighted' version of the output to the newErrorGradient
+                        // dX[h:h+f, w:w+f] += W * dh(h,w)
+                        newErrorGradient[inputMapIndex][filterRow + outputRow][filterCol] += filters[outputChannel][inputMapIndex][filterRow][filterCol] * dh;
+                        // get the update for the filters with the difference a "conv" of that error
+                        // dW += X[h:h+f, w:w+f] * dH(h,w)
+                        filterAdjustments[outputChannel][inputMapIndex][filterRow][filterCol] += inputMaps[inputMapIndex][filterRow + outputRow][filterCol + outputCol] * dh;
+                    }
+                }
+            }
+        }
+    }
 }
 
 double ConvolutionalLayer::dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const {
@@ -168,7 +214,9 @@ void ConvolutionalLayer::outputLayerToFile(ofstream& fout) const {
 void ConvolutionalLayer::updateError() {
     // apply the adjustments
     for (int i = 0; i < filters.size(); i++) {
-        filters[i] = filters[i] + filterAdjustments[i];
+        filterVelocities[i].velocityUpdateWithWeights(filterAdjustments[i]);
+        //filterVelocities[i] = filterVelocities[i].velocityUpdateWithWeights() + 0.1*filterAdjustments[i];
+        filters[i] = filters[i] + filterVelocities[i];
         filterAdjustments[i].clearOut();
     }
 

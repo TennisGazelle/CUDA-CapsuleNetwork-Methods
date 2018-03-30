@@ -19,6 +19,7 @@ public:
     static const int numEpochs = 1000;
     double learningRate = 0.01;
     const ActivationType at = SIGMOID;
+    static const bool multithreaded = true;
 private:
     Config();
     static Config* instance;

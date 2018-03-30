@@ -6,6 +6,19 @@
 #include <Utils.h>
 #include "models/Filter.h"
 
+void Filter::clearInit(size_t depth, size_t height, size_t width) {
+    resize(depth);
+    for (auto& channel : (*this)) {
+        channel.resize(height);
+        for (auto& row : channel) {
+            row.resize(width);
+            for (auto& col : row) {
+                col = 0.0;
+            }
+        }
+    }
+}
+
 void Filter::init(size_t depth, size_t height, size_t width) {
     resize(depth);
     for (auto& channel : (*this)) {
@@ -13,7 +26,7 @@ void Filter::init(size_t depth, size_t height, size_t width) {
         for (auto& row : channel) {
             row.resize(width);
             for (auto& col : row) {
-                col = Utils::getRandBetween(-1, 1);
+                col = Utils::getWeightRand(10);
             }
         }
     }
@@ -44,4 +57,19 @@ Filter Filter::operator+(const Filter &right) {
     }
 
     return result;
+}
+
+void Filter::velocityUpdateWithWeights(const Filter& incomingAdjustments) {
+	assert (size() == incomingAdjustments.size());
+	assert (at(0).size() == incomingAdjustments.at(0).size());
+	assert (at(0).at(0).size() == incomingAdjustments.at(0).at(0).size());
+	
+	for (size_t ch = 0; ch < size(); ch++) {
+		for (size_t r = 0; r < at(ch).size(); r++) {
+			for (size_t c = 0; c < at(ch).at(r).size(); c++) {
+				(*this)[ch][r][c] *= 0.9;
+				(*this)[ch][r][c] += 0.1 * incomingAdjustments[ch][r][c];
+			}
+		}
+	}
 }
