@@ -7,19 +7,18 @@
 #include <models/VectorMap.h>
 #include <Utils.h>
 #include <cassert>
-#include <cfloat>
 #include <HostTimer.h>
 #include <ProgressBar.h>
 #include <thread>
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
 CapsuleNetwork::CapsuleNetwork() :
-        primaryCaps(Config::inputHeight, Config::inputWidth, 16, 22, 22),
-        digitCaps(10),
-        reconstructionLayers(10*16, 28*28, {28*28}) {
-    // TODO extrapolate this for varying inputs and outputs
+        primaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels*Config::cnInnerDim, 22, 22),
+        digitCaps(Config::numClasses),
+        reconstructionLayers(Config::numClasses*Config::cnOuterDim, Config::inputHeight*Config::inputWidth, {28*28}) {
+    auto totalNumVectors = 6 * 6 * Config::cnNumTensorChannels;
     for (auto& capsule : digitCaps) {
-        capsule.init(8, 16, 72, 10);
+        capsule.init(Config::cnInnerDim, Config::cnOuterDim, totalNumVectors, Config::numClasses);
     }
     reconstructionLayers.init();
 }
@@ -81,6 +80,9 @@ vector<arma::vec> CapsuleNetwork::getReconstructionError(vector<arma::vec> digit
     auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
     auto reconstructionGradient = getErrorGradientImage(image, reconstructionImage);
     auto mlpError = Utils::asCapsuleVectors(16, 10, reconstructionLayers.backPropagateError(reconstructionGradient));
+    for (auto& v : mlpError) {
+        v *= 0.005; // to not dominate as other error
+    }
     return mlpError;
 }
 
@@ -185,11 +187,7 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
         // loss(v)
         auto rawMarginLoss = getMarginLoss(i == targetLabel, output[i]);
 
-//        error[i] = activationDerivativeLength * errorGradient * output[i];
-//        error[i] = (-rawMarginLoss*output[i]) - output[i];
-//        error[i] = normalise(output[i]);
-//        error[i] = Utils::safeNormalise(output[i]);
-         error[i] = 0.01 * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
+         error[i] = Config::getInstance()->getLearningRate() * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
     }
     return error;
 }
@@ -201,10 +199,10 @@ void CapsuleNetwork::runEpoch() {
     for (int i = 0; i < data.size(); i++) {
         vector<arma::vec> output = loadImageAndGetOutput(i);
         vector<arma::vec> error = getErrorGradient(output, data[i].getLabel());
-//        vector<arma::vec> imageError = getReconstructionError(output, i);
+        vector<arma::vec> imageError = getReconstructionError(output, i);
 
         backPropagate(error);
-//        backPropagate(imageError);
+        backPropagate(imageError);
 
         if (i%Config::batchSize == Config::batchSize-1) {
             updateWeights();

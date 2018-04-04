@@ -14,12 +14,18 @@ public:
     double getLearningRate() const;
     void resetLearningRate();
 
-    static const int inputHeight = 28, inputWidth = 28;
-    static const int batchSize = 250;
-    static const int numEpochs = 1000;
-    double learningRate = 0.01;
-    const ActivationType at = SIGMOID;
     static const bool multithreaded = true;
+
+    static const int inputHeight = 28, inputWidth = 28;
+    static const int cnInnerDim = 8, cnOuterDim = 16;
+    static const int cnNumTensorChannels = 2;
+    static const int numClasses = 10;
+
+    static const int batchSize = 250;
+    static const int numEpochs = 600;
+    double learningRate = 0.01;
+
+    const ActivationType at = SIGMOID;
 private:
     Config();
     static Config* instance;

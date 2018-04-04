@@ -75,7 +75,7 @@ double MultilayerPerceptron::tally(bool useTraining) {
 vector<double> MultilayerPerceptron::loadInputAndGetOutput(const vector<double> &input) {
     layers[0].setInput(input);
     for (auto& l : layers) {
-        l.populateOutput();
+        l.forwardPropagate();
     }
     return layers[layers.size()-1].getOutput();
 }
@@ -87,7 +87,7 @@ vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool 
 
     layers[0].setInput(imageAsVector);
     for (auto& l : layers) {
-        l.populateOutput();
+        l.forwardPropagate();
     }
 
     return layers[layers.size()-1].getOutput();

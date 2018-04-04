@@ -5,9 +5,7 @@
 #include <cstdlib>
 #include <Utils.h>
 #include <cassert>
-#include <iostream>
 #include <iomanip>
-#include <Config.h>
 #include <thread>
 
 #include "ConvolutionalNetwork/ConvolutionalLayer.h"
@@ -109,9 +107,6 @@ vector<FeatureMap> ConvolutionalLayer::multiThreadedBackPropagation(const vector
     thread workers[inputMaps.size()];
 
     for (int i = 0; i < inputMaps.size(); i++) {
-        if (workers[i].joinable()) {
-            workers[i].join();
-        }
         workers[i] = thread(&ConvolutionalLayer::m_threading_BackPropagation, this, i, errorGradient);
     }
     for (auto& w : workers) {

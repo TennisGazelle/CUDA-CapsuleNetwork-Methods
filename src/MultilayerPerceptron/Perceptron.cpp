@@ -4,7 +4,6 @@
 
 #include <Utils.h>
 #include <cassert>
-#include <cmath>
 #include <Config.h>
 #include "MultilayerPerceptron/Perceptron.h"
 
@@ -65,7 +64,7 @@ void Perceptron::recordWeightAdjustment(const double error, const vector<double>
     // change w_i by factor of a_i
     for (unsigned int i = 0; i < weights.size(); i++) {
         // by a factor of the previous input for this neuron...
-        double adjustment = (Config::getInstance()->getLearningRate() * prevInput[i] * error);// + (momentum * weightAdjustment[i]);
+        double adjustment = (Config::getInstance()->getLearningRate() * prevInput[i] * error);
         weightAdjustment[i] += adjustment;
     }
 }
