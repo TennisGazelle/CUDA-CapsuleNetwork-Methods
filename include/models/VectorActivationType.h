@@ -1,0 +1,12 @@
+//
+// Created by Daniel Lopez on 3/17/18.
+//
+
+#ifndef NEURALNETS_VECTORACTIVATIONTYPE_H
+#define NEURALNETS_VECTORACTIVATIONTYPE_H
+
+enum VectorActivationType {
+    NON_LINEAR_HINTON
+};
+
+#endif //NEURALNETS_VECTORACTIVATIONTYPE_H

@@ -6,33 +6,26 @@
 #define NEURALNETS_PROGRESSBAR_H
 
 #include <string>
-#include <thread>
 
 using namespace std;
 
 class ProgressBar {
 public:
     ProgressBar(int pSize = 0);
-    ~ProgressBar();
+    ~ProgressBar() = default;
 
     // for progress bar with percentage
     void updateProgress(const int cIndex);
     void setSize(int pSize);
-
-    // for waiting ticker with no percentage
-    void startWait();
-    void endWait();
+    bool stdoutHasTerminal() const;
 
 private:
-    void waitHandler();
 
     int size;
     int currentIndex;
     float percent;
 
     bool waitFlag;
-
-    thread* waitingThread;
 };
 
 

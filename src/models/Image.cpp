@@ -10,6 +10,15 @@ Image::Image() {
     reserve(28*28);
 }
 
+Image::Image(size_t label, const vector<double> &input) {
+    this->label = (unsigned char) label;
+    resize(28*28);
+    assert (size() == input.size());
+    for (int i = 0; i < size(); i++) {
+        (*this)[i] = (unsigned char)(input[i] * 256.0);
+    }
+}
+
 void Image::addRow(const vector<unsigned char> &row) {
     insert(end(), row.begin(), row.end());
 }
@@ -18,9 +27,9 @@ void Image::print() const {
     int index = 0;
     cout << "A [" << int(label) << "]" << endl;
     for (unsigned int i = 0; i < size(); i++) {
-//        if (!(i % 28)) {
-//            cout << index++ << ": ";
-//        }
+        if (!(i % 28)) {
+            cout << index++ << ": ";
+        }
         cout << (int) at(i) << '\t';
         if (!((i+1) % 28)) {
             cout << endl;
@@ -37,6 +46,12 @@ vector<double> Image::toVectorOfDoubles() const {
     return result;
 }
 
+void Image::fromVectorOfDoubles(const vector<double> &input) {
+    for (int i = 0; i < size(); i++) {
+        (*this)[i] = (unsigned char)(input[i] * 256.0);
+    }
+}
+
 size_t Image::getLabel() const {
     return size_t (label);
 }
@@ -51,7 +66,7 @@ FeatureMap Image::toFeatureMap() const {
     for (unsigned int r = 0; r < 28; r++) {
         vector<double> row(28);
         for (unsigned int col = 0; col < 28; col++) {
-            row[col] = double(at(col + (r * 28)));
+            row[col] = double(at(col + (r * 28)))/256.0;
         }
         pixels.push_back(row);
     }

@@ -15,7 +15,9 @@ public:
     void init();
     void calculateOutput();
     void outputLayerToFile(ofstream &fout) const;
-    void backPropagate(const vector<FeatureMap>& errorGradient);
+    vector<FeatureMap> singleThreadedBackPropagate(const vector<FeatureMap>& errorGradient);
+    vector<FeatureMap> multiThreadedBackPropagation(const vector<FeatureMap>& errorGradient);
+    void m_threading_BackPropagation(int inputMapIndex, const vector<FeatureMap>& errorGradient);
     void updateError();
 
     void printKernel(int channel);
@@ -24,8 +26,8 @@ public:
 private:
     double dotMatrixWithFilter(int beginRow, int beginCol, int filterIndex) const;
     // filters (constructor should include how many of them to have)
-    vector<Filter> filters, filterAdjustments; // Note: THESE ARE THE WEIGHTS TO UPDATE
-    vector<FeatureMap> inputDesiredChange;
+    vector<Filter> filters, filterAdjustments, filterVelocities; // Note: THESE ARE THE WEIGHTS TO UPDATE
+    vector<FeatureMap> newErrorGradient;
     size_t filterDepth, filterHeight, filterWidth;
 };
 

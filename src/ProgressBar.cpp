@@ -5,24 +5,21 @@
 #include <cassert>
 #include <iostream>
 #include <thread>
+#include <zconf.h>
 #include "ProgressBar.h"
 
 ProgressBar::ProgressBar(int pSize) :
         size(pSize),
         currentIndex(0),
-        waitFlag(false),
-        waitingThread(nullptr)
-{}
-
-ProgressBar::~ProgressBar() {
-    if (waitingThread != nullptr) {
-        if (waitingThread->joinable());
-            waitingThread->join();
-        delete waitingThread;
-    }
+        waitFlag(false) {
 }
 
 void ProgressBar::updateProgress(const int cIndex) {
+    // If this is redirected to a file or something that may/may not reinterpret
+    // the '\r's that are being printed, stop.
+    if (!stdoutHasTerminal()) {
+        return;
+    }
     assert (size > 0);
 
     // update internal state
@@ -35,8 +32,8 @@ void ProgressBar::updateProgress(const int cIndex) {
      * > |//////////[100%]//////////|
      */
 
-    const int numSubDiv = 50;
-    int numTicks = numSubDiv * percent;
+    const int numSubDiv = 25;
+    auto numTicks = (int) (numSubDiv * percent);
 
     cout << "|";
     for (int i = 0; i < numSubDiv; i++) {
@@ -61,36 +58,6 @@ void ProgressBar::setSize(int pSize) {
     size = pSize;
 }
 
-void ProgressBar::startWait() {
-    // start thread for the wait handler
-    waitFlag = true;
-
-    if (waitingThread) {
-        if (waitingThread->joinable()) {
-            waitingThread->join();
-        }
-        delete waitingThread;
-    }
-
-//    waitingThread = new thread(&ProgressBar::waitHandler, this);
-}
-
-void ProgressBar::waitHandler() {
-    const static int waitTime = 200;
-
-    auto characters = {".", "o", "O", "@", "*"};
-
-    while (waitFlag){
-        for (auto& c : characters) {
-            cout << " " << c << "\r" << flush;
-            std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
-        }
-    }
-}
-
-void ProgressBar::endWait() {
-    // join the thread
-    waitFlag = false;
-    waitingThread->join();
-    cout << "Done!" << endl;
+bool ProgressBar::stdoutHasTerminal() const {
+    return nullptr != ttyname(STDOUT_FILENO);
 }

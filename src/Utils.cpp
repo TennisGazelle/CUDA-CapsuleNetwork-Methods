@@ -3,6 +3,7 @@
 //
 
 #include <random>
+#include <cassert>
 
 #include "Utils.h"
 
@@ -39,4 +40,58 @@ int Utils::reverseInt(int i) {
            ((int) c2 << 16) +
            ((int) c3 << 8) +
            ((int) c4);
+}
+
+long double Utils::square_length(const arma::vec &vn) {
+    long double sum = 0.0;
+    for (auto& v : vn) {
+        sum += pow(v, 2);
+    }
+    return sum;
+}
+
+double Utils::length(const arma::vec &vn) {
+    return (double) sqrt(square_length(vn) + 1e-4);
+}
+
+double Utils::getSquashDerivativeLength(const arma::vec &input) {
+    auto l = length(input);
+    return (2*l) / pow(l*l + 1,2);
+}
+
+arma::vec Utils::squish(const arma::vec &input) {
+    auto lengthSquared = Utils::square_length(input);
+    auto squishingScalar = lengthSquared / (1 + lengthSquared);
+//    return squishingScalar * normalise(input, 1);
+    return squishingScalar * safeNormalise(input);
+}
+
+arma::vec Utils::safeNormalise(arma::vec input) {
+    auto l = length(input);
+    if (l == 0.0) {
+        return input; // a zero vector is itself
+    }
+    return input / l;
+}
+
+vector<double> Utils::getAsOneDim(const vector<arma::vec> &input) {
+    vector<double> result;
+    result.reserve(input.size() * input[0].size());
+    for (int i = 0; i < input.size(); i++) {
+        for (int j = 0; j < input[i].size(); j++) {
+            result.push_back(input[i][j]);
+        }
+    }
+    return result;
+}
+
+vector<arma::vec> Utils::asCapsuleVectors(int dim, int numVectors, const vector<double> &data) {
+    assert (data.size() <= dim*numVectors);
+    vector<arma::vec> result(numVectors, arma::vec(dim, arma::fill::zeros));
+    for (int v = 0; v < numVectors; v++) {
+        for (int d = 0; d < dim; d++) {
+            result[v][d] = data[(v*dim)+d];
+        }
+    }
+    return result;
 }

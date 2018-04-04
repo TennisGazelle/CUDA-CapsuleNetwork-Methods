@@ -20,7 +20,7 @@ public:
     // TODO: break this function down to get the error inputs from the input fields...
     void runEpoch();
     vector<double> backPropagateError(const vector<double>& error);
-    double tallyAndReportAccuracy(bool useTraining = true);
+    double tally(bool useTraining = true);
 
     void writeToFile();
     void writeToFile(ofstream &fout);
