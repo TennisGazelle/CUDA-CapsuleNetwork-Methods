@@ -1,10 +1,14 @@
 #!/usr/bin/python3
 import subprocess
 
+cwd_directory = "../cmake-build-cubix"
+
 batchfileTemplate = "#!/bin/bash\n" \
+                    "#SBATCH --ntasks=1\n" \
                     "#SBATCH --output={0}.log\n" \
                     "#SBATCH --time=24:00:00\n" \
-                    "srun ../cmake-build-debug/NeuralNets \n"
+                    "#SBATCH --cpus-per-task=8\n" \
+                    "srun " + cwd_directory + "/NeuralNets \n"
 
 def slurm_run():
     run_type = "largescale_with_reconstruction"
@@ -19,5 +23,14 @@ def slurm_run():
     # erase file
     subprocess.run(["rm", "-rf", batchfilename])
 
+def recompile():
+    subprocess.run(["rm", "-rf", cwd_directory])
+    subprocess.run(["mkdir", cwd_directory])
+    subprocess.run(["env", "CUDA_BIN_PATH=/usr/local/cuda-9.0", "cmake", ".."], cwd=cwd_directory)
+    subprocess.run(["env", "CUDA_BIN_PATH=/usr/local/cuda-9.0", "make"], cwd=cwd_directory)
+    # subprocess.call("(cd {} && make)".format(cwd_directory))
+    # subprocess.run(["cmake", "--build", cwd_directory, "--target", "NeuralNets", "--", "-j", "4"])
+
 if __name__ == '__main__':
-    slurm_run()
+    recompile()
+    # slurm_run()

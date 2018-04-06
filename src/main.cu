@@ -10,6 +10,7 @@
 #include <models/VectorMap.h>
 #include <cassert>
 #include <CapsuleNetwork/CapsuleNetwork.h>
+#include <models/CUUnifiedBlob.h>
 
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
@@ -121,7 +122,6 @@ void test_FeatureMapsFromVectorMap() {
     }
 
     vector<FeatureMap> maps = VectorMap::toArrayOfFeatureMaps(row, col, inputsDepth, inputs);
-
 }
 
 void test_CapsuleNetwork_ForwardPropagation() {
@@ -240,10 +240,54 @@ void test_CapsuleNetwork_multipleReconstruction() {
     }
 }
 
+void test_CUUnifiedBlob_matrixVectorMultiplication() {
+    int inputDim = 2, outputDim = 3;
+    CUUnifiedBlob v(inputDim), w(inputDim * outputDim), vv(outputDim);
+    v.setValueAt_1D(0, 10);
+    v.setValueAt_1D(1, 120);
+
+    w.setValueAt_2D(0, 0, inputDim, 1.0);
+    w.setValueAt_2D(0, 1, inputDim, 0.0);
+    w.setValueAt_2D(1, 0, inputDim, 0.0);
+    w.setValueAt_2D(1, 1, inputDim, -1.0);
+    w.setValueAt_2D(2, 0, inputDim, 1.0);
+    w.setValueAt_2D(2, 1, inputDim, -1.0);
+
+    vv.clear();
+
+    CUUnifiedBlob::matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
+
+    v.print("v");
+    w.print("w");
+    vv.print("vv");
+}
+
+void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
+    int inputDim = 8, outputDim = 16;
+    CUUnifiedBlob v(inputDim), w(inputDim * outputDim), vv(outputDim);
+    v.setValueAt_1D(0, 10);
+    v.setValueAt_1D(1, 120);
+
+    w.setValueAt_2D(0, 0, inputDim, 1.0);
+    w.setValueAt_2D(0, 1, inputDim, 0.0);
+    w.setValueAt_2D(1, 0, inputDim, 0.0);
+    w.setValueAt_2D(1, 1, inputDim, -1.0);
+    w.setValueAt_2D(2, 0, inputDim, 1.0);
+    w.setValueAt_2D(2, 1, inputDim, -1.0);
+
+    vv.clear();
+    
+    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
+
+    v.print("v");
+    w.print("w");
+    vv.print("vv");
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
-//    test_VectorMapFromFeatureMaps();
+//    test_VectorMapFromFeatureMaps
 //    test_FeatureMapsFromVectorMap();
 
 //    test_CapsuleNetwork_ForwardPropagation();
@@ -253,8 +297,10 @@ int main() {
 //    test_CapsuleNetwork_multipleReconstruction();
 
 //    test_CapsuleNetwork_Epoch();
-    test_NetworkTallyingTiming();
+//    test_NetworkTallyingTiming();
 
+//    test_CUUnifiedBlob_matrixVectorMultiplication();
+    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();
