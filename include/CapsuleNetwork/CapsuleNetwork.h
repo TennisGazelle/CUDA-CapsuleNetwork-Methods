@@ -34,7 +34,6 @@ private:
     // PrimaryCaps -> DigitCaps;
     vector<Capsule> digitCaps; // one cap for each of
     MultilayerPerceptron reconstructionLayers;
-    volatile const int flattenTensorSize = 72;
 };
 
 

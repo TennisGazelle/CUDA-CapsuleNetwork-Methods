@@ -13,7 +13,7 @@
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
 CapsuleNetwork::CapsuleNetwork() :
-        primaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels*Config::cnInnerDim, 22, 22),
+        primaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels*Config::cnInnerDim, 28-6, 28-6),
         digitCaps(Config::numClasses),
         reconstructionLayers(Config::numClasses*Config::cnOuterDim, Config::inputHeight*Config::inputWidth, {28*28}) {
     auto totalNumVectors = 6 * 6 * Config::cnNumTensorChannels;
@@ -34,7 +34,7 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
     primaryCaps.setInput({image});
     primaryCaps.calculateOutput();
     vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
-    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
+    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(Config::cnInnerDim, primaryCapsOutput);
 
     // for each of the digitCaps, make them accept this as input
     vector<arma::vec> outputs(digitCaps.size());
@@ -216,11 +216,13 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
     assert (error.size() == digitCaps.size());
     assert (error[0].size() == 16);
 
-    vector<arma::vec> primaryCapsError(flattenTensorSize, arma::vec(8, arma::fill::zeros));
+    auto flattenedTensorSize = 6 * 6 * Config::cnNumTensorChannels;
+
+    vector<arma::vec> primaryCapsError(flattenedTensorSize, arma::vec(8, arma::fill::zeros));
     // given the error, put this in the last layer and get the error, and give it to the Conv. net
     for (int i = 0; i < error.size(); i++) {
         vector<arma::vec> subset = digitCaps[i].backPropagate(error[i]);
-        for (int j = 0; j < flattenTensorSize; j++) {
+        for (int j = 0; j < flattenedTensorSize; j++) {
             primaryCapsError[i] += subset[i];
         }
     }
@@ -229,7 +231,7 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
         delta_u = derivativeLength * Utils::safeNormalise(delta_u);
     }
     // translate to feature maps
-    vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6, 16, primaryCapsError);
+    vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6, Config::cnNumTensorChannels*Config::cnInnerDim, primaryCapsError);
     // give back to the conv net here.
     primaryCaps.backPropagate(convError);
 }
