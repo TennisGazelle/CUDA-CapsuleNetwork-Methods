@@ -24,12 +24,6 @@ include_directories(${INCLUDES})
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cu")
 
 # finally the exec
-#add_executable(
-#        ${PROJECT_NAME}
-#        ${SOURCES}
-#        ${INCLUDES}
-#)
-
 cuda_add_executable(
         ${PROJECT_NAME}
         ${SOURCES}

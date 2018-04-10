@@ -46,13 +46,16 @@ void CUUnifiedBlob::resize(int newSize) {
     allocateMemory();
 }
 
-void CUUnifiedBlob::print(const string& msg) {
+void CUUnifiedBlob::print(const string& msg, int width) {
     if (!msg.empty()) {
         cout << msg << endl;
     }
-    int bufferSize = min(size, 100);
+    int bufferSize = min(size, 1000);
     for (int i = 0; i < bufferSize; i++) {
-        cout << data[i] << "\t" << endl;
+        cout << data[i] << "\t";
+        if (((i+1) % width) == 0) {
+            cout << endl;
+        }
     }
     cout << endl;
 }
@@ -96,9 +99,10 @@ void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
                                                     int inputDim,
-                                                    int outputDim) {
+                                                    int outputDim,
+                                                    int numMultiplications) {
 
-    cu_matrixVectorMultiplication_helper<<<1, outputDim>>>(matrix.data,
+    cu_matrixVectorMultiplication_helper<<<numMultiplications, outputDim>>>(matrix.data,
                                                     inputVector.data,
                                                     outputVector.data,
                                                     inputDim,
@@ -111,8 +115,10 @@ void cu_matrixVectorMultiplication_helper(double *matrix,
                                           double *outputVector,
                                           int inputDim,
                                           int outputDim) {
-    int r = threadIdx.x;
+    int u_hat_index = threadIdx.x + (blockIdx.x * outputDim);
+    double cache = 0.0;
     for (int c = 0; c < inputDim; c++) {
-        outputVector[r] += matrix[r*inputDim+c] * inputVector[c];
+        cache += matrix[u_hat_index*inputDim+c] * inputVector[blockIdx.x*inputDim+c];
     }
+    outputVector[u_hat_index] = cache;
 }

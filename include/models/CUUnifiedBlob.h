@@ -16,7 +16,7 @@ public:
     ~CUUnifiedBlob();
     void resize(int newSize);
     void clear();
-    void print(const string& msg = "");
+    void print(const string& msg = "", int width = 1);
 
     void setValueAt_1D(int location, double incomingValue);
     void setValueAt_2D(int x, int y, int xDim, double incomingValue);
@@ -32,7 +32,8 @@ public:
                                                 CUUnifiedBlob &inputVector,
                                                 CUUnifiedBlob &outputVector,
                                                 int inputDim,
-                                                int outputDim);
+                                                int outputDim,
+                                                int numMultiplications);
 
 private:
 

@@ -256,31 +256,33 @@ void test_CUUnifiedBlob_matrixVectorMultiplication() {
     vv.clear();
 
     CUUnifiedBlob::matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
-
     v.print("v");
     w.print("w");
     vv.print("vv");
 }
 
 void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
-    int inputDim = 8, outputDim = 16;
-    CUUnifiedBlob v(inputDim), w(inputDim * outputDim), vv(outputDim);
-    v.setValueAt_1D(0, 10);
-    v.setValueAt_1D(1, 120);
+    int inputDim = 8, outputDim = 16, numMultiples=2;
+    CUUnifiedBlob v(inputDim * numMultiples),
+                  w(inputDim * outputDim * numMultiples),
+                 vv(outputDim * numMultiples);
 
-    w.setValueAt_2D(0, 0, inputDim, 1.0);
-    w.setValueAt_2D(0, 1, inputDim, 0.0);
-    w.setValueAt_2D(1, 0, inputDim, 0.0);
-    w.setValueAt_2D(1, 1, inputDim, -1.0);
-    w.setValueAt_2D(2, 0, inputDim, 1.0);
-    w.setValueAt_2D(2, 1, inputDim, -1.0);
+    for (int i = 0; i < inputDim; i++) {
+        v.setValueAt_1D(i, i);
+        v.setValueAt_1D(i+inputDim, i*10);
 
+        w.setValueAt_2D(i, i, inputDim, 1.0);
+        w.setValueAt_2D(i+inputDim, i, inputDim, 1.0);
+        w.setValueAt_2D(i+2*inputDim, i, inputDim, 1.0);
+        w.setValueAt_2D(i+3*inputDim, i, inputDim, 1.0);
+    }
     vv.clear();
-    
-    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
+
+
+    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim, numMultiples);
 
     v.print("v");
-    w.print("w");
+    w.print("w", inputDim);
     vv.print("vv");
 }
 
