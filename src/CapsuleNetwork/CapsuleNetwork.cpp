@@ -205,7 +205,7 @@ void CapsuleNetwork::runEpoch() {
         backPropagate(imageError);
 
         if (i%Config::batchSize == Config::batchSize-1) {
-            updateWeights();
+            batchUpdate();
 //            loadImageAndPrintOutput(i);
         }
         pb.updateProgress(i);
@@ -279,7 +279,7 @@ double CapsuleNetwork::getMarginLossGradient(bool isPresent, const arma::vec &v_
     return value;
 }
 
-void CapsuleNetwork::updateWeights() {
+void CapsuleNetwork::batchUpdate() {
     primaryCaps.updateError();
     for (auto& cap : digitCaps) {
         cap.updateWeights();
@@ -311,4 +311,14 @@ vector<double> CapsuleNetwork::getErrorGradientImage(const Image& truth, const v
         gradient[i] = networkOutput[i] * (1-networkOutput[i]) * (truth[i] - networkOutput[i]);
     }
     return gradient;
+}
+
+void CapsuleNetwork::writeToFile() const {
+    // build the filename
+    string outputfileName = "../bin/layer_weights/caps";
+
+}
+
+void CapsuleNetwork::writeToFile(ofstream &fout) const {
+
 }

@@ -76,17 +76,18 @@ void ConvolutionalNetwork::train() {
 }
 
 void ConvolutionalNetwork::writeToFile() const {
-    cout << "saving..." << endl;
-    string outputfileName = "../bin/layer_weights/cnn";
-    for (auto ptr : layers) {
-        if (typeid(*ptr) == typeid(ConvolutionalLayer)) {
-            outputfileName += "-c" + to_string(ptr->outputMaps.size());
-        } else if (typeid(*ptr) == typeid(PoolingLayer)) {
+    string outputfileName = "../bin/testing/cnn";
+
+    for (int layer_index = 0; layer_index < layers.size(); layer_index++) {
+        if (typeid(*layers[layer_index]) == typeid(ConvolutionalLayer)) {
+            outputfileName += "-c" + to_string(layers[layer_index]->outputMaps.size());
+        } else {
             outputfileName += "-p";
         }
     }
-    for (auto num : finalLayers->getSizes()) {
-        outputfileName += "-" + to_string(num);
+    outputfileName += "-mlp";
+    for (int final_layer_index = 0; final_layer_index < finalLayers->getSizes().size(); final_layer_index++) {
+        outputfileName += "-" + to_string(finalLayers->getSizes()[final_layer_index]);
     }
     outputfileName += ".nnet";
 

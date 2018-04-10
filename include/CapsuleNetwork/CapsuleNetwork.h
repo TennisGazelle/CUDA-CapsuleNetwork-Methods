@@ -22,7 +22,14 @@ public:
     void backPropagate(vector<arma::vec> error);
     void runEpoch();
     void train();
-    void updateWeights();
+    void batchUpdate();
+
+    void writeToFile() const;
+    void writeToFile(ofstream &fout) const;
+    bool readFromFile(const string& filename);
+    bool readFromFile(ifstream &fin);
+    bool getLayerFromFile(ifstream &fin);
+
 
     long double getTotalMarginLoss(int targetLabel, const vector<arma::vec>& output) const;
     double getMarginLoss(bool isPresent, const arma::vec& v_k) const;

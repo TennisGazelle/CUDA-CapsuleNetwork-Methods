@@ -22,8 +22,8 @@ public:
     vector<double> backPropagateError(const vector<double>& error);
     double tally(bool useTraining = true);
 
-    void writeToFile();
-    void writeToFile(ofstream &fout);
+    void writeToFile() const;
+    void writeToFile(ofstream &fout) const;
     bool readFromFile(const string& filename);
     bool readFromFile(ifstream &fin);
     bool getLayerFromFile(ifstream& fin);

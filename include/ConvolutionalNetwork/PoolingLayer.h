@@ -13,6 +13,7 @@ public:
     explicit PoolingLayer(ICNLayer* parent, PoolingType pt = MAX, size_t sSize = 2, size_t wHeight = 5, size_t wWidth = 5);
     void init();
     void calculateOutput();
+    void outputLayerToFile(ofstream &fout) const;
     vector<FeatureMap> singleThreadedBackPropagate(const vector<FeatureMap>& errorGradient);
     vector<FeatureMap> multiThreadedBackPropagation(const vector<FeatureMap>& errorGradient);
     void updateError() = 0; // TODO write this eventually

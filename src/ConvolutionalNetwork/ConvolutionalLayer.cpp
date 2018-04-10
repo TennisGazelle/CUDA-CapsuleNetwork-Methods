@@ -23,6 +23,8 @@ ConvolutionalLayer::ConvolutionalLayer(size_t iHeight, size_t iWidth, size_t num
 ConvolutionalLayer::ConvolutionalLayer(ICNLayer* pParent, size_t numFilters, size_t fHeight, size_t fWidth)
         : filterDepth(pParent->outputMaps.size()), filterHeight(fHeight), filterWidth(fWidth) {
     filters.resize(numFilters);
+    filterAdjustments.resize(numFilters);
+    filterVelocities.resize(numFilters);
     setParentLayer(pParent);
     setInputDimension(parent->outputMaps.size(), parent->outputHeight, parent->outputWidth);
     init();
@@ -194,6 +196,7 @@ void ConvolutionalLayer::outputLayerToFile(ofstream& fout) const {
     // specs of convolutional layers
     fout << filters.size() << " " << filterHeight << " " << filterWidth << endl;
     for (int filterIndex = 0; filterIndex < filters.size(); filterIndex++) {
+        fout << "start of filter " << filterIndex << ":" << endl;
         for (int ch = 0; ch < filterDepth; ch++) {
             for (int r = 0; r < filterHeight; r++) {
                 for (int c = 0; c < filterWidth; c++) {
@@ -201,8 +204,11 @@ void ConvolutionalLayer::outputLayerToFile(ofstream& fout) const {
                 }
                 fout << endl;
             }
-            fout << endl;
+            if (ch != filterDepth - 1) {
+                fout << endl;
+            }
         }
+        fout << "end" << endl;
     }
 }
 

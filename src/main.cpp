@@ -158,7 +158,7 @@ void test_CapsuleNetwork_Epoch() {
         capsuleNetwork.backPropagate(error);
 
         if (i%batchSize == batchSize-1) {
-            capsuleNetwork.updateWeights();
+            capsuleNetwork.batchUpdate();
             capsuleNetwork.loadImageAndPrintOutput(i);
         }
         pb.updateProgress(i);
@@ -209,7 +209,7 @@ void test_CapsuleNetwork_reconstruction() {
 
     capsuleNetwork.backPropagate(capsuleError);
     capsuleNetwork.backPropagate(mlpError);
-    capsuleNetwork.updateWeights();
+    capsuleNetwork.batchUpdate();
 
     vector<arma::vec> updatedOutput = capsuleNetwork.loadImageAndGetOutput(0);
 
@@ -230,7 +230,7 @@ void test_CapsuleNetwork_multipleReconstruction() {
 
         capsuleNetwork.backPropagate(capsuleError);
         capsuleNetwork.backPropagate(mlpError);
-        capsuleNetwork.updateWeights();
+        capsuleNetwork.batchUpdate();
     }
 
     vector<arma::vec> updatedOutput = capsuleNetwork.loadImageAndGetOutput(4);
@@ -238,6 +238,12 @@ void test_CapsuleNetwork_multipleReconstruction() {
     for (int i = 0; i < 10; i++) {
         cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(updatedOutput[i])) << endl;
     }
+}
+
+void test_fileIO_ConvNetwork() {
+    ConvolutionalNetwork cnn;
+    cnn.init();
+    cnn.writeToFile();
 }
 
 int main() {
@@ -252,8 +258,10 @@ int main() {
 //    test_CapsuleNetwork_reconstruction();
 //    test_CapsuleNetwork_multipleReconstruction();
 
+    test_fileIO_ConvNetwork();
+
 //    test_CapsuleNetwork_Epoch();
-    test_NetworkTallyingTiming();
+//    test_NetworkTallyingTiming();
 
 
 //    ConvolutionalNetwork cnn;

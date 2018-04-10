@@ -148,11 +148,11 @@ vector<double> MultilayerPerceptron::backPropagateError(const vector<double> &er
     return layers[layers.size()-1].backPropagate(error);
 }
 
-void MultilayerPerceptron::writeToFile() {
+void MultilayerPerceptron::writeToFile() const {
     // build the filename
     string outputfileName = "../bin/layer_weights/mlp";
-    for (auto& l : layerSizes) {
-        outputfileName += "-" + to_string(l);
+    for (int i = 0; i < layerSizes.size(); i++) {
+        outputfileName += "-" + to_string(layerSizes[i]);
     }
     outputfileName += ".nnet";
 
@@ -162,7 +162,7 @@ void MultilayerPerceptron::writeToFile() {
     fout.close();
 }
 
-void MultilayerPerceptron::writeToFile(ofstream &fout) {
+void MultilayerPerceptron::writeToFile(ofstream &fout) const {
     // output how many layers
     fout << layers.size() << endl;
     // for each layer

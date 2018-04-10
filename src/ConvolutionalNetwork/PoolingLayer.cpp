@@ -111,3 +111,9 @@ void PoolingLayer::updateError() {
 
     parent->updateError();
 }
+
+void PoolingLayer::outputLayerToFile(ofstream &fout) const {
+    fout << windowHeight << " " << windowWidth << " " << strideSize << endl;
+    // TODO: make string for this enum (and back for reading)
+    //fout << to_string(poolingType) << endl;
+}
