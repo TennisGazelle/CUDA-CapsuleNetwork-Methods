@@ -27,18 +27,21 @@ public:
                                            CUUnifiedBlob& outputVector,
                                            int inputDim,
                                            int outputDim);
-
     static void CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                 CUUnifiedBlob &inputVector,
                                                 CUUnifiedBlob &outputVector,
                                                 int inputDim,
                                                 int outputDim,
                                                 int numMultiplications);
-
+    static void vectorVectorSoftmax(CUUnifiedBlob& b,
+                                    CUUnifiedBlob& c,
+                                    int numClasses,
+                                    int tensorSize);
+    static void CUDA_vectorVectorSoftmax(CUUnifiedBlob& b,
+                                         CUUnifiedBlob& c,
+                                         int numClasses,
+                                         int tensorSize);
 private:
-
-
-
     void allocateMemory();
     void deallocateMemory();
     int size;
@@ -47,10 +50,13 @@ private:
 };
 
 __global__
-void cu_matrixVectorMultiplication_helper(double* matrix,
+void cu_matrixVectorMultiplication_kernel(double* matrix,
                                           double* inputVector,
                                           double* outputVector,
                                           int inputDim,
                                           int outputDim);
+
+__global__
+void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize, int offset);
 
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

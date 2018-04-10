@@ -5,7 +5,9 @@
 #include <cassert>
 #include <CUDAUtils.h>
 #include <iostream>
+#include <cmath>
 #include "models/CUUnifiedBlob.h"
+#include "CUDAUtils.h"
 
 using namespace std;
 
@@ -95,30 +97,77 @@ void CUUnifiedBlob::matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedB
     }
 }
 
+void CUUnifiedBlob::vectorVectorSoftmax(CUUnifiedBlob& b, CUUnifiedBlob& c,
+                                        int numClasses, int tensorSize) {
+    for (int k = 0; k < numClasses; k++) {
+        double sum_b_exps = 0.0;
+        for (int t = 0; t < tensorSize; t++) {
+            sum_b_exps += exp(b.data[t*numClasses + k]);
+        }
+
+        // then go through the c's and set accordingly
+        for (int t = 0; t < tensorSize; t++) {
+            c.data[t*numClasses + k] = exp(b.data[t*numClasses + k])/ sum_b_exps;
+        }
+    }
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
                                                     int inputDim,
                                                     int outputDim,
                                                     int numMultiplications) {
-
-    cu_matrixVectorMultiplication_helper<<<numMultiplications, outputDim>>>(matrix.data,
+    cu_matrixVectorMultiplication_kernel<<<numMultiplications, outputDim>>>(matrix.data,
                                                     inputVector.data,
                                                     outputVector.data,
                                                     inputDim,
                                                     outputDim);
 }
 
+void CUUnifiedBlob::CUDA_vectorVectorSoftmax(CUUnifiedBlob &b,
+                                             CUUnifiedBlob &c,
+                                             int numClasses,
+                                             int tensorSize) {
+    int offset = 0;
+    do {
+        unsigned int numThreadsToAllocate = (unsigned int) min(1024, tensorSize);
+        cu_vectorVectorSoftmax_kernel<<<numClasses, numThreadsToAllocate, numThreadsToAllocate*sizeof(double)>>>(b.data, c.data, numClasses, tensorSize, offset);
+        tensorSize -= numThreadsToAllocate;
+        offset++;
+    } while (tensorSize > 0);
+}
+
 __global__
-void cu_matrixVectorMultiplication_helper(double *matrix,
-                                          double *inputVector,
-                                          double *outputVector,
-                                          int inputDim,
-                                          int outputDim) {
+void cu_matrixVectorMultiplication_kernel(double *matrix, double *inputVector, double *outputVector,
+                                          int inputDim, int outputDim) {
     int u_hat_index = threadIdx.x + (blockIdx.x * outputDim);
     double cache = 0.0;
     for (int c = 0; c < inputDim; c++) {
         cache += matrix[u_hat_index*inputDim+c] * inputVector[blockIdx.x*inputDim+c];
     }
     outputVector[u_hat_index] = cache;
+}
+
+__global__
+void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize, int offset) {
+    int t = threadIdx.x + offset;
+    int k = blockIdx.x;
+
+    extern __shared__
+    double shared_b_exps[];
+
+    double my_exp_b = exp(b[t*numClasses+k]); // consider using hexp() for speed
+    shared_b_exps[t] = my_exp_b;
+    __syncthreads();
+
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        if (t % (2*s) == 0) {
+            shared_b_exps[t] += shared_b_exps[t + s];
+        }
+        __syncthreads();
+    }
+
+    double sum_exps = shared_b_exps[0];
+    c[t*numClasses + k] = my_exp_b / sum_exps;
 }

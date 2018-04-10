@@ -278,12 +278,31 @@ void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
     }
     vv.clear();
 
-
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim, numMultiples);
 
     v.print("v");
     w.print("w", inputDim);
     vv.print("vv");
+}
+
+void test_CUUnifiedBlob_CUDA_softmax() {
+    int numClasses = 10, flattenedTensorSize = 45;
+    CUUnifiedBlob bMatrix(numClasses * flattenedTensorSize),
+                  cMatrix(numClasses * flattenedTensorSize);
+
+    for (int k = 0; k < numClasses; k++) {
+        for (int t = 0; t < flattenedTensorSize; t++) {
+            bMatrix.setValueAt_2D(t, k, numClasses, t);
+        }
+    }
+    cMatrix.clear();
+    bMatrix.print("b:", numClasses);
+
+//    CUUnifiedBlob::vectorVectorSoftmax(bMatrix, cMatrix, numClasses, flattenedTensorSize);
+//    cMatrix.print("c sequentially :", numClasses);
+//    cMatrix.clear();
+    CUUnifiedBlob::CUDA_vectorVectorSoftmax(bMatrix, cMatrix, numClasses, flattenedTensorSize);
+    cMatrix.print("c in cuda      :", numClasses);
 }
 
 int main() {
@@ -302,7 +321,8 @@ int main() {
 //    test_NetworkTallyingTiming();
 
 //    test_CUUnifiedBlob_matrixVectorMultiplication();
-    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
+//    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
+    test_CUUnifiedBlob_CUDA_softmax();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();
