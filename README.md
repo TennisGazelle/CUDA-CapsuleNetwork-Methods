@@ -24,4 +24,13 @@ cd build/
 ./NeuralNets
 ```
 
+## Running on Slurm
+Assuming a `slurm` based cluster is in use with potentially mulitple gpus available in the same node (multi-gpu on multi-node pending), a Python 3 script that generates a batch script and will run it is in place.
+This resulting batch script enables job queueing with `squeue` and `sbatch`.
+```bash
+cd slurm
+chmod +x run.py
+./run.py
+```
+
 Nothing too special comes up yet, look at the file `src/main.cpp` to see what you're supposed to do right now.

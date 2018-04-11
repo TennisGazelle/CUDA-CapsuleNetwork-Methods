@@ -4,7 +4,6 @@
 
 #include <cassert>
 #include <Utils.h>
-#include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
 void Capsule::init(int iD, int oD, int inputs, int outputs) {
@@ -127,4 +126,11 @@ void Capsule::updateWeights() {
 
 arma::vec Capsule::getOutput() const {
     return output;
+}
+
+void Capsule::outputCapsuleToFile(ofstream &fout) const {
+    for (int i = 0; i < weightMatrices.size(); i++) {
+        fout << "weight matrix " << i << endl;
+        fout << weightMatrices[i] << endl;
+    }
 }

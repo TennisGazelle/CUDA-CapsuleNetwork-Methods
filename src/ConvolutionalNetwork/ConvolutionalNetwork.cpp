@@ -115,8 +115,8 @@ void ConvolutionalNetwork::writeToFile(ofstream &fout) const {
     fout << endl;
 
     // layer data
-    for (auto ptr : layers) {
-        ptr->outputLayerToFile(fout);
+    for (int i = 0; i < layers.size(); i++) {
+        layers[i]->outputLayerToFile(fout);
     }
 
     if (finalLayers) {

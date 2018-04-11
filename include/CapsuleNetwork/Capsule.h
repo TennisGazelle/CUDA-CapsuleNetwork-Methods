@@ -20,6 +20,7 @@ public:
     arma::vec forwardPropagate(const vector<arma::vec>& u);
     void updateWeights();
     arma::vec getOutput() const;
+    void outputCapsuleToFile(ofstream &fout) const;
 
 private:
     arma::vec routingAlgorithm();

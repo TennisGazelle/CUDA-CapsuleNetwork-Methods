@@ -241,9 +241,8 @@ void test_CapsuleNetwork_multipleReconstruction() {
 }
 
 void test_fileIO_ConvNetwork() {
-    ConvolutionalNetwork cnn;
-    cnn.init();
-    cnn.writeToFile();
+    CapsuleNetwork capsNet;
+    capsNet.writeToFile();
 }
 
 int main() {

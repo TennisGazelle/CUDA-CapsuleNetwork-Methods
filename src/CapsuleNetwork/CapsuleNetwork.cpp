@@ -15,7 +15,7 @@
 CapsuleNetwork::CapsuleNetwork() :
         primaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels*Config::cnInnerDim, 28-6, 28-6),
         digitCaps(Config::numClasses),
-        reconstructionLayers(Config::numClasses*Config::cnOuterDim, Config::inputHeight*Config::inputWidth, {28*28}) {
+        reconstructionLayers(Config::numClasses*Config::cnOuterDim, Config::inputHeight*Config::inputWidth, {1024}) {
     auto totalNumVectors = 6 * 6 * Config::cnNumTensorChannels;
     for (auto& capsule : digitCaps) {
         capsule.init(Config::cnInnerDim, Config::cnOuterDim, totalNumVectors, Config::numClasses);
@@ -319,8 +319,39 @@ void CapsuleNetwork::writeToFile() const {
     // build the filename
     string outputfileName = "../bin/layer_weights/caps";
 
+    // primary caps
+    outputfileName += "-c" + to_string(primaryCaps.outputMaps.size());
+
+    //  digit caps
+    outputfileName += "-caps" + to_string(Config::cnNumTensorChannels) + "-" + to_string(Config::cnInnerDim) + "-" + to_string(Config::cnOuterDim);
+
+    // reconstruction layers
+    outputfileName += "-mlp";
+    for (int final_layer_index = 0; final_layer_index < reconstructionLayers.getSizes().size(); final_layer_index++) {
+        outputfileName += "-" + to_string(reconstructionLayers.getSizes()[final_layer_index]);
+    }
+    outputfileName += ".nnet";
+
+    // make an fout
+    ofstream fout;
+    // output your own stuff
+    fout.open(outputfileName);
+    writeToFile(fout);
+    fout.close();
+
 }
 
 void CapsuleNetwork::writeToFile(ofstream &fout) const {
+    fout << "c " << "caps " << "mlp " << endl;
 
+    primaryCaps.outputLayerToFile(fout);
+
+    fout << "caps " << to_string(6*6*Config::cnNumTensorChannels) << " " << to_string(Config::cnInnerDim) << " " << to_string(Config::cnOuterDim) << endl;
+    for (int i = 0; i < digitCaps.size(); i++) {
+        fout << i << endl;
+        digitCaps[i].outputCapsuleToFile(fout);
+        fout << "***" << endl;
+    }
+
+    reconstructionLayers.writeToFile(fout);
 }
