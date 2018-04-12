@@ -33,6 +33,7 @@ public:
                                                 int inputDim,
                                                 int outputDim,
                                                 int numMultiplications);
+
     static void vectorVectorSoftmax(CUUnifiedBlob& b,
                                     CUUnifiedBlob& c,
                                     int numClasses,
@@ -41,6 +42,19 @@ public:
                                          CUUnifiedBlob& c,
                                          int numClasses,
                                          int tensorSize);
+
+    static void weightReduceVectors(CUUnifiedBlob &u_hat,
+                                    CUUnifiedBlob &c,
+                                    CUUnifiedBlob &v,
+                                    int numClasses,
+                                    int tensorSize,
+                                    int dim);
+    static void CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
+                                         CUUnifiedBlob &c,
+                                         CUUnifiedBlob &v,
+                                         int numClasses,
+                                         int tensorSize,
+                                         int dim);
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -50,13 +64,12 @@ private:
 };
 
 __global__
-void cu_matrixVectorMultiplication_kernel(double* matrix,
-                                          double* inputVector,
-                                          double* outputVector,
-                                          int inputDim,
-                                          int outputDim);
+void cu_matrixVectorMultiplication_kernel(double* matrix, double* inputVector, double* outputVector, int inputDim, int outputDim);
 
 __global__
 void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize, int offset);
+
+__global__
+void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset);
 
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

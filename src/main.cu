@@ -240,27 +240,6 @@ void test_CapsuleNetwork_multipleReconstruction() {
     }
 }
 
-void test_CUUnifiedBlob_matrixVectorMultiplication() {
-    int inputDim = 2, outputDim = 3;
-    CUUnifiedBlob v(inputDim), w(inputDim * outputDim), vv(outputDim);
-    v.setValueAt_1D(0, 10);
-    v.setValueAt_1D(1, 120);
-
-    w.setValueAt_2D(0, 0, inputDim, 1.0);
-    w.setValueAt_2D(0, 1, inputDim, 0.0);
-    w.setValueAt_2D(1, 0, inputDim, 0.0);
-    w.setValueAt_2D(1, 1, inputDim, -1.0);
-    w.setValueAt_2D(2, 0, inputDim, 1.0);
-    w.setValueAt_2D(2, 1, inputDim, -1.0);
-
-    vv.clear();
-
-    CUUnifiedBlob::matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
-    v.print("v");
-    w.print("w");
-    vv.print("vv");
-}
-
 void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
     int inputDim = 8, outputDim = 16, numMultiples=2;
     CUUnifiedBlob v(inputDim * numMultiples),
@@ -278,6 +257,7 @@ void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
     }
     vv.clear();
 
+//    CUUnifiedBlob::matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim, numMultiples);
 
     v.print("v");
@@ -305,6 +285,31 @@ void test_CUUnifiedBlob_CUDA_softmax() {
     cMatrix.print("c in cuda      :", numClasses);
 }
 
+void test_CUUnifiedBlob_CUDA_weightReduceAndSquash() {
+    int numClasses = 2, flattenedTensorSize = 10, outputDim = 3;
+    CUUnifiedBlob cMatrix(numClasses * flattenedTensorSize),
+                  u_hat(numClasses * flattenedTensorSize * outputDim),
+                  v(numClasses * outputDim);
+
+    int i = 1;
+    for (int t = 0; t < flattenedTensorSize; t++) {
+        for (int k = 0; k < numClasses; k++)  {
+            cMatrix.setValueAt_2D(t, k, numClasses, i);
+//            u_hat.setValueAt_2D(t, k*outputDim, numClasses*outputDim, i++);
+            for (int j = 0; j < outputDim; j++) {
+                u_hat.setValueAt_2D(t, k*outputDim + j, numClasses*outputDim, i+j);
+            }
+            i++;
+        }
+    }
+    cMatrix.print("c", numClasses);
+    u_hat.print("u_hat", numClasses*outputDim);
+//    CUUnifiedBlob::weightReduceVectors(u_hat, cMatrix, v, numClasses, flattenedTensorSize, outputDim);
+    CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, cMatrix, v, numClasses, flattenedTensorSize, outputDim);
+    u_hat.print("u_hat", numClasses*outputDim);
+    v.print("v", numClasses*outputDim);
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
@@ -320,9 +325,10 @@ int main() {
 //    test_CapsuleNetwork_Epoch();
 //    test_NetworkTallyingTiming();
 
-//    test_CUUnifiedBlob_matrixVectorMultiplication();
 //    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
-    test_CUUnifiedBlob_CUDA_softmax();
+//    test_CUUnifiedBlob_CUDA_softmax();
+
+    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

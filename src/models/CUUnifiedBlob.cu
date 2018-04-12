@@ -91,7 +91,6 @@ void CUUnifiedBlob::matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedB
 
     for (int i = 0; i < outputDim; i++) {
         for (int j = 0; j < inputDim; j++) {
-            cout << "output at += : " << i << " matrix:[" << i  << ", " << j << "]" << endl;
             outputVector.data[i] += inputVector.data[j] * matrix.data[i*inputDim + j];
         }
     }
@@ -108,6 +107,20 @@ void CUUnifiedBlob::vectorVectorSoftmax(CUUnifiedBlob& b, CUUnifiedBlob& c,
         // then go through the c's and set accordingly
         for (int t = 0; t < tensorSize; t++) {
             c.data[t*numClasses + k] = exp(b.data[t*numClasses + k])/ sum_b_exps;
+        }
+    }
+}
+
+void CUUnifiedBlob::weightReduceVectors(CUUnifiedBlob &u_hat, CUUnifiedBlob &c, CUUnifiedBlob &v, int numClasses,
+                                        int tensorSize, int dim) {
+    for (int k = 0; k < numClasses; k++) {
+        for (int t = 0; t < tensorSize; t++) {
+            int u_hat_index = t*numClasses*dim + k*dim;
+
+            for (int i = u_hat_index; i < u_hat_index + dim; i++) {
+                u_hat.data[i] *= c.data[t*numClasses+k];
+                v.data[i % (numClasses*dim)] += u_hat.data[i];
+            }
         }
     }
 }
@@ -135,6 +148,22 @@ void CUUnifiedBlob::CUDA_vectorVectorSoftmax(CUUnifiedBlob &b,
         cu_vectorVectorSoftmax_kernel<<<numClasses, numThreadsToAllocate, numThreadsToAllocate*sizeof(double)>>>(b.data, c.data, numClasses, tensorSize, offset);
         tensorSize -= numThreadsToAllocate;
         offset++;
+    } while (tensorSize > 0);
+}
+
+void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
+                                             CUUnifiedBlob &c,
+                                             CUUnifiedBlob &v,
+                                             int numClasses,
+                                             int tensorSize,
+                                             int dim) {
+    dim3 blockDimensions(numClasses, dim);
+    int offset = 0;
+    do {
+    	unsigned int numThreadsToAllocate = (unsigned int) min(1024, tensorSize);
+    	cu_weightReduceVector_kernel<<<blockDimensions, tensorSize, tensorSize*sizeof(double)>>>(u_hat.data, c.data, v.data, numClasses, tensorSize, dim, offset);
+    	tensorSize -= numThreadsToAllocate;
+    	offset++;
     } while (tensorSize > 0);
 }
 
@@ -170,4 +199,31 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
 
     double sum_exps = shared_b_exps[0];
     c[t*numClasses + k] = my_exp_b / sum_exps;
+}
+
+__global__
+void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset) {
+    int k = blockIdx.x;
+    int specificDim = blockIdx.y;
+    int t = threadIdx.x + offset;
+
+    int u_hat_index = t*numClasses*dim + k*dim;
+
+    extern __shared__
+    double shared_v_vec[];
+
+    u_hat[u_hat_index + specificDim] *= c[t*numClasses+k];
+    shared_v_vec[t] = u_hat[u_hat_index + specificDim] * c[t*numClasses+k];
+
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        if (t % (2*s) == 0) {
+            shared_v_vec[t] += shared_v_vec[t + s];
+        }
+        __syncthreads();
+    }
+    double sum_exps = shared_v_vec[0];
+
+    if (t == 0) {
+        v[k*dim + specificDim] = shared_v_vec[0];
+    }
 }
