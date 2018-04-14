@@ -195,9 +195,9 @@ void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
     dim3 blockDimensions(numClasses, dim);
     int offset = 0;
     do {
-    	unsigned int numThreadsToAllocate = (unsigned int) min(1024, tensorSize);
+    	unsigned int numBlocksToAllocate = (unsigned int) min(1024, tensorSize);
     	cu_weightReduceVector_kernel<<<blockDimensions, tensorSize, tensorSize*sizeof(double)>>>(u_hat.data, c.data, v.data, numClasses, tensorSize, dim, offset);
-    	tensorSize -= numThreadsToAllocate;
+    	tensorSize -= numBlocksToAllocate;
     	offset++;
     } while (tensorSize > 0);
 }
@@ -251,9 +251,9 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
 
 __global__
 void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset) {
-    int k = blockIdx.x * gridDim.x + blockIdx.y;
+    int k = blockIdx.x;
     int specificDim = blockIdx.y;
-    int t = threadIdx.x + offset;
+    int t = threadIdx.x;
 
     int u_hat_index = t*numClasses*dim + k*dim;
 
@@ -261,7 +261,7 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
     double shared_v_vec[];
 
     u_hat[u_hat_index + specificDim] *= c[t*numClasses+k];
-    shared_v_vec[t] = u_hat[u_hat_index + specificDim] * c[t*numClasses+k];
+    shared_v_vec[t] = u_hat[u_hat_index + specificDim];
     __syncthreads();
 
     for (unsigned int s = 1; s < blockDim.x; s *= 2) {
@@ -270,7 +270,6 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
         }
         __syncthreads();
     }
-    double sum_exps = shared_v_vec[0];
 
     if (t == 0) {
         v[k*dim + specificDim] = shared_v_vec[0];

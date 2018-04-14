@@ -289,25 +289,34 @@ void test_CUUnifiedBlob_CUDA_weightReduceAndSquash() {
     int numClasses = 2, flattenedTensorSize = 10, outputDim = 3;
     CUUnifiedBlob cMatrix(numClasses * flattenedTensorSize),
                   u_hat(numClasses * flattenedTensorSize * outputDim),
-                  v(numClasses * outputDim);
+                  u_hat_cuda_output(numClasses * flattenedTensorSize * outputDim),
+                  v(numClasses * outputDim),
+                  v_cuda_output(numClasses * outputDim);
 
     int i = 1;
     for (int t = 0; t < flattenedTensorSize; t++) {
         for (int k = 0; k < numClasses; k++)  {
             cMatrix.setValueAt_2D(t, k, numClasses, i);
-//            u_hat.setValueAt_2D(t, k*outputDim, numClasses*outputDim, i++);
             for (int j = 0; j < outputDim; j++) {
                 u_hat.setValueAt_2D(t, k*outputDim + j, numClasses*outputDim, i+j);
+                u_hat_cuda_output.setValueAt_2D(t, k*outputDim + j, numClasses*outputDim, i+j);
             }
             i++;
         }
     }
     cMatrix.print("c", numClasses);
+    u_hat.print("u_hat (original)", numClasses*outputDim);
+    CUUnifiedBlob::weightReduceVectors(u_hat, cMatrix, v, numClasses, flattenedTensorSize, outputDim);
+    CUUnifiedBlob::CUDA_weightReduceVectors(u_hat_cuda_output, cMatrix, v_cuda_output, numClasses, flattenedTensorSize, outputDim);
+
     u_hat.print("u_hat", numClasses*outputDim);
-//    CUUnifiedBlob::weightReduceVectors(u_hat, cMatrix, v, numClasses, flattenedTensorSize, outputDim);
-    CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, cMatrix, v, numClasses, flattenedTensorSize, outputDim);
-    u_hat.print("u_hat", numClasses*outputDim);
+    u_hat_cuda_output.print("u_hat (cuda)", numClasses*outputDim);
+    
     v.print("v", numClasses*outputDim);
+    v_cuda_output.print("v (cuda)", numClasses*outputDim);
+
+    assert(u_hat == u_hat_cuda_output);
+    assert(v == v_cuda_output);
 }
 
 void test_CUUnifiedBlob_CUDA_vectorSquash() {
@@ -328,9 +337,8 @@ void test_CUUnifiedBlob_CUDA_vectorSquash() {
     sleep(1);
     vectors.print("vecs", vectorDim);
     cuda_output.print("cuda output", vectorDim);
-    if (vectors == cuda_output) {
-        cout << "they match outputs" << endl;
-    }
+    
+    assert(vectors == cuda_output);
 }
 
 void test_CUUnifiedBlob_CUDA_getScalarProducts() {
@@ -354,8 +362,8 @@ int main() {
 
 //    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
 //    test_CUUnifiedBlob_CUDA_softmax();
-//    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
-    test_CUUnifiedBlob_CUDA_vectorSquash();
+    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
+//    test_CUUnifiedBlob_CUDA_vectorSquash();
     test_CUUnifiedBlob_CUDA_getScalarProducts();
 
 //    ConvolutionalNetwork cnn;
