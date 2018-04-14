@@ -139,8 +139,7 @@ void CUUnifiedBlob::weightReduceVectors(CUUnifiedBlob &u_hat, CUUnifiedBlob &c, 
             int u_hat_index = t*numClasses*dim + k*dim;
 
             for (int i = u_hat_index; i < u_hat_index + dim; i++) {
-                u_hat.data[i] *= c.data[t*numClasses+k];
-                v.data[i % (numClasses*dim)] += u_hat.data[i];
+                v.data[i % (numClasses*dim)] += u_hat.data[i] * c.data[t*numClasses+k];
             }
         }
     }
@@ -260,8 +259,7 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
     extern __shared__
     double shared_v_vec[];
 
-    u_hat[u_hat_index + specificDim] *= c[t*numClasses+k];
-    shared_v_vec[t] = u_hat[u_hat_index + specificDim];
+    shared_v_vec[t] = u_hat[u_hat_index + specificDim] * c[t*numClasses+k];
     __syncthreads();
 
     for (unsigned int s = 1; s < blockDim.x; s *= 2) {
