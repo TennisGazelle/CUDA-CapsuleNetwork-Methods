@@ -52,7 +52,7 @@ void CUUnifiedBlob::print(const string& msg, int width) {
     if (!msg.empty()) {
         cout << msg << endl;
     }
-    int bufferSize = min(size, 1000);
+    int bufferSize = min(size, 30);
     for (int i = 0; i < bufferSize; i++) {
         cout << data[i] << "\t";
         if (((i+1) % width) == 0) {
@@ -60,6 +60,27 @@ void CUUnifiedBlob::print(const string& msg, int width) {
         }
     }
     cout << endl;
+}
+
+bool CUUnifiedBlob::operator==(const CUUnifiedBlob &other) const {
+    if (this == &other) {
+        return true;
+    }
+
+    if (size != other.size) {
+        cout << "bad sizes" << endl;
+        return false;
+    }
+
+    for (int i = 0; i < size; i++) {
+        if (data[i] != other.data[i]) {
+            cout << "they didn't match at: " << i << endl;
+            cout << "this: " << data[i] << " other: " << other.data[i] << endl;
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void CUUnifiedBlob::setValueAt_1D(int location, double incomingValue) {
@@ -125,6 +146,20 @@ void CUUnifiedBlob::weightReduceVectors(CUUnifiedBlob &u_hat, CUUnifiedBlob &c, 
     }
 }
 
+void CUUnifiedBlob::vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim) {
+    for (int v_index = 0; v_index < numVecs*vecDim; v_index += vecDim) {
+        double sum_squares = 0;
+    	for (int i = 0; i < vecDim; i++) {
+    	    sum_squares += pow(v.data[v_index + i], 2);
+    	}
+    	double squashFactor = sum_squares / (1.0 + sum_squares);
+    	sum_squares = sqrt(sum_squares);
+    	for (int i = 0; i < vecDim; i++) {
+    		v.data[v_index + i] *= squashFactor / sum_squares;
+    	}
+    }
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
@@ -167,6 +202,19 @@ void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
     } while (tensorSize > 0);
 }
 
+void CUUnifiedBlob::CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim) {
+    dim3 blockDims(1, numVecs);
+
+    if (blockDims.y > 1024) {
+    	while (blockDims.y > 1024) {
+    		blockDims.x++;
+    		blockDims.y -= 1024;
+       	}
+    	blockDims.y = 1024;
+    }
+    cu_vectorSquash_kernel<<<blockDims, vecDim, vecDim*sizeof(double)>>>(v.data, numVecs, vecDim);
+}
+
 __global__
 void cu_matrixVectorMultiplication_kernel(double *matrix, double *inputVector, double *outputVector,
                                           int inputDim, int outputDim) {
@@ -203,7 +251,7 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
 
 __global__
 void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset) {
-    int k = blockIdx.x;
+    int k = blockIdx.x * gridDim.x + blockIdx.y;
     int specificDim = blockIdx.y;
     int t = threadIdx.x + offset;
 
@@ -214,6 +262,7 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
 
     u_hat[u_hat_index + specificDim] *= c[t*numClasses+k];
     shared_v_vec[t] = u_hat[u_hat_index + specificDim] * c[t*numClasses+k];
+    __syncthreads();
 
     for (unsigned int s = 1; s < blockDim.x; s *= 2) {
         if (t % (2*s) == 0) {
@@ -225,5 +274,36 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
 
     if (t == 0) {
         v[k*dim + specificDim] = shared_v_vec[0];
+    }
+}
+
+__global__
+void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim) {
+    int v_index = blockIdx.y*gridDim.x + blockIdx.x;
+    int v_val_index = threadIdx.x;
+
+    extern __shared__
+    double shared_v_values[];
+    // reduce the square of the individual elements in shared mem
+    if (v_index < numVecs) {
+    	shared_v_values[v_val_index] = pow(v[v_index*vecDim + v_val_index], 2);
+    }
+    __syncthreads();
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        if (v_val_index % (2*s) == 0) {
+        	shared_v_values[v_val_index] += shared_v_values[v_val_index + s];
+        }
+        __syncthreads();
+    }
+
+    // calc squashing func
+    if (v_val_index == 0) {
+        shared_v_values[1] = shared_v_values[0] / (1 + shared_v_values[0]);
+        shared_v_values[0] = sqrt(shared_v_values[0]);
+    }
+    __syncthreads();
+
+    if (v_index < numVecs) {
+        v[v_index*vecDim + v_val_index] *= shared_v_values[1] / shared_v_values[0];   	
     }
 }

@@ -310,6 +310,33 @@ void test_CUUnifiedBlob_CUDA_weightReduceAndSquash() {
     v.print("v", numClasses*outputDim);
 }
 
+void test_CUUnifiedBlob_CUDA_vectorSquash() {
+    int vectorDim = 8, numVectors = 2000;
+	CUUnifiedBlob vectors(vectorDim * numVectors), cuda_output(vectorDim * numVectors);
+	int i = 0;
+	for (int v = 0; v < numVectors; v++) {
+		for (int d = 0; d < vectorDim; d++) {
+			vectors.setValueAt_2D(v, d, vectorDim, i);
+            cuda_output.setValueAt_2D(v, d, vectorDim, i);
+            i++;
+		}
+	}
+
+	cuda_output.print("original (cuda)", vectorDim);
+	CUUnifiedBlob::vectorSquash(vectors, numVectors, vectorDim);
+    CUUnifiedBlob::CUDA_vectorSquash(cuda_output, numVectors, vectorDim);
+    sleep(1);
+    vectors.print("vecs", vectorDim);
+    cuda_output.print("cuda output", vectorDim);
+    if (vectors == cuda_output) {
+        cout << "they match outputs" << endl;
+    }
+}
+
+void test_CUUnifiedBlob_CUDA_getScalarProducts() {
+
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
@@ -327,8 +354,9 @@ int main() {
 
 //    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
 //    test_CUUnifiedBlob_CUDA_softmax();
-
-    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
+//    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
+    test_CUUnifiedBlob_CUDA_vectorSquash();
+    test_CUUnifiedBlob_CUDA_getScalarProducts();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

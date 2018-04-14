@@ -17,6 +17,7 @@ public:
     void resize(int newSize);
     void clear();
     void print(const string& msg = "", int width = 1);
+    bool operator==(const CUUnifiedBlob& other) const;
 
     void setValueAt_1D(int location, double incomingValue);
     void setValueAt_2D(int x, int y, int xDim, double incomingValue);
@@ -55,6 +56,9 @@ public:
                                          int numClasses,
                                          int tensorSize,
                                          int dim);
+
+    static void vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
+    static void CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -72,4 +76,6 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
 __global__
 void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset);
 
+__global__
+void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim);
 #endif //NEURALNETS_CUUNIFIEDBLOB_H
