@@ -342,7 +342,30 @@ void test_CUUnifiedBlob_CUDA_vectorSquash() {
 }
 
 void test_CUUnifiedBlob_CUDA_getScalarProducts() {
+    int numClasses = 2, flattenedTensorSize = 10, dim = 3;
+    CUUnifiedBlob b(numClasses * flattenedTensorSize),
+                      b_cuda_output(numClasses * flattenedTensorSize),
+                      u_hat(numClasses * flattenedTensorSize * dim),
+                      v(numClasses * dim);
 
+    int i = 1;
+    for (int t = 0; t < flattenedTensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+    		for (int d = 0; d < dim; d++) {
+    			u_hat.setValueAt_2D(t, k*dim+d, numClasses*dim, i+d);
+    			v.setValueAt_2D(0, k*dim+d, numClasses*dim, i-10);
+    		}
+    		i++;
+    	}
+    }
+
+    u_hat.print("u_hat (original)", numClasses*dim);
+    v.print("v (original)", numClasses*dim);
+    CUUnifiedBlob::vectorVectorScalarProduct(u_hat, v, b, numClasses, flattenedTensorSize, dim);
+    CUUnifiedBlob::CUDA_vectorVectorScalarProduct(u_hat, v, b_cuda_output, numClasses, flattenedTensorSize, dim);
+    sleep(1);
+    b.print("b output (seq)", numClasses);
+    b_cuda_output.print("b output (cuda)", numClasses);
 }
 
 int main() {
@@ -362,7 +385,7 @@ int main() {
 
 //    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
 //    test_CUUnifiedBlob_CUDA_softmax();
-    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
+//    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
 //    test_CUUnifiedBlob_CUDA_vectorSquash();
     test_CUUnifiedBlob_CUDA_getScalarProducts();
 

@@ -59,6 +59,9 @@ public:
 
     static void vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
     static void CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
+
+    static void vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim);
+    static void CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim);    
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -78,4 +81,7 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
 
 __global__
 void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim);
+
+__global__
+void cu_vectorVectorScalarProduct_kernel(double *u_hat, double *v, double *b, int numClasses, int tensorSize, int dim);
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

@@ -159,6 +159,20 @@ void CUUnifiedBlob::vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim) {
     }
 }
 
+void CUUnifiedBlob::vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim) {
+    for (int k = 0; k < numClasses; k++) {
+        int v_index = k*dim;
+    	for (int t = 0; t < tensorSize; t++) {
+    		int u_hat_index = t*numClasses*dim + k*dim;
+    		int b_index = t*numClasses + k;
+
+    		for (int i = 0; i < dim; i++) {
+    			b.data[b_index] += u_hat.data[u_hat_index + i] * v.data[v_index + i];
+    		}
+    	}
+    }	
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
@@ -214,6 +228,11 @@ void CUUnifiedBlob::CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim)
     cu_vectorSquash_kernel<<<blockDims, vecDim, vecDim*sizeof(double)>>>(v.data, numVecs, vecDim);
 }
 
+void CUUnifiedBlob::CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim) {
+    dim3 blockDims(numClasses, dim);
+    cu_vectorVectorScalarProduct_kernel<<<blockDims, tensorSize>>>(u_hat.data, v.data, b.data, numClasses, tensorSize, dim);
+}
+
 __global__
 void cu_matrixVectorMultiplication_kernel(double *matrix, double *inputVector, double *outputVector,
                                           int inputDim, int outputDim) {
@@ -252,7 +271,7 @@ __global__
 void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset) {
     int k = blockIdx.x;
     int specificDim = blockIdx.y;
-    int t = threadIdx.x;
+    int t = threadIdx.x + offset;
 
     int u_hat_index = t*numClasses*dim + k*dim;
 
@@ -303,4 +322,15 @@ void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim) {
     if (v_index < numVecs) {
         v[v_index*vecDim + v_val_index] *= shared_v_values[1] / shared_v_values[0];   	
     }
+}
+
+__global__
+void cu_vectorVectorScalarProduct_kernel(double *u_hat, double *v, double *b, int numClasses, int tensorSize, int dim) {
+    int k = blockIdx.x;
+    int specificDim = blockIdx.y;
+    int t = threadIdx.x;
+
+	// TODO: finish this method
+    int u_hat_index = t*numClasses*dim + k*dim;
+    b[t*numClasses+k] = u_hat[u_hat_index];
 }
