@@ -74,10 +74,10 @@ __global__
 void cu_matrixVectorMultiplication_kernel(double* matrix, double* inputVector, double* outputVector, int inputDim, int outputDim);
 
 __global__
-void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize, int offset);
+void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize);
 
 __global__
-void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset);
+void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim);
 
 __global__
 void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim);

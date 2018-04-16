@@ -31,7 +31,7 @@ void test_SingleLayerCNN() {
             if (i == image.getLabel()) {
                 target = 1;
             };
-            error[i] = mlpOutput[i] * (1-mlpOutput[i]) * (target - mlpOutput[i]);
+            error[i] = mlpOutput[i] * (1 - mlpOutput[i]) * (target - mlpOutput[i]);
         }
         vector<double> mlpLastLayerError = mp.backPropagateError(error);
         layer.backPropagate(
@@ -56,7 +56,7 @@ void test_SingleLayerCNN() {
         if (i == image.getLabel()) {
             target = 1;
         };
-        error[i] = mlpOutput[i] * (1-mlpOutput[i]) * (target - mlpOutput[i]);
+        error[i] = mlpOutput[i] * (1 - mlpOutput[i]) * (target - mlpOutput[i]);
         cout << i << ": " << mlpOutput[i] << " " << error[i] << endl;
     }
 
@@ -72,9 +72,9 @@ void test_CapsuleNetSquishing() {
     Utils::squish(testInput).print("output is....");
 }
 
-void fillFeatureMapWithRandom(FeatureMap& featureMap) {
-    for (auto& row : featureMap) {
-        for (auto& col : row) {
+void fillFeatureMapWithRandom(FeatureMap &featureMap) {
+    for (auto &row : featureMap) {
+        for (auto &col : row) {
             col = Utils::getWeightRand(10) + 10;
         }
     }
@@ -113,10 +113,10 @@ void test_VectorMapFromFeatureMaps() {
 void test_FeatureMapsFromVectorMap() {
     size_t inputsDepth = 32, vectorDim = 8, outputsDepth = 256;
     size_t row = 6, col = 6;
-    vector<arma::vec> inputs(row*col*inputsDepth, arma::vec(vectorDim, arma::fill::randu));
+    vector<arma::vec> inputs(row * col * inputsDepth, arma::vec(vectorDim, arma::fill::randu));
 
-    for (auto& v : inputs) {
-        for (auto& val : v) {
+    for (auto &v : inputs) {
+        for (auto &val : v) {
             val = Utils::getWeightRand(10) + 10;
         }
     }
@@ -136,7 +136,8 @@ void test_CapsuleNetwork_ForwardPropagation() {
 void test_CapsuleNetwork_BackPropagation() {
     CapsuleNetwork capsuleNetwork;
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
-    vector<arma::vec> error = capsuleNetwork.getErrorGradient(output, MNISTReader::getInstance()->trainingData[0].getLabel());
+    vector<arma::vec> error = capsuleNetwork.getErrorGradient(output,
+                                                              MNISTReader::getInstance()->trainingData[0].getLabel());
     capsuleNetwork.backPropagate(error);
     output = capsuleNetwork.loadImageAndGetOutput(0);
 
@@ -148,7 +149,7 @@ void test_CapsuleNetwork_BackPropagation() {
 void test_CapsuleNetwork_Epoch() {
     CapsuleNetwork capsuleNetwork;
 
-    auto& data = MNISTReader::getInstance()->trainingData;
+    auto &data = MNISTReader::getInstance()->trainingData;
     const size_t batchSize = 250;
 
     ProgressBar pb(data.size());
@@ -157,7 +158,7 @@ void test_CapsuleNetwork_Epoch() {
         vector<arma::vec> error = capsuleNetwork.getErrorGradient(output, data[i].getLabel());
         capsuleNetwork.backPropagate(error);
 
-        if (i%batchSize == batchSize-1) {
+        if (i % batchSize == batchSize - 1) {
             capsuleNetwork.updateWeights();
             capsuleNetwork.loadImageAndPrintOutput(i);
         }
@@ -168,13 +169,14 @@ void test_CapsuleNetwork_Epoch() {
 void test_CapsuleNetwork_getMarginLoss() {
     CapsuleNetwork capsuleNetwork;
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
-    double totalLoss = capsuleNetwork.getTotalMarginLoss(MNISTReader::getInstance()->trainingData[0].getLabel(), output);
+    double totalLoss = capsuleNetwork.getTotalMarginLoss(MNISTReader::getInstance()->trainingData[0].getLabel(),
+                                                         output);
 
     cout << "total loss is: " << totalLoss << endl;
 }
 
 void test_NetworkTallyingTiming() {
-    MultilayerPerceptron mp(784, 10, {16,16});
+    MultilayerPerceptron mp(784, 10, {16, 16});
     ConvolutionalNetwork cnn;
     CapsuleNetwork capsNet;
 
@@ -214,7 +216,8 @@ void test_CapsuleNetwork_reconstruction() {
     vector<arma::vec> updatedOutput = capsuleNetwork.loadImageAndGetOutput(0);
 
     for (int i = 0; i < 10; i++) {
-        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(updatedOutput[i])) << endl;
+        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(updatedOutput[i]))
+             << endl;
     }
 }
 
@@ -236,39 +239,45 @@ void test_CapsuleNetwork_multipleReconstruction() {
     vector<arma::vec> updatedOutput = capsuleNetwork.loadImageAndGetOutput(4);
     cout << "target label: " << MNISTReader::getInstance()->trainingData[4].getLabel() << endl;
     for (int i = 0; i < 10; i++) {
-        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(updatedOutput[i])) << endl;
+        cout << "length of vector corresponding to " << i << ": " << sqrt(Utils::square_length(updatedOutput[i]))
+             << endl;
     }
 }
 
 void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
-    int inputDim = 8, outputDim = 16, numMultiples=2;
+    int inputDim = 8, outputDim = 16, numMultiples = 2;
     CUUnifiedBlob v(inputDim * numMultiples),
-                  w(inputDim * outputDim * numMultiples),
-                 vv(outputDim * numMultiples);
+            w(inputDim * outputDim * numMultiples),
+            vv(outputDim * numMultiples);
 
-    for (int i = 0; i < inputDim; i++) {
+    for (int i = 0; i < inputDim * numMultiples; i++) {
         v.setValueAt_1D(i, i);
-        v.setValueAt_1D(i+inputDim, i*10);
-
-        w.setValueAt_2D(i, i, inputDim, 1.0);
-        w.setValueAt_2D(i+inputDim, i, inputDim, 1.0);
-        w.setValueAt_2D(i+2*inputDim, i, inputDim, 1.0);
-        w.setValueAt_2D(i+3*inputDim, i, inputDim, 1.0);
     }
-    vv.clear();
+    int i = 0;
+    for (int r = 0; r < outputDim * numMultiples; r++) {
+        for (int c = 0; c < inputDim; c++) {
+            if (r == c) {
+                w.setValueAt_2D(r, c, inputDim, 1.0);
+                w.setValueAt_2D(r + inputDim, c, inputDim, 2.0);
+
+                w.setValueAt_2D(r + (2 * inputDim), c, inputDim, 3.0);
+                w.setValueAt_2D(r + (3 * inputDim), c, inputDim, 4.0);
+            }
+        }
+    }
 
 //    CUUnifiedBlob::matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim, numMultiples);
 
-    v.print("v");
+    v.print("v", inputDim);
     w.print("w", inputDim);
-    vv.print("vv");
+    vv.print("vv", outputDim);
 }
 
 void test_CUUnifiedBlob_CUDA_softmax() {
     int numClasses = 10, flattenedTensorSize = 45;
     CUUnifiedBlob bMatrix(numClasses * flattenedTensorSize),
-                  cMatrix(numClasses * flattenedTensorSize);
+            cMatrix(numClasses * flattenedTensorSize);
 
     for (int k = 0; k < numClasses; k++) {
         for (int t = 0; t < flattenedTensorSize; t++) {
@@ -288,32 +297,33 @@ void test_CUUnifiedBlob_CUDA_softmax() {
 void test_CUUnifiedBlob_CUDA_weightReduceAndSquash() {
     int numClasses = 2, flattenedTensorSize = 10, outputDim = 3;
     CUUnifiedBlob cMatrix(numClasses * flattenedTensorSize),
-                  u_hat(numClasses * flattenedTensorSize * outputDim),
-                  u_hat_cuda_output(numClasses * flattenedTensorSize * outputDim),
-                  v(numClasses * outputDim),
-                  v_cuda_output(numClasses * outputDim);
+            u_hat(numClasses * flattenedTensorSize * outputDim),
+            u_hat_cuda_output(numClasses * flattenedTensorSize * outputDim),
+            v(numClasses * outputDim),
+            v_cuda_output(numClasses * outputDim);
 
     int i = 1;
     for (int t = 0; t < flattenedTensorSize; t++) {
-        for (int k = 0; k < numClasses; k++)  {
+        for (int k = 0; k < numClasses; k++) {
             cMatrix.setValueAt_2D(t, k, numClasses, i);
             for (int j = 0; j < outputDim; j++) {
-                u_hat.setValueAt_2D(t, k*outputDim + j, numClasses*outputDim, i+j);
-                u_hat_cuda_output.setValueAt_2D(t, k*outputDim + j, numClasses*outputDim, i+j);
+                u_hat.setValueAt_2D(t, k * outputDim + j, numClasses * outputDim, i + j);
+                u_hat_cuda_output.setValueAt_2D(t, k * outputDim + j, numClasses * outputDim, i + j);
             }
             i++;
         }
     }
     cMatrix.print("c", numClasses);
-    u_hat.print("u_hat (original)", numClasses*outputDim);
+    u_hat.print("u_hat (original)", numClasses * outputDim);
     CUUnifiedBlob::weightReduceVectors(u_hat, cMatrix, v, numClasses, flattenedTensorSize, outputDim);
-    CUUnifiedBlob::CUDA_weightReduceVectors(u_hat_cuda_output, cMatrix, v_cuda_output, numClasses, flattenedTensorSize, outputDim);
+    CUUnifiedBlob::CUDA_weightReduceVectors(u_hat_cuda_output, cMatrix, v_cuda_output, numClasses, flattenedTensorSize,
+                                            outputDim);
 
-    u_hat.print("u_hat", numClasses*outputDim);
-    u_hat_cuda_output.print("u_hat (cuda)", numClasses*outputDim);
-    
-    v.print("v", numClasses*outputDim);
-    v_cuda_output.print("v (cuda)", numClasses*outputDim);
+    u_hat.print("u_hat", numClasses * outputDim);
+    u_hat_cuda_output.print("u_hat (cuda)", numClasses * outputDim);
+
+    v.print("v", numClasses * outputDim);
+    v_cuda_output.print("v (cuda)", numClasses * outputDim);
 
     assert(u_hat == u_hat_cuda_output);
     assert(v == v_cuda_output);
@@ -321,51 +331,92 @@ void test_CUUnifiedBlob_CUDA_weightReduceAndSquash() {
 
 void test_CUUnifiedBlob_CUDA_vectorSquash() {
     int vectorDim = 8, numVectors = 2000;
-	CUUnifiedBlob vectors(vectorDim * numVectors), cuda_output(vectorDim * numVectors);
-	int i = 0;
-	for (int v = 0; v < numVectors; v++) {
-		for (int d = 0; d < vectorDim; d++) {
-			vectors.setValueAt_2D(v, d, vectorDim, i);
+    CUUnifiedBlob vectors(vectorDim * numVectors), cuda_output(vectorDim * numVectors);
+    int i = 0;
+    for (int v = 0; v < numVectors; v++) {
+        for (int d = 0; d < vectorDim; d++) {
+            vectors.setValueAt_2D(v, d, vectorDim, i);
             cuda_output.setValueAt_2D(v, d, vectorDim, i);
             i++;
-		}
-	}
+        }
+    }
 
-	cuda_output.print("original (cuda)", vectorDim);
-	CUUnifiedBlob::vectorSquash(vectors, numVectors, vectorDim);
+    cuda_output.print("original (cuda)", vectorDim);
+    CUUnifiedBlob::vectorSquash(vectors, numVectors, vectorDim);
     CUUnifiedBlob::CUDA_vectorSquash(cuda_output, numVectors, vectorDim);
     sleep(1);
     vectors.print("vecs", vectorDim);
     cuda_output.print("cuda output", vectorDim);
-    
+
     assert(vectors == cuda_output);
 }
 
 void test_CUUnifiedBlob_CUDA_getScalarProducts() {
-    int numClasses = 2, flattenedTensorSize = 10, dim = 3;
+    int numClasses = 10, flattenedTensorSize = 1152, dim = 16;
     CUUnifiedBlob b(numClasses * flattenedTensorSize),
-                      b_cuda_output(numClasses * flattenedTensorSize),
-                      u_hat(numClasses * flattenedTensorSize * dim),
-                      v(numClasses * dim);
+            b_cuda_output(numClasses * flattenedTensorSize),
+            u_hat(numClasses * flattenedTensorSize * dim),
+            v(numClasses * dim);
 
     int i = 1;
     for (int t = 0; t < flattenedTensorSize; t++) {
         for (int k = 0; k < numClasses; k++) {
-    		for (int d = 0; d < dim; d++) {
-    			u_hat.setValueAt_2D(t, k*dim+d, numClasses*dim, i+d);
-    			v.setValueAt_2D(0, k*dim+d, numClasses*dim, i-10);
-    		}
-    		i++;
-    	}
+            for (int d = 0; d < dim; d++) {
+                u_hat.setValueAt_2D(t, k * dim + d, numClasses * dim, i + d);
+                v.setValueAt_2D(0, k * dim + d, numClasses * dim, i - 10);
+            }
+            i++;
+        }
     }
 
-    u_hat.print("u_hat (original)", numClasses*dim);
-    v.print("v (original)", numClasses*dim);
+    u_hat.print("u_hat (original)", numClasses * dim);
+    v.print("v (original)", numClasses * dim);
     CUUnifiedBlob::vectorVectorScalarProduct(u_hat, v, b, numClasses, flattenedTensorSize, dim);
     CUUnifiedBlob::CUDA_vectorVectorScalarProduct(u_hat, v, b_cuda_output, numClasses, flattenedTensorSize, dim);
     sleep(1);
     b.print("b output (seq)", numClasses);
     b_cuda_output.print("b output (cuda)", numClasses);
+}
+
+void test_CUDA_forwardPropagation() {
+    int numClasses = 2, flattenedTensorSize = 1025, innerDim = 3, outerDim = 5;
+    CUUnifiedBlob u(innerDim * numClasses * flattenedTensorSize),
+            w(innerDim * outerDim * numClasses * flattenedTensorSize),
+            u_hat(outerDim * numClasses * flattenedTensorSize),
+            v(numClasses * outerDim),
+            b(numClasses * flattenedTensorSize),
+            c(numClasses * flattenedTensorSize);
+
+    int i = 0;
+    for (int t = 0; t < flattenedTensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+            for (int d = 0; d < innerDim; d++) {
+                //u.setValueAt_2D(t, k*innerDim+d, numClasses*innerDim, i+d);
+                u.setValueAt_2D(t, k * innerDim + d, numClasses * innerDim, Utils::getWeightRand(1));
+            }
+            i++;
+        }
+    }
+    for (i = 0; i < innerDim * outerDim * numClasses * flattenedTensorSize; i++) {
+        w.setValueAt_1D(i, Utils::getWeightRand(1));
+    }
+
+    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, innerDim, outerDim, flattenedTensorSize * numClasses);
+    u.print("u", innerDim * numClasses);
+    w.print("w", innerDim * numClasses);
+    u_hat.print("u_hat", outerDim * numClasses);
+
+    for (int iter = 0; iter < 3; iter++) {
+        cout << "DYNAMIC ROUTING ITERATION: " << iter << endl;
+        CUUnifiedBlob::CUDA_vectorVectorSoftmax(b, c, numClasses, flattenedTensorSize);
+        CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, v, numClasses, flattenedTensorSize, outerDim);
+        CUUnifiedBlob::CUDA_vectorSquash(v, numClasses * flattenedTensorSize, outerDim);
+        CUUnifiedBlob::CUDA_vectorVectorScalarProduct(u_hat, v, b, numClasses, flattenedTensorSize, outerDim);
+//        sleep(0.5);
+        b.print("b", numClasses);
+        c.print("c", numClasses);
+        v.print("v", outerDim);
+    }
 }
 
 int main() {
@@ -387,7 +438,8 @@ int main() {
 //    test_CUUnifiedBlob_CUDA_softmax();
 //    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
 //    test_CUUnifiedBlob_CUDA_vectorSquash();
-    test_CUUnifiedBlob_CUDA_getScalarProducts();
+//    test_CUUnifiedBlob_CUDA_getScalarProducts();
+    test_CUDA_forwardPropagation();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

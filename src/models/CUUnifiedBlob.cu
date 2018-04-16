@@ -52,7 +52,7 @@ void CUUnifiedBlob::print(const string& msg, int width) {
     if (!msg.empty()) {
         cout << msg << endl;
     }
-    int bufferSize = min(size, 30);
+    int bufferSize = min(size, 200);
     for (int i = 0; i < bufferSize; i++) {
         cout << data[i] << "\t";
         if (((i+1) % width) == 0) {
@@ -170,7 +170,7 @@ void CUUnifiedBlob::vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlo
     			b.data[b_index] += u_hat.data[u_hat_index + i] * v.data[v_index + i];
     		}
     	}
-    }	
+    }
 }
 
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
@@ -191,12 +191,8 @@ void CUUnifiedBlob::CUDA_vectorVectorSoftmax(CUUnifiedBlob &b,
                                              int numClasses,
                                              int tensorSize) {
     int offset = 0;
-    do {
-        unsigned int numThreadsToAllocate = (unsigned int) min(1024, tensorSize);
-        cu_vectorVectorSoftmax_kernel<<<numClasses, numThreadsToAllocate, numThreadsToAllocate*sizeof(double)>>>(b.data, c.data, numClasses, tensorSize, offset);
-        tensorSize -= numThreadsToAllocate;
-        offset++;
-    } while (tensorSize > 0);
+    int numThreads = min(1024, tensorSize);
+    cu_vectorVectorSoftmax_kernel<<<numClasses, numThreads, numThreads*sizeof(double)>>>(b.data, c.data, numClasses, tensorSize);
 }
 
 void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
@@ -206,31 +202,17 @@ void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
                                              int tensorSize,
                                              int dim) {
     dim3 blockDimensions(numClasses, dim);
-    int offset = 0;
-    do {
-    	unsigned int numBlocksToAllocate = (unsigned int) min(1024, tensorSize);
-    	cu_weightReduceVector_kernel<<<blockDimensions, tensorSize, tensorSize*sizeof(double)>>>(u_hat.data, c.data, v.data, numClasses, tensorSize, dim, offset);
-    	tensorSize -= numBlocksToAllocate;
-    	offset++;
-    } while (tensorSize > 0);
+    int numThreads = min(1024, tensorSize);
+    cu_weightReduceVector_kernel<<<blockDimensions, numThreads, numThreads*sizeof(double)>>>(u_hat.data, c.data, v.data, numClasses, tensorSize, dim);
 }
 
 void CUUnifiedBlob::CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim) {
-    dim3 blockDims(1, numVecs);
-
-    if (blockDims.y > 1024) {
-    	while (blockDims.y > 1024) {
-    		blockDims.x++;
-    		blockDims.y -= 1024;
-       	}
-    	blockDims.y = 1024;
-    }
-    cu_vectorSquash_kernel<<<blockDims, vecDim, vecDim*sizeof(double)>>>(v.data, numVecs, vecDim);
+    cu_vectorSquash_kernel<<<numVecs, vecDim, vecDim*sizeof(double)>>>(v.data, numVecs, vecDim);
 }
 
 void CUUnifiedBlob::CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim) {
-    dim3 blockDims(numClasses, dim);
-    cu_vectorVectorScalarProduct_kernel<<<blockDims, tensorSize>>>(u_hat.data, v.data, b.data, numClasses, tensorSize, dim);
+    dim3 blockDims(tensorSize, numClasses);
+    cu_vectorVectorScalarProduct_kernel<<<blockDims, dim, dim*sizeof(double)>>>(u_hat.data, v.data, b.data, numClasses, tensorSize, dim);
 }
 
 __global__
@@ -245,15 +227,20 @@ void cu_matrixVectorMultiplication_kernel(double *matrix, double *inputVector, d
 }
 
 __global__
-void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize, int offset) {
-    int t = threadIdx.x + offset;
+void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize) {
+    int t = threadIdx.x;
     int k = blockIdx.x;
 
     extern __shared__
     double shared_b_exps[];
 
-    double my_exp_b = exp(b[t*numClasses+k]); // consider using hexp() for speed
-    shared_b_exps[t] = my_exp_b;
+    double my_exp_bs [8]; // make this dynamic and only as needed
+    for (int i = 0; i*1024 < tensorSize; i++) {
+        if (i*1024 + t < tensorSize) {
+            my_exp_bs[i] = exp(b[(i*1024+t)*numClasses+k]); // consider using hexp() for speed
+            shared_b_exps[t] += my_exp_bs[i];
+        }
+    }
     __syncthreads();
 
     for (unsigned int s = 1; s < blockDim.x; s *= 2) {
@@ -264,21 +251,33 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
     }
 
     double sum_exps = shared_b_exps[0];
-    c[t*numClasses + k] = my_exp_b / sum_exps;
+    for (int i = 0; i*1024 < tensorSize; i++) {
+        if (i*1024 + t < tensorSize) {
+            c[(i*1024+t)*numClasses+k] = my_exp_bs[i] / sum_exps;
+        }
+    }
 }
 
 __global__
-void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim, int offset) {
+void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numClasses, int tensorSize, int dim) {
     int k = blockIdx.x;
     int specificDim = blockIdx.y;
-    int t = threadIdx.x + offset;
+    int t = threadIdx.x;
 
     int u_hat_index = t*numClasses*dim + k*dim;
-
+    int c_index = t*numClasses+k;
     extern __shared__
     double shared_v_vec[];
 
-    shared_v_vec[t] = u_hat[u_hat_index + specificDim] * c[t*numClasses+k];
+    shared_v_vec[t] = u_hat[u_hat_index + specificDim] * c[c_index];
+    // if tensorsize > 1024, add them to the shared mem as well
+    for (int i = 1; i*1024 < tensorSize; i++) {
+        int u_hat_offset = 1024*numClasses*dim;
+        int c_offset = 1024*numClasses;
+        if (i*1024 + t < tensorSize) {
+            shared_v_vec[t] += u_hat[u_hat_index + specificDim + u_hat_offset] * c[c_index + c_offset];
+        }
+    }
     __syncthreads();
 
     for (unsigned int s = 1; s < blockDim.x; s *= 2) {
@@ -320,17 +319,28 @@ void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim) {
     __syncthreads();
 
     if (v_index < numVecs) {
-        v[v_index*vecDim + v_val_index] *= shared_v_values[1] / shared_v_values[0];   	
+        v[v_index*vecDim + v_val_index] *= shared_v_values[1] / shared_v_values[0];
     }
 }
 
 __global__
 void cu_vectorVectorScalarProduct_kernel(double *u_hat, double *v, double *b, int numClasses, int tensorSize, int dim) {
-    int k = blockIdx.x;
-    int specificDim = blockIdx.y;
-    int t = threadIdx.x;
-
-	// TODO: finish this method
+    int k = blockIdx.y;
+    int specificDim = threadIdx.x;
+    int t = blockIdx.x;
     int u_hat_index = t*numClasses*dim + k*dim;
-    b[t*numClasses+k] = u_hat[u_hat_index];
+
+    extern __shared__
+    double shared_scalar_products[];
+    shared_scalar_products[specificDim] = u_hat[u_hat_index + specificDim] * v[k*dim + specificDim];
+    __syncthreads();
+
+    for (unsigned int s = 1; s < blockDim.x; s*= 2) {
+    	if (specificDim % (2*s) == 0) {
+    		shared_scalar_products[specificDim] += shared_scalar_products[specificDim + s];
+    	}
+    	__syncthreads();
+    }
+
+    b[t*numClasses+k] = shared_scalar_products[0];
 }
