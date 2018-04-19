@@ -379,7 +379,7 @@ void test_CUUnifiedBlob_CUDA_getScalarProducts() {
 }
 
 void test_CUDA_forwardPropagation() {
-    int numClasses = 2, flattenedTensorSize = 1152, innerDim = 3, outerDim = 5;
+    int numClasses = 2, flattenedTensorSize = 1024, innerDim = 3, outerDim = 5;
     CUUnifiedBlob u(innerDim * numClasses * flattenedTensorSize),
             w(innerDim * outerDim * numClasses * flattenedTensorSize),
             u_hat(outerDim * numClasses * flattenedTensorSize),
@@ -400,7 +400,7 @@ void test_CUDA_forwardPropagation() {
     for (i = 0; i < innerDim * outerDim * numClasses * flattenedTensorSize; i++) {
         w.setValueAt_1D(i, Utils::getWeightRand(1));
     }
-
+https://www.google.com/search?client=ubuntu&channel=fs&q=60000%2F250&ie=utf-8&oe=utf-8
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, innerDim, outerDim, flattenedTensorSize * numClasses);
     sleep(1);
     u.print("u", innerDim * numClasses);
@@ -417,6 +417,33 @@ void test_CUDA_forwardPropagation() {
     b.print("b", numClasses);
     c.print("c", numClasses);
     v.print("v", outerDim);
+}
+
+void test_CUUnifiedBlob_vectorLossFunction() {
+    int numClasses = 10, dim = 16;
+    CUUnifiedBlob v(numClasses * dim);
+    CUUnifiedBlob v_cuda_output(numClasses * dim);
+    CUUnifiedBlob truth(numClasses);
+
+    for (int i = 0; i < numClasses; i++) {
+        for (int j = 0; j < dim; j++) {
+            v.setValueAt_2D(i, j, dim, double(j)/100.0);
+            v_cuda_output.setValueAt_2D(i, j, dim, double(j)/100.0);
+        }
+    }
+    truth.setValueAt_1D(1, 1);
+    v.print("v", dim);
+    truth.print("truth");
+
+    CUUnifiedBlob::vectorLossFunction(v, truth, numClasses, dim);
+    CUUnifiedBlob::CUDA_vectorLossFunction(v_cuda_output, truth, numClasses, dim);
+    sleep(1);
+
+    assert(v == v_cuda_output);
+}
+
+void test_CUUnifiedBlob_weightedTransMatrixVecMult() {
+
 }
 
 int main() {
@@ -439,7 +466,11 @@ int main() {
 //    test_CUUnifiedBlob_CUDA_weightReduceAndSquash();
 //    test_CUUnifiedBlob_CUDA_vectorSquash();
 //    test_CUUnifiedBlob_CUDA_getScalarProducts();
-    test_CUDA_forwardPropagation();
+//    test_CUDA_forwardPropagation();
+
+//    test_CUUnifiedBlob_vectorLossFunction();
+    test_CUUnifiedBlob_weightedTransMatrixVecMult();
+
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

@@ -176,6 +176,45 @@ void CUUnifiedBlob::vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlo
     }
 }
 
+void CUUnifiedBlob::vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim) {
+    const double m_plus = 0.9;
+    const double m_minus = 0.1;
+    const double lambda = 0.5;
+
+    for (int classIndex = 0; classIndex < numClasses; classIndex++) {
+        double sumOfSquaredValues = 0.0;
+        for (int i = 0; i < dim; i++) {
+            sumOfSquaredValues += std::pow(v.data[classIndex*dim + i], 2);
+        }
+        double vec_length = sqrt(sumOfSquaredValues + 1e-4);
+
+        double activationFactor = 2*vec_length / pow((vec_length * vec_length) + 1, 2);
+
+        double errorGradient;
+        if (vec_length < m_plus) {
+            if (vec_length <= m_minus) {
+                errorGradient = -2 * truthMap.data[classIndex] * (m_plus - vec_length);
+            } else {
+                errorGradient = 2 * ((lambda * (truthMap.data[classIndex] - 1) * (m_minus - vec_length)) + truthMap.data[classIndex] * (vec_length - m_plus));
+            }
+        } else {
+            errorGradient = 2 * lambda * (truthMap.data[classIndex] - 1) * (m_minus - vec_length);
+        }
+
+        double rawMarginLoss;
+        if (truthMap.data[classIndex]) {
+            rawMarginLoss = pow(std::max(0.0, m_plus - vec_length), 2);
+        } else {
+            rawMarginLoss = lambda * pow(std::max(0.0, vec_length - m_minus), 2);
+        }
+
+        double resizingFactor = activationFactor * errorGradient * rawMarginLoss / vec_length;
+        for (int i = 0; i < dim; i++) {
+            v.data[classIndex*dim + i] *= resizingFactor;
+        }
+    }
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
@@ -216,6 +255,10 @@ void CUUnifiedBlob::CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim)
 void CUUnifiedBlob::CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim) {
     dim3 blockDims(tensorSize, numClasses);
     cu_vectorVectorScalarProduct_kernel<<<blockDims, dim, dim*sizeof(double)>>>(u_hat.data, v.data, b.data, numClasses, tensorSize, dim);
+}
+
+void CUUnifiedBlob::CUDA_vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim) {
+    cu_vectorLossFunction_kernel<<<numClasses, dim, dim*sizeof(double)>>>(v.data, truthMap.data);
 }
 
 __global__
@@ -319,7 +362,7 @@ void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim) {
 
     // calc squashing func
     if (v_val_index == 0) {
-        shared_v_values[0] = 1e-4;
+        shared_v_values[0] += 1e-4;
         shared_v_values[1] = shared_v_values[0] / (1 + shared_v_values[0]);
         shared_v_values[0] = sqrt(shared_v_values[0]);
     }
@@ -352,4 +395,54 @@ void cu_vectorVectorScalarProduct_kernel(double *u_hat, double *v, double *b, in
     if (specificDim == 0 && !isnan(shared_scalar_products[0])) {
         b[t*numClasses+k] += shared_scalar_products[0];
     }
+}
+
+__global__
+void cu_vectorLossFunction_kernel(double *v, double *truthMap) {
+    const double m_plus = 0.9;
+    const double m_minus = 0.1;
+    const double lambda = 0.5;
+
+    int k = blockIdx.x;
+    int d = threadIdx.x;
+    int dim = blockDim.x;
+
+    extern __shared__
+    double shared_vector_lengths[];
+    shared_vector_lengths[d] = v[k*dim + d] * v[k*dim + d];
+    __syncthreads();
+
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        if (d % (2*s) == 0) {
+            shared_vector_lengths[d] += shared_vector_lengths[d+s];
+        }
+        __syncthreads();
+    }
+    if (d == 0) {
+        shared_vector_lengths[0] = sqrt(shared_vector_lengths[0] + 1e-4);
+    }
+    __syncthreads();
+
+    double activationFactor = 2*shared_vector_lengths[0] / pow(shared_vector_lengths[0]*shared_vector_lengths[0]+1, 2);
+
+    double errorGradient;
+    if (shared_vector_lengths[0] < m_plus) {
+        if (shared_vector_lengths[0] <= m_minus) {
+            errorGradient = -2 * truthMap[k] * (m_plus - shared_vector_lengths[0]);
+        } else {
+            errorGradient = 2 * ((lambda * (truthMap[k] - 1) * (m_minus - shared_vector_lengths[0])) + truthMap[k] * (shared_vector_lengths[0] - m_plus));
+        }
+    } else {
+        errorGradient = 2 * lambda * (truthMap[k] - 1) * (m_minus - shared_vector_lengths[0]);
+    }
+
+    double rawMarginLoss;
+    if (truthMap[k]) {
+        rawMarginLoss = pow(max(0.0, m_plus - shared_vector_lengths[0]), 2);
+    } else {
+        rawMarginLoss = lambda * pow(max(0.0, shared_vector_lengths[0] - m_minus), 2);
+    }
+
+    double resizingFactor = activationFactor * errorGradient * rawMarginLoss / shared_vector_lengths[0];
+    v[k*dim + d] *= resizingFactor;
 }

@@ -184,16 +184,12 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
     // generate the derivative of the non-linear vector activation function
     for (int i = 0; i < error.size(); i++) {
         // d(squash())/dv
-        auto activationDerivativeLength = Utils::getSquashDerivativeLength(
-                output[i]); // Note: this is the first derivative of the activation function
+        auto activationDerivativeLength = Utils::getSquashDerivativeLength(output[i]); // Note: this is the first derivative of the activation function
         // d(loss(v))/d||v||
         auto errorGradient = getMarginLossGradient(i == targetLabel, output[i]);
         // loss(v)
         auto rawMarginLoss = getMarginLoss(i == targetLabel, output[i]);
-
-        error[i] =
-                Config::getInstance()->getLearningRate() * activationDerivativeLength * errorGradient * rawMarginLoss *
-                normalise(output[i]);
+        error[i] = Config::getInstance()->getLearningRate() * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
     }
     return error;
 }
@@ -280,8 +276,7 @@ double CapsuleNetwork::getMarginLossGradient(bool isPresent, const arma::vec &v_
         if (vLength <= m_minus) {
             value = -2 * t_k * (m_plus - vLength);
         } else {
-            value = 2 * ((lambda * (t_k - 1) * (m_minus - vLength)) +
-                         t_k * (vLength - m_plus));
+            value = 2 * ((lambda * (t_k - 1) * (m_minus - vLength)) + t_k * (vLength - m_plus));
         }
     } else {
         value = 2 * lambda * (t_k - 1) * (m_minus - vLength);
