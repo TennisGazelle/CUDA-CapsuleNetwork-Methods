@@ -11,6 +11,8 @@
  * source: https://stackoverflow.com/questions/39980645/enable-code-indexing-of-cuda-in-clion
  */
 #ifdef __JETBRAINS_IDE__
+
+#include <cmath>
 #define __CUDACC__ 1
 #define __host__
 #define __device__
@@ -35,8 +37,8 @@ inline float powf(float x, float power) {
     }
     return temp;
 }
-//inline bool isnan(float x) { return x != x; }
-
+inline bool isnan(float x) { return x != x; }
+inline bool isinf(float x) { return x == INFINITY; }
 // This is slightly mental, but gets it to properly index device function calls like __popc and whatever.
 #define __CUDACC__
 #include <device_functions.h>

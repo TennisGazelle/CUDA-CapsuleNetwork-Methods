@@ -379,7 +379,7 @@ void test_CUUnifiedBlob_CUDA_getScalarProducts() {
 }
 
 void test_CUDA_forwardPropagation() {
-    int numClasses = 2, flattenedTensorSize = 1025, innerDim = 3, outerDim = 5;
+    int numClasses = 2, flattenedTensorSize = 1152, innerDim = 3, outerDim = 5;
     CUUnifiedBlob u(innerDim * numClasses * flattenedTensorSize),
             w(innerDim * outerDim * numClasses * flattenedTensorSize),
             u_hat(outerDim * numClasses * flattenedTensorSize),
@@ -402,6 +402,7 @@ void test_CUDA_forwardPropagation() {
     }
 
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, innerDim, outerDim, flattenedTensorSize * numClasses);
+    sleep(1);
     u.print("u", innerDim * numClasses);
     w.print("w", innerDim * numClasses);
     u_hat.print("u_hat", outerDim * numClasses);
@@ -412,11 +413,10 @@ void test_CUDA_forwardPropagation() {
         CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, v, numClasses, flattenedTensorSize, outerDim);
         CUUnifiedBlob::CUDA_vectorSquash(v, numClasses * flattenedTensorSize, outerDim);
         CUUnifiedBlob::CUDA_vectorVectorScalarProduct(u_hat, v, b, numClasses, flattenedTensorSize, outerDim);
-//        sleep(0.5);
-        b.print("b", numClasses);
-        c.print("c", numClasses);
-        v.print("v", outerDim);
     }
+    b.print("b", numClasses);
+    c.print("c", numClasses);
+    v.print("v", outerDim);
 }
 
 int main() {

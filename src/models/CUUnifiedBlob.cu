@@ -9,8 +9,6 @@
 #include "models/CUUnifiedBlob.h"
 #include "CUDAUtils.h"
 
-using namespace std;
-
 CUUnifiedBlob::CUUnifiedBlob(int pSize) : size(pSize), data(nullptr), isGPUAllocated(false) {
     assert (pSize > 0);
     allocateMemory();
@@ -48,18 +46,23 @@ void CUUnifiedBlob::resize(int newSize) {
     allocateMemory();
 }
 
-void CUUnifiedBlob::print(const string& msg, int width) {
+void CUUnifiedBlob::print(const std::string& msg, int width) {
     if (!msg.empty()) {
-        cout << msg << endl;
+        std::cout << msg << std::endl;
     }
-    int bufferSize = min(size, 200);
+    int bufferSize = std::min(size, 200);
     for (int i = 0; i < bufferSize; i++) {
-        cout << data[i] << "\t";
+        std::cout << data[i] << "\t";
         if (((i+1) % width) == 0) {
-            cout << endl;
+            std::cout << std::endl;
         }
     }
-    cout << endl;
+    std::cout << std::endl;
+//    for (int i = 0; i < size; i++) {
+//        if (data[i] == 0.0) {
+//            std::cout << "zero at location: " << i << "(" << i/width << "," << i % width << ")" << std::endl;
+//        }
+//    }
 }
 
 bool CUUnifiedBlob::operator==(const CUUnifiedBlob &other) const {
@@ -68,14 +71,14 @@ bool CUUnifiedBlob::operator==(const CUUnifiedBlob &other) const {
     }
 
     if (size != other.size) {
-        cout << "bad sizes" << endl;
+        std::cout << "bad sizes" << std::endl;
         return false;
     }
 
     for (int i = 0; i < size; i++) {
         if (data[i] != other.data[i]) {
-            cout << "they didn't match at: " << i << endl;
-            cout << "this: " << data[i] << " other: " << other.data[i] << endl;
+            std::cout << "they didn't match at: " << i << std::endl;
+            std::cout << "this: " << data[i] << " other: " << other.data[i] << std::endl;
             return false;
         }
     }
@@ -191,7 +194,7 @@ void CUUnifiedBlob::CUDA_vectorVectorSoftmax(CUUnifiedBlob &b,
                                              int numClasses,
                                              int tensorSize) {
     int offset = 0;
-    int numThreads = min(1024, tensorSize);
+    int numThreads = std::min(1024, tensorSize);
     cu_vectorVectorSoftmax_kernel<<<numClasses, numThreads, numThreads*sizeof(double)>>>(b.data, c.data, numClasses, tensorSize);
 }
 
@@ -202,7 +205,7 @@ void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
                                              int tensorSize,
                                              int dim) {
     dim3 blockDimensions(numClasses, dim);
-    int numThreads = min(1024, tensorSize);
+    int numThreads = std::min(1024, tensorSize);
     cu_weightReduceVector_kernel<<<blockDimensions, numThreads, numThreads*sizeof(double)>>>(u_hat.data, c.data, v.data, numClasses, tensorSize, dim);
 }
 
@@ -234,18 +237,21 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
     extern __shared__
     double shared_b_exps[];
 
-    double my_exp_bs [8]; // make this dynamic and only as needed
+    double my_exp_bs [2]; // make this dynamic and only as needed
     for (int i = 0; i*1024 < tensorSize; i++) {
         if (i*1024 + t < tensorSize) {
             my_exp_bs[i] = exp(b[(i*1024+t)*numClasses+k]); // consider using hexp() for speed
+//            if (!isnan(my_exp_bs[i])) {
+//                my_exp_bs[i] = 0;
+//            }
             shared_b_exps[t] += my_exp_bs[i];
         }
     }
     __syncthreads();
 
     for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-        if (t % (2*s) == 0) {
-            shared_b_exps[t] += shared_b_exps[t + s];
+        if (t % (2*s) == 0 && !isinf(shared_b_exps[t+s] + shared_b_exps[t])) {
+            shared_b_exps[t] += shared_b_exps[t+s];
         }
         __syncthreads();
     }
@@ -313,12 +319,13 @@ void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim) {
 
     // calc squashing func
     if (v_val_index == 0) {
+        shared_v_values[0] = 1e-4;
         shared_v_values[1] = shared_v_values[0] / (1 + shared_v_values[0]);
         shared_v_values[0] = sqrt(shared_v_values[0]);
     }
     __syncthreads();
 
-    if (v_index < numVecs) {
+    if (v_val_index == 0 && v_index < numVecs) {
         v[v_index*vecDim + v_val_index] *= shared_v_values[1] / shared_v_values[0];
     }
 }
@@ -342,5 +349,7 @@ void cu_vectorVectorScalarProduct_kernel(double *u_hat, double *v, double *b, in
     	__syncthreads();
     }
 
-    b[t*numClasses+k] = shared_scalar_products[0];
+    if (specificDim == 0 && !isnan(shared_scalar_products[0])) {
+        b[t*numClasses+k] += shared_scalar_products[0];
+    }
 }

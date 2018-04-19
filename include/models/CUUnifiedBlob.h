@@ -8,15 +8,13 @@
 #include <string>
 #include <CUDAClionHelper.h>
 
-using namespace std;
-
 class CUUnifiedBlob {
 public:
-    explicit CUUnifiedBlob(int pSize);
+    explicit CUUnifiedBlob(int pSize = 1);
     ~CUUnifiedBlob();
     void resize(int newSize);
     void clear();
-    void print(const string& msg = "", int width = 1);
+    void print(const std::string& msg = "", int width = 1);
     bool operator==(const CUUnifiedBlob& other) const;
 
     void setValueAt_1D(int location, double incomingValue);

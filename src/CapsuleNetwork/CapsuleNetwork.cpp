@@ -13,11 +13,13 @@
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
 CapsuleNetwork::CapsuleNetwork() :
-        primaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels*Config::cnInnerDim, 28-6, 28-6),
+        primaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels * Config::cnInnerDim, 28 - 6,
+                    28 - 6),
         digitCaps(Config::numClasses),
-        reconstructionLayers(Config::numClasses*Config::cnOuterDim, Config::inputHeight*Config::inputWidth, {28*28}) {
+        reconstructionLayers(Config::numClasses * Config::cnOuterDim, Config::inputHeight * Config::inputWidth,
+                             {28 * 28}) {
     auto totalNumVectors = 6 * 6 * Config::cnNumTensorChannels;
-    for (auto& capsule : digitCaps) {
+    for (auto &capsule : digitCaps) {
         capsule.init(Config::cnInnerDim, Config::cnOuterDim, totalNumVectors, Config::numClasses);
     }
     reconstructionLayers.init();
@@ -58,7 +60,7 @@ vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool use
     return outputs;
 }
 
-void CapsuleNetwork::m_threading_loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> input) {
+void CapsuleNetwork::m_threading_loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> &input) {
     digitCaps[capsuleIndex].forwardPropagate(input);
 }
 
@@ -80,7 +82,7 @@ vector<arma::vec> CapsuleNetwork::getReconstructionError(vector<arma::vec> digit
     auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
     auto reconstructionGradient = getErrorGradientImage(image, reconstructionImage);
     auto mlpError = Utils::asCapsuleVectors(16, 10, reconstructionLayers.backPropagateError(reconstructionGradient));
-    for (auto& v : mlpError) {
+    for (auto &v : mlpError) {
         v *= 0.005; // to not dominate as other error
     }
     return mlpError;
@@ -135,7 +137,7 @@ pair<double, long double> CapsuleNetwork::tally(bool useTraining) {
     int numCorrectlyClassified = 0;
     long double totalLoss = 0.0;
 
-    auto& tallyData = MNISTReader::getInstance()->trainingData;
+    auto &tallyData = MNISTReader::getInstance()->trainingData;
     if (!useTraining) {
         tallyData = MNISTReader::getInstance()->testingData;
     }
@@ -167,7 +169,8 @@ pair<double, long double> CapsuleNetwork::tally(bool useTraining) {
     timer.stop();
 
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
-    cout << "       Accuracy (out of " << tallyData.size() << "): " << double(numCorrectlyClassified)/double(tallyData.size()) * 100 << endl;
+    cout << "       Accuracy (out of " << tallyData.size() << "): "
+         << double(numCorrectlyClassified) / double(tallyData.size()) * 100 << endl;
     cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
     cout << "                  Average Loss: " << totalLoss << endl;
     return {
@@ -181,19 +184,22 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
     // generate the derivative of the non-linear vector activation function
     for (int i = 0; i < error.size(); i++) {
         // d(squash())/dv
-        auto activationDerivativeLength = Utils::getSquashDerivativeLength(output[i]); // Note: this is the first derivative of the activation function
+        auto activationDerivativeLength = Utils::getSquashDerivativeLength(
+                output[i]); // Note: this is the first derivative of the activation function
         // d(loss(v))/d||v||
         auto errorGradient = getMarginLossGradient(i == targetLabel, output[i]);
         // loss(v)
         auto rawMarginLoss = getMarginLoss(i == targetLabel, output[i]);
 
-         error[i] = Config::getInstance()->getLearningRate() * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
+        error[i] =
+                Config::getInstance()->getLearningRate() * activationDerivativeLength * errorGradient * rawMarginLoss *
+                normalise(output[i]);
     }
     return error;
 }
 
 void CapsuleNetwork::runEpoch() {
-    auto& data = MNISTReader::getInstance()->trainingData;
+    auto &data = MNISTReader::getInstance()->trainingData;
 
     ProgressBar pb(data.size());
     for (int i = 0; i < data.size(); i++) {
@@ -204,7 +210,7 @@ void CapsuleNetwork::runEpoch() {
         backPropagate(error);
         backPropagate(imageError);
 
-        if (i%Config::batchSize == Config::batchSize-1) {
+        if (i % Config::batchSize == Config::batchSize - 1) {
             updateWeights();
 //            loadImageAndPrintOutput(i);
         }
@@ -226,12 +232,14 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
             primaryCapsError[i] += subset[i];
         }
     }
-    for (auto& delta_u : primaryCapsError) {
+    for (auto &delta_u : primaryCapsError) {
         auto derivativeLength = Utils::getSquashDerivativeLength(delta_u);
         delta_u = derivativeLength * Utils::safeNormalise(delta_u);
     }
     // translate to feature maps
-    vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6, Config::cnNumTensorChannels*Config::cnInnerDim, primaryCapsError);
+    vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6,
+                                                                   Config::cnNumTensorChannels * Config::cnInnerDim,
+                                                                   primaryCapsError);
     // give back to the conv net here.
     primaryCaps.backPropagate(convError);
 }
@@ -283,7 +291,7 @@ double CapsuleNetwork::getMarginLossGradient(bool isPresent, const arma::vec &v_
 
 void CapsuleNetwork::updateWeights() {
     primaryCaps.updateError();
-    for (auto& cap : digitCaps) {
+    for (auto &cap : digitCaps) {
         cap.updateWeights();
     }
     reconstructionLayers.batchUpdate();
@@ -307,10 +315,10 @@ void CapsuleNetwork::train() {
     cout << "DONE!" << endl;
 }
 
-vector<double> CapsuleNetwork::getErrorGradientImage(const Image& truth, const vector<double>& networkOutput) {
+vector<double> CapsuleNetwork::getErrorGradientImage(const Image &truth, const vector<double> &networkOutput) {
     vector<double> gradient(truth.size());
     for (int i = 0; i < gradient.size(); i++) {
-        gradient[i] = networkOutput[i] * (1-networkOutput[i]) * (truth[i] - networkOutput[i]);
+        gradient[i] = networkOutput[i] * (1 - networkOutput[i]) * (truth[i] - networkOutput[i]);
     }
     return gradient;
 }

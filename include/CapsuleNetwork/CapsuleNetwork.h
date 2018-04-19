@@ -14,7 +14,7 @@ class CapsuleNetwork {
 public:
     CapsuleNetwork();
     vector<arma::vec> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
-    void m_threading_loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> input);
+    void m_threading_loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> &input);
     void loadImageAndPrintOutput(int imageIndex, bool useTraining = true);
     vector<arma::vec> getErrorGradient(const vector<arma::vec> &output, int targetLabel);
     vector<arma::vec> getReconstructionError(vector<arma::vec> digitCapsOutput, int imageIndex, bool useTraining = true);

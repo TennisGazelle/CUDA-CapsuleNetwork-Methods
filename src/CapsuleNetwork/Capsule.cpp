@@ -4,7 +4,6 @@
 
 #include <cassert>
 #include <Utils.h>
-#include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
 void Capsule::init(int iD, int oD, int inputs, int outputs) {
@@ -50,8 +49,7 @@ void Capsule::softmax() {
 vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
     vector<arma::vec> delta_u(numInputs);
     for (int i = 0; i < numInputs; i++) {
-        arma::vec delta_u_hat = trans(weightMatrices[i]) * error;
-        delta_u[i] = c[i] * delta_u_hat;
+        delta_u[i] = c[i] * trans(weightMatrices[i]) * error;
 
         // calculate your damn deltas
         weightDeltas[i] -= error * trans(prevInput[i]);
@@ -60,7 +58,6 @@ vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
 }
 
 arma::vec Capsule::forwardPropagate(const vector<arma::vec>& u) {
-    // error check
     // we have as many inputs as we have weights for
     assert (u.size() == numInputs);
     // all inputs have the same dimensions
