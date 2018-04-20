@@ -215,6 +215,27 @@ void CUUnifiedBlob::vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap
     }
 }
 
+void CUUnifiedBlob::weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &c, CUUnifiedBlob &w,
+                                               CUUnifiedBlob &v_error, int numClasses,
+                                               int tensorSize, int innerDim, int outerDim) {
+    for (int t = 0; t < tensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+            int c_index = t*numClasses + k;
+            int w_index = c_index * innerDim * outerDim;
+            int v_index = k * outerDim;
+            int u_index = c_index * innerDim;
+            // think transposed matrix
+            for (int col = 0; col < innerDim; col++) {
+                double u_value = 0.0;
+                for (int row = 0; row < outerDim; row++) {
+                    u_value += w.data[row*innerDim + col + w_index] * v_error.data[row + v_index];
+                }
+                delta_u.data[col + u_index] = u_value * c.data[c_index];
+            }
+        }
+    }
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
@@ -259,6 +280,13 @@ void CUUnifiedBlob::CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifi
 
 void CUUnifiedBlob::CUDA_vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim) {
     cu_vectorLossFunction_kernel<<<numClasses, dim, dim*sizeof(double)>>>(v.data, truthMap.data);
+}
+
+void CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &c, CUUnifiedBlob &w,
+                                                    CUUnifiedBlob &v_error, int numClasses, int tensorSize,
+                                                    int innerDim, int outerDim) {
+    dim3 blockDims(tensorSize, numClasses);
+    cu_weightedTransMatrixVecMult_kernel<<<blockDims, innerDim, innerDim*sizeof(double)>>>(delta_u.data, c.data, w.data, v_error.data, innerDim, outerDim);
 }
 
 __global__
@@ -445,4 +473,23 @@ void cu_vectorLossFunction_kernel(double *v, double *truthMap) {
 
     double resizingFactor = activationFactor * errorGradient * rawMarginLoss / shared_vector_lengths[0];
     v[k*dim + d] *= resizingFactor;
+}
+
+__global__
+void cu_weightedTransMatrixVecMult_kernel(double *delta_u, double *c, double *w, double *v_error, int innerDim, int outerDim) {
+    int t = blockIdx.x;
+    int k = blockIdx.y;
+
+    int c_index = t*gridDim.y + k;
+    int w_index = c_index * innerDim * outerDim;
+    int u_index = c_index * innerDim;
+    int v_index = k * outerDim;
+
+    int col = threadIdx.x;
+
+    double u_value = 0.0;
+    for (int row = 0; row < outerDim; row++) {
+        u_value += w[row*innerDim + col + w_index] * v_error[row + v_index];
+    }
+    delta_u[col + u_index] = u_value * c[c_index];
 }

@@ -400,7 +400,7 @@ void test_CUDA_forwardPropagation() {
     for (i = 0; i < innerDim * outerDim * numClasses * flattenedTensorSize; i++) {
         w.setValueAt_1D(i, Utils::getWeightRand(1));
     }
-https://www.google.com/search?client=ubuntu&channel=fs&q=60000%2F250&ie=utf-8&oe=utf-8
+
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, innerDim, outerDim, flattenedTensorSize * numClasses);
     sleep(1);
     u.print("u", innerDim * numClasses);
@@ -427,8 +427,8 @@ void test_CUUnifiedBlob_vectorLossFunction() {
 
     for (int i = 0; i < numClasses; i++) {
         for (int j = 0; j < dim; j++) {
-            v.setValueAt_2D(i, j, dim, double(j)/100.0);
-            v_cuda_output.setValueAt_2D(i, j, dim, double(j)/100.0);
+            v.setValueAt_2D(i, j, dim, double(i+j)/100.0);
+            v_cuda_output.setValueAt_2D(i, j, dim, double(i+j)/100.0);
         }
     }
     truth.setValueAt_1D(1, 1);
@@ -443,7 +443,43 @@ void test_CUUnifiedBlob_vectorLossFunction() {
 }
 
 void test_CUUnifiedBlob_weightedTransMatrixVecMult() {
+    int numClasses = 10, flattenedTensorSize = 13, innerDim = 3, outerDim = 5;
+    CUUnifiedBlob delta_u(innerDim * numClasses * flattenedTensorSize),
+            delta_u_cuda_output(innerDim * numClasses * flattenedTensorSize),
+            w(innerDim * outerDim * numClasses * flattenedTensorSize),
+            v_error(outerDim * numClasses),
+            c(numClasses * flattenedTensorSize);
 
+    for (int t = 0; t < flattenedTensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+            int w_index = (t*numClasses + k) * innerDim * outerDim;
+            int v_index = (k) * outerDim;
+
+
+            int i = (t+k+1);
+            c.setValueAt_2D(t, k, numClasses, 1.0/double(i)-0.9);
+            for (int row = 0; row < outerDim; row++) {
+                v_error.setValueAt_1D(row + v_index, double(row)/double(outerDim) - double(t+k));
+                for (int col = 0; col < innerDim; col++) {
+                    if (row == outerDim-1 || row == col) {
+                        w.setValueAt_1D(row*innerDim + col + w_index, i);
+                    }
+                }
+            }
+        }
+    }
+
+    w.print("w", innerDim);
+    v_error.print("v_error", outerDim);
+    c.print("c", numClasses);
+
+    CUUnifiedBlob::weightedTransMatrixVecMult(delta_u, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u_cuda_output, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+
+//    sleep(2);
+//    delta_u.print("delta_u", innerDim);
+//    delta_u_cuda_output.print("delta_u_cuda_output", innerDim);
+//    assert(delta_u == delta_u_cuda_output);
 }
 
 int main() {
@@ -469,6 +505,7 @@ int main() {
 //    test_CUDA_forwardPropagation();
 
 //    test_CUUnifiedBlob_vectorLossFunction();
+//    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
     test_CUUnifiedBlob_weightedTransMatrixVecMult();
 
 

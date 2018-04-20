@@ -37,7 +37,7 @@ void Capsule::softmax() {
     for (int i = 0; i < numInputs; i++) {
         c[i] = double(exp(b[i]) / sum_b_exps);
         if (isnan(c[i])) {
-            cerr << "c[i] got nan" << endl;
+            cerr << " c[i] got nan" << endl;
             cerr << "       b[i]: " << b[i] << endl;
             cerr << "  exp(b[i]): " << exp(b[i]) << endl;
             cerr << " sum_b_exps: " << sum_b_exps << endl;
