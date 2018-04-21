@@ -72,6 +72,11 @@ public:
 
     static void weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &c, CUUnifiedBlob &w, CUUnifiedBlob &v_error, int numClasses, int tensorSize, int innerDim, int outerDim);
     static void CUDA_weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &c, CUUnifiedBlob &w, CUUnifiedBlob &v_error, int numClasses, int tensorSize, int innerDim, int outerDim);
+
+    static void vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUnifiedBlob &v_error, CUUnifiedBlob &old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
+    static void CUDA_vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUnifiedBlob &v_error, CUUnifiedBlob &old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
+
+    static void multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim);
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -102,4 +107,7 @@ void cu_vectorLossFunction_kernel(double *v, double *truthMap);
 
 __global__
 void cu_weightedTransMatrixVecMult_kernel(double *delta_u, double *c, double *w, double *v_error, int innerDim, int outerDim);
+
+__global__
+void cu_vectorVectorMatrixProductAndSum_kernel(double *w, double *v_error, double *old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

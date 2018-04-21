@@ -482,6 +482,42 @@ void test_CUUnifiedBlob_weightedTransMatrixVecMult() {
 //    assert(delta_u == delta_u_cuda_output);
 }
 
+void test_CUUnifiedBlob_vectorVectorMatrixProductAndSum() {
+    int numClasses = 10, flattenedTensorSize = 1152, innerDim = 8, outerDim = 16;
+    CUUnifiedBlob
+            u(innerDim * numClasses * flattenedTensorSize),
+            w(innerDim * outerDim * numClasses * flattenedTensorSize),
+            w_cuda_output(innerDim  * outerDim * numClasses * flattenedTensorSize),
+            v_error(outerDim * numClasses);
+
+    for (int t = 0; t < flattenedTensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+            int v_index = (k) * outerDim;
+            int u_index = (t*numClasses + k) * innerDim;
+
+            int i = (t+k+1);
+            for (int row = 0; row < outerDim; row++) {
+                v_error.setValueAt_1D(row + v_index, double(row)/double(outerDim) - double(t+k));
+            }
+            for (int col = 0; col < innerDim; col++) {
+                u.setValueAt_1D(col + u_index, double(col) + k + t);
+            }
+        }
+    }
+
+    u.print("u", innerDim);
+    v_error.print("v_error", outerDim);
+
+    CUUnifiedBlob::vectorVectorMatrixProductAndSum(w, v_error, u, numClasses, flattenedTensorSize, innerDim, outerDim);
+    CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_cuda_output, v_error, u, numClasses, flattenedTensorSize, innerDim, outerDim);    
+    sleep(1);
+    assert (w == w_cuda_output);
+}
+
+void test_CUUnifiedBlob_CUDA_multiVectorReduction() {
+	
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
@@ -506,8 +542,9 @@ int main() {
 
 //    test_CUUnifiedBlob_vectorLossFunction();
 //    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
-    test_CUUnifiedBlob_weightedTransMatrixVecMult();
-
+//    test_CUUnifiedBlob_weightedTransMatrixVecMult();
+//    test_CUUnifiedBlob_vectorVectorMatrixProductAndSum();
+    test_CUUnifiedBlob_CUDA_multiVectorReduction();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

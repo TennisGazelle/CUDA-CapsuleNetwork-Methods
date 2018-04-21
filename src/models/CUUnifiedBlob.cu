@@ -236,6 +236,28 @@ void CUUnifiedBlob::weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnified
     }
 }
 
+void CUUnifiedBlob::vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUnifiedBlob &v_error, CUUnifiedBlob &old_u,
+                                                    int numClasses, int tensorSize, int innerDim, int outerDim) {
+    for (int t = 0; t < tensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+            int element_index = t*numClasses + k;
+            int w_index = element_index * innerDim * outerDim;
+            int v_index = k * outerDim;
+            int u_index = element_index * innerDim;
+
+            for (int row = 0; row < outerDim; row++) {
+                for (int col = 0; col < innerDim; col++) {
+                    w.data[row*innerDim + col + w_index] += v_error.data[row + v_index] * old_u.data[col + u_index];
+                }
+            }
+        }
+    }
+}
+
+void CUUnifiedBlob::multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim) {
+	
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
@@ -287,6 +309,12 @@ void CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUn
                                                     int innerDim, int outerDim) {
     dim3 blockDims(tensorSize, numClasses);
     cu_weightedTransMatrixVecMult_kernel<<<blockDims, innerDim, innerDim*sizeof(double)>>>(delta_u.data, c.data, w.data, v_error.data, innerDim, outerDim);
+}
+
+void CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUnifiedBlob &v_error, CUUnifiedBlob &old_u, int numClasses, int tensorSize, int innerDim, int outerDim) {
+	dim3 blockDims(tensorSize, numClasses);
+	dim3 threadDims(outerDim, innerDim);
+	cu_vectorVectorMatrixProductAndSum_kernel<<<blockDims,threadDims>>>(w.data, v_error.data, old_u.data, numClasses, tensorSize, innerDim, outerDim);
 }
 
 __global__
@@ -492,4 +520,20 @@ void cu_weightedTransMatrixVecMult_kernel(double *delta_u, double *c, double *w,
         u_value += w[row*innerDim + col + w_index] * v_error[row + v_index];
     }
     delta_u[col + u_index] = u_value * c[c_index];
+}
+
+__global__
+void cu_vectorVectorMatrixProductAndSum_kernel(double *w, double *v_error, double *old_u, int numClasses, int tensorSize, int innerDim, int outerDim) {
+    int t = blockIdx.x;
+    int k = blockIdx.y;
+
+    int row = threadIdx.x;
+    int col = threadIdx.y;
+
+    int element_index = t*numClasses + k;
+    int w_index = element_index * innerDim * outerDim;
+    int u_index = element_index * innerDim;
+    int v_index = k * outerDim;
+
+	w[row*innerDim + col + w_index] += v_error[row + v_index] * old_u[col + u_index];
 }
