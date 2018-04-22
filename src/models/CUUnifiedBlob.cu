@@ -266,6 +266,13 @@ void CUUnifiedBlob::multiVectorReduction(CUUnifiedBlob &u, int numClasses, int t
 	}
 }
 
+void CUUnifiedBlob::matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, int size) {
+	for (int i = 0; i < size; i++) {
+		w.data[i] += w_error.data[i];
+		w_error.data[i] = 0;
+	}
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
@@ -326,8 +333,12 @@ void CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUni
 }
 
 void CUUnifiedBlob::CUDA_multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim) {
-    dim3 blockDims(tensorSize, numClasses);
+    dim3 blockDims(tensorSize);
     cu_multiVectorReduction_kernel<<<blockDims, dim>>>(u.data, numClasses, dim);
+}
+
+void CUUnifiedBlob::CUDA_matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_update, int size) {
+    cu_matrixMatrixUpdate_kernel<<<size, 1>>>(w.data, w_update.data);	
 }
 
 __global__
@@ -554,25 +565,18 @@ void cu_vectorVectorMatrixProductAndSum_kernel(double *w, double *v_error, doubl
 __global__
 void cu_multiVectorReduction_kernel(double *u, int numClasses, int dim) {
 	int t = blockIdx.x;
-	int k = blockIdx.y;
 	int d = threadIdx.x;
 
     for (int i = 1; i < numClasses; i++) {
-        int u_element_index = t*numClasses + k;
+        int u_element_index = t*numClasses + i;
     	u[t*numClasses*dim + d] += u[u_element_index*dim + d];
     	u[u_element_index*dim + d] = 0;
     }
 }
 
-/*
-	for (int t = 0; t < tensorSize; t++) {
-		for (int d = 0; d < dim; d++) {
-			for (int k = 1; k < numClasses; k++) {
-				int element_index = t*numClasses + k;
-				u.data[t*numClasses*dim + d] += u.data[element_index*dim + d];
-				u.data[element_index*dim + d] = 0;
-			}
-		}
-	}
-
-*/
+__global__
+void cu_matrixMatrixUpdate_kernel(double *w, double *w_error) {
+    int tid = blockIdx.x;
+    w[tid] += w_error[tid];
+    w_error[tid] = 0;
+}
