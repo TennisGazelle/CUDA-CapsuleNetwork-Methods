@@ -255,7 +255,15 @@ void CUUnifiedBlob::vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUnifiedB
 }
 
 void CUUnifiedBlob::multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim) {
-	
+	for (int t = 0; t < tensorSize; t++) {
+		for (int d = 0; d < dim; d++) {
+			for (int k = 1; k < numClasses; k++) {
+				int element_index = t*numClasses + k;
+				u.data[t*numClasses*dim + d] += u.data[element_index*dim + d];
+				u.data[element_index*dim + d] = 0;
+			}
+		}
+	}
 }
 
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
@@ -315,6 +323,11 @@ void CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUni
 	dim3 blockDims(tensorSize, numClasses);
 	dim3 threadDims(outerDim, innerDim);
 	cu_vectorVectorMatrixProductAndSum_kernel<<<blockDims,threadDims>>>(w.data, v_error.data, old_u.data, numClasses, tensorSize, innerDim, outerDim);
+}
+
+void CUUnifiedBlob::CUDA_multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim) {
+    dim3 blockDims(tensorSize, numClasses);
+    cu_multiVectorReduction_kernel<<<blockDims, dim>>>(u.data, numClasses, dim);
 }
 
 __global__
@@ -537,3 +550,29 @@ void cu_vectorVectorMatrixProductAndSum_kernel(double *w, double *v_error, doubl
 
 	w[row*innerDim + col + w_index] += v_error[row + v_index] * old_u[col + u_index];
 }
+
+__global__
+void cu_multiVectorReduction_kernel(double *u, int numClasses, int dim) {
+	int t = blockIdx.x;
+	int k = blockIdx.y;
+	int d = threadIdx.x;
+
+    for (int i = 1; i < numClasses; i++) {
+        int u_element_index = t*numClasses + k;
+    	u[t*numClasses*dim + d] += u[u_element_index*dim + d];
+    	u[u_element_index*dim + d] = 0;
+    }
+}
+
+/*
+	for (int t = 0; t < tensorSize; t++) {
+		for (int d = 0; d < dim; d++) {
+			for (int k = 1; k < numClasses; k++) {
+				int element_index = t*numClasses + k;
+				u.data[t*numClasses*dim + d] += u.data[element_index*dim + d];
+				u.data[element_index*dim + d] = 0;
+			}
+		}
+	}
+
+*/

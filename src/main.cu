@@ -515,7 +515,75 @@ void test_CUUnifiedBlob_vectorVectorMatrixProductAndSum() {
 }
 
 void test_CUUnifiedBlob_CUDA_multiVectorReduction() {
-	
+	int numClasses = 2, tensorSize = 10, dim = 5;
+	CUUnifiedBlob delta_u(numClasses * tensorSize * dim),
+	              delta_u_cuda_output(numClasses * tensorSize * dim);
+
+	for (int t = 0; t < tensorSize; t++) {
+		for (int k = 0; k < numClasses; k++) {
+		    int i = t+k;
+			for (int d = 0; d < dim; d++) {
+				delta_u.setValueAt_2D(t, k*dim+d, numClasses*dim, i);
+				delta_u_cuda_output.setValueAt_2D(t, k*dim+d, numClasses*dim, i++);
+			}
+		}
+	}
+   
+	delta_u.print("delta_u", numClasses*dim);
+	CUUnifiedBlob::multiVectorReduction(delta_u, numClasses, tensorSize, dim);
+	CUUnifiedBlob::CUDA_multiVectorReduction(delta_u_cuda_output, numClasses, tensorSize, dim);
+    sleep(1);
+	delta_u.print("reduced_delta_u", numClasses*dim);
+	assert(delta_u == delta_u_cuda_output);
+}
+
+void test_CUDA_backPropagation() {
+    int numClasses = 3, flattenedTensorSize = 2, innerDim = 3, outerDim = 5;
+    CUUnifiedBlob
+            u(innerDim * numClasses * flattenedTensorSize),
+            delta_u(innerDim * numClasses * flattenedTensorSize),
+            w(innerDim * outerDim * numClasses * flattenedTensorSize),
+            w_error(innerDim  * outerDim * numClasses * flattenedTensorSize),
+            v_error(outerDim * numClasses),
+            c(numClasses * flattenedTensorSize),
+            truth(numClasses);
+            
+    for (int t = 0; t < flattenedTensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+            int v_index = (k) * outerDim;
+            int u_index = (t*numClasses + k) * innerDim;
+            int i = (t+k+1);
+
+            c.setValueAt_2D(t, k, numClasses, 1.0/double(i)-0.9);
+            
+            for (int row = 0; row < outerDim; row++) {
+                v_error.setValueAt_1D(row + v_index, double(row)/double(outerDim) - double(t+k));
+                for (int col = 0; col < innerDim; col++) {
+                    w.setValueAt_2D((t*numClasses + k)*outerDim+row, col, innerDim, row + col);
+                }
+            }
+            for (int col = 0; col < innerDim; col++) {
+                u.setValueAt_1D(col + u_index, double(col) + k + t);
+            }
+        }
+    }
+    truth.setValueAt_1D(1, 1);
+
+    CUUnifiedBlob::CUDA_vectorLossFunction(v_error, truth, numClasses, outerDim);
+    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+	CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_error, v_error, u, numClasses, flattenedTensorSize, innerDim, outerDim);
+
+
+    v_error.print("v_error", outerDim*numClasses);
+    w.print("w", innerDim);
+    w_error.print("w_update", innerDim);
+    c.print("c", numClasses);
+    u.print("u", innerDim*numClasses);
+    delta_u.print("delta_u", innerDim*numClasses);
+
+    CUUnifiedBlob::CUDA_multiVectorReduction(delta_u, numClasses, flattenedTensorSize, innerDim);
+    sleep(2);
+    delta_u.print("final delta_u", innerDim*numClasses);
 }
 
 int main() {
@@ -544,7 +612,8 @@ int main() {
 //    test_CUUnifiedBlob_CUDA_matrixVectorMultiplication();
 //    test_CUUnifiedBlob_weightedTransMatrixVecMult();
 //    test_CUUnifiedBlob_vectorVectorMatrixProductAndSum();
-    test_CUUnifiedBlob_CUDA_multiVectorReduction();
+//    test_CUUnifiedBlob_CUDA_multiVectorReduction();
+	test_CUDA_backPropagation();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();
