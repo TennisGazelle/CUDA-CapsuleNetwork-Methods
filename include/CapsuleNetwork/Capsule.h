@@ -33,7 +33,6 @@ private:
     int numInputs;
     int numOutputs;
 
-    static const int numIterations = 3;
     vector<arma::vec> prevInput;
     arma::vec output;
 };

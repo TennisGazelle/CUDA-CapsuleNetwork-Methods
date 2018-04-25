@@ -11,12 +11,16 @@
 class CUUnifiedBlob {
 public:
     explicit CUUnifiedBlob(int pSize = 1);
+    CUUnifiedBlob(const CUUnifiedBlob& other);
     ~CUUnifiedBlob();
 
+    void copy(const CUUnifiedBlob& other);
     void resize(int newSize);
     void clear();
     void print(const std::string &msg = "", int width = 1);
     bool operator==(const CUUnifiedBlob &other) const;
+    int getSize() const;
+    void fillWithRandom();
 
     void setValueAt_1D(int location, double incomingValue);
     void setValueAt_2D(int x, int y, int xDim, double incomingValue);
@@ -57,15 +61,10 @@ public:
                                          int dim);
 
     static void vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
-
     static void CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
 
-    static void
-    vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize,
-                              int dim);
-
-    static void CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses,
-                                               int tensorSize, int dim);
+    static void vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim);
+    static void CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim);
 
     static void vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim);
     static void CUDA_vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim);
@@ -81,6 +80,12 @@ public:
 
     static void matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, int size);
     static void CUDA_matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, int size);
+
+    static void vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim);
+    static void CUDA_vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim);
+
+    static void convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
+    static void CUDA_convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -120,4 +125,10 @@ void cu_multiVectorReduction_kernel(double *u, int numClasses, int dim);
 
 __global__
 void cu_matrixMatrixUpdate_kernel(double *w, double *w_error);
+
+__global__
+void cu_vectorSquashDerivative_kernel(double *v);
+
+__global__
+void cu_convolutionalDotProduct_kernel(double *input, double *filter, double *output, int iHeight, int iWidth);
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

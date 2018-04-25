@@ -11,6 +11,8 @@
 #include <cassert>
 #include <CapsuleNetwork/CapsuleNetwork.h>
 #include <models/CUUnifiedBlob.h>
+#include <HostTimer.h>
+#include <CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h>
 
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
@@ -584,12 +586,143 @@ void test_CUDA_backPropagationAndUpdate() {
     CUUnifiedBlob::CUDA_multiVectorReduction(delta_u, numClasses, flattenedTensorSize, innerDim);
     delta_u.print("final delta_u", innerDim*numClasses);
 
+//    CUUnifiedBlob::matrixMatrixUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
 	CUUnifiedBlob::CUDA_matrixMatrixUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
     w.print("w updated", innerDim);
 }
 
+void test_forwardPropagationSpeedUpTimings() {
+    CapsuleNetwork seqCapsuleNetwork;
+    int statisticalTimings = 30;
+    vector<long double> timings(statisticalTimings);
+    HostTimer timer;
+
+    // full forward propagate
+    for (int i = 0; i < timings.size(); i++) {
+        timer.start();
+        seqCapsuleNetwork.fullForwardPropagation(i);
+        timer.stop();
+        timings[i] = timer.getElapsedTime();
+    }
+
+    for (auto d : timings) {
+        cout << d << endl;
+    }
+}
+
+void test_backwardPropagationSpeedupTimings() {
+    CapsuleNetwork seqCapsuleNetwork;
+    int statisticalTimings = 30;
+    vector<long double> timings(statisticalTimings);
+
+    // full forward propagate
+    for (int i = 0; i < timings.size(); i++) {
+        timings[i] = seqCapsuleNetwork.fullBackwardPropagation(i);
+    }
+    for (auto d : timings) {
+        cout << d << endl;
+    }
+}
+
+void test_weightUpdateSpeedupTiming() {
+    CapsuleNetwork seqCapsuleNetwork;
+    int statisticalTimings = 30;
+    vector<long double> timings(statisticalTimings);
+    HostTimer timer;
+
+    // full forward propagate
+    for (int i = 0; i < timings.size(); i++) {
+        seqCapsuleNetwork.fullForwardPropagation(i);
+        seqCapsuleNetwork.fullBackwardPropagation(i);
+
+        timer.start();
+        seqCapsuleNetwork.updateWeights();
+        timer.stop();
+        timings[i] = timer.getElapsedTime();
+    }
+
+    for (auto d : timings) {
+        cout << d << endl;
+    }
+}
+
+void test_epochSpeedupTimings() {
+    CapsuleNetwork seqCapsuleNetwork;
+    int statisticalTimings = 30;
+    vector<long double> timings(statisticalTimings);
+    HostTimer timer;
+
+    // full forward propagate
+    for (int i = 0; i < timings.size(); i++) {
+        timer.start();
+        seqCapsuleNetwork.runEpoch();
+        timer.stop();
+        timings[i] = timer.getElapsedTime();
+        for (auto d : timings) {
+            cout << d << endl;
+        }
+    }
+
+}
+
+void test_CUCapsuleNetwork_forwardPropagation() {
+    CUCapsuleNetwork capsNet;
+    int statisticalTimings = 30;
+    vector<long double> timings(statisticalTimings);
+    HostTimer timer;
+
+    for (int i = 0; i < timings.size(); i++) {
+        timer.start();
+        capsNet.runEpoch();
+        timer.stop();
+//        timings[i] = capsNet.forwardAndBackPropagation(i, true);
+        timings[i] = timer.getElapsedTime();
+        for (auto d : timings) {
+            cout << d << endl;
+        }
+    }
+}
+
+void test_CUUnifiedBlob_CUDA_convolutionalFP() {
+    int filterHeight = 23, filterWidth = 23, depth = 1, numFilters = 3;
+    int inputHeight = 28, inputWidth = 28;
+    int outputHeight = inputHeight - filterHeight + 1,
+            outputWidth = inputWidth - filterWidth + 1;
+
+    CUUnifiedBlob input(inputHeight * inputWidth * depth),
+            filters(filterHeight * filterWidth * depth * numFilters),
+            output(outputHeight * outputWidth * numFilters),
+            output_cuda_output(outputHeight * outputWidth * numFilters);
+
+    for (int f = 0; f < numFilters; f++) {
+        for (int r = 0; r < filterHeight; r++) {
+            for (int c = 0; c < filterWidth; c++) {
+                for (int d = 0; d < depth; d++) {
+                    int index = f*filterHeight*filterWidth*depth;
+                    index += r*filterWidth*depth;
+                    index += c*depth;
+                    index += d;
+
+                    filters.setValueAt_1D(index, index);
+                }
+            }
+        }
+    }
+    input.fillWithRandom();
+
+    filters.print("filters", filterWidth);
+    input.print("input", inputWidth);
+
+    CUUnifiedBlob::convolutionalDotProduct(input, filters, output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+    CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filters, output_cuda_output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+    output.print("outputs", outputWidth);
+    output_cuda_output.print("output_cuda", outputWidth);
+
+    assert(output == output_cuda_output);
+}
+
 int main() {
-//    test_SingleLayerCNN();
+//    test_SingleLayerCNNv_error();
 //    test_CapsuleNetSquishing();
 //    test_VectorMapFromFeatureMaps
 //    test_FeatureMapsFromVectorMap();
@@ -615,7 +748,16 @@ int main() {
 //    test_CUUnifiedBlob_weightedTransMatrixVecMult();
 //    test_CUUnifiedBlob_vectorVectorMatrixProductAndSum();
 //    test_CUUnifiedBlob_CUDA_multiVectorReduction();
-	test_CUDA_backPropagationAndUpdate();
+//	test_CUDA_backPropagationAndUpdate();
+
+    test_CUUnifiedBlob_CUDA_convolutionalFP();
+
+//    test_forwardPropagationSpeedUpTimings();
+//    test_backwardPropagationSpeedupTimings();
+//    test_weightUpdateSpeedupTiming();
+//    test_epochSpeedupTimings();
+
+//    test_CUCapsuleNetwork_forwardPropagation();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

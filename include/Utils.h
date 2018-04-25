@@ -8,8 +8,6 @@
 #include <string>
 #include <armadillo>
 
-using namespace std;
-
 class Utils {
 public:
     static double getRandBetween(double lowerBound, double upperBound);
@@ -22,8 +20,8 @@ public:
     static double getSquashDerivativeLength(const arma::vec &input);
 
     // the following are inverses of one another // not tested yet
-    static vector<double> getAsOneDim(const vector<arma::vec>& input);
-    static vector<arma::vec> asCapsuleVectors(int dim, int numVectors, const vector<double>& data);
+    static std::vector<double> getAsOneDim(const std::vector<arma::vec>& input);
+    static std::vector<arma::vec> asCapsuleVectors(int dim, int numVectors, const std::vector<double>& data);
 };
 
 

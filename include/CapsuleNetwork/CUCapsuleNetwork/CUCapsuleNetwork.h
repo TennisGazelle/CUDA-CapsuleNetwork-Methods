@@ -8,17 +8,28 @@
 
 #include <models/CUUnifiedBlob.h>
 #include <ConvolutionalNetwork/ConvolutionalLayer.h>
+#include <armadillo>
+#include <ConvolutionalNetwork/CUConvolutionalNetwork/CUConvolutionalLayer.h>
 
 class CUCapsuleNetwork {
 public:
     CUCapsuleNetwork();
+    void forwardPropagation(int imageIndex, bool useTraining = true);
+    void backPropagation(int imageIndex, bool useTraining = true);
+    long double forwardAndBackPropagation(int imageIndex, bool useTraining = true);
+    void runEpoch();
+    void updateWeights();
+
 private:
+    void to1DSquishedArrayOfVecs(size_t vectorDim, vector<FeatureMap> inputMaps, CUUnifiedBlob &output, int numClasses) const;
     unsigned int flattenedTensorSize;
     ConvolutionalLayer primaryCaps;
+    CUConvolutionalLayer other_primaryCaps;
     CUUnifiedBlob u, u_hat,
                   w, w_delta, w_velocity,
                   v,
-                  b, c;
+                  b, c,
+                  truth;
 };
 
 

@@ -14,7 +14,7 @@ public:
     double getLearningRate() const;
     void resetLearningRate();
 
-    static const bool multithreaded = true;
+    static const bool multithreaded = false;
 
     static const int inputHeight = 28, inputWidth = 28;
     static const int cnInnerDim = 8, cnOuterDim = 16;
@@ -23,6 +23,7 @@ public:
 
     static const int batchSize = 250;
     static const int numEpochs = 600;
+    static const int numIterations = 3;
     double learningRate = 0.01;
 
     const ActivationType at = SIGMOID;

@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules")
 #set(CXX11_FLAGS -std=gnu++11)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread --std=c++11 -O3 -g")
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std c++11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread -Wall -O3 -D_MWAITXINTRIN_H_INCLUDED -D_FORCE_INLINES") # to get rid of issues with strcpy
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread -Wall -D_MWAITXINTRIN_H_INCLUDED -D_FORCE_INLINES") # to get rid of issues with strcpy
 
 # find the dependencies
 find_package(Armadillo REQUIRED)

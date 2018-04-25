@@ -6,12 +6,17 @@
 #include <CUDAUtils.h>
 #include <iostream>
 #include <cmath>
+#include <Utils.h>
 #include "models/CUUnifiedBlob.h"
 #include "CUDAUtils.h"
 
 CUUnifiedBlob::CUUnifiedBlob(int pSize) : size(pSize), data(nullptr), isGPUAllocated(false) {
     assert (pSize > 0);
     allocateMemory();
+}
+
+CUUnifiedBlob::CUUnifiedBlob(const CUUnifiedBlob &other) {
+    copy(other);
 }
 
 CUUnifiedBlob::~CUUnifiedBlob() {
@@ -22,7 +27,7 @@ CUUnifiedBlob::~CUUnifiedBlob() {
 
 void CUUnifiedBlob::allocateMemory() {
     assert(!isGPUAllocated);
-    auto error = cudaMallocManaged((void**)&data, size * sizeof(double), cudaMemAttachGlobal);
+    auto error = cudaMallocManaged((void**)&data, size * sizeof(double));
     CUDAUtils::handleError(error);
     isGPUAllocated = true;
 }
@@ -44,6 +49,15 @@ void CUUnifiedBlob::resize(int newSize) {
     deallocateMemory();
     size = newSize;
     allocateMemory();
+}
+
+void CUUnifiedBlob::copy(const CUUnifiedBlob &other) {
+    if (other.size != size) {
+        resize(other.size);
+    }
+    for (int i = 0; i < size; i++) {
+        data[i] = other.data[i];
+    }
 }
 
 void CUUnifiedBlob::print(const std::string& msg, int width) {
@@ -84,6 +98,16 @@ bool CUUnifiedBlob::operator==(const CUUnifiedBlob &other) const {
     }
 
     return true;
+}
+
+int CUUnifiedBlob::getSize() const {
+    return size;
+}
+
+void CUUnifiedBlob::fillWithRandom() {
+    for (int i = 0; i < size; i++) {
+        data[i] = Utils::getWeightRand(1);
+    }
 }
 
 void CUUnifiedBlob::setValueAt_1D(int location, double incomingValue) {
@@ -273,6 +297,54 @@ void CUUnifiedBlob::matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error,
 	}
 }
 
+void CUUnifiedBlob::vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim) {
+    for (int v_index = 0; v_index < numVecs*vecDim; v_index += vecDim) {
+        double sum_squares = 0;
+        for (int i = 0; i < vecDim; i++) {
+            sum_squares += pow(v.data[v_index + i], 2);
+        }
+        sum_squares = sqrt(sum_squares);
+        double squashFactor = (2*sum_squares) / pow(sum_squares*sum_squares + 1,2);
+
+        for (int i = 0; i < vecDim; i++) {
+            v.data[v_index + i] *= squashFactor / sum_squares;
+        }
+    }
+}
+
+void CUUnifiedBlob::convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output,
+                                            int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters) {
+    int outputHeight = iHeight - fHeight + 1;
+    int outputWidth = iWidth - fWidth + 1;
+
+    for (int f = 0; f < numFilters; f++) {
+        for (int r = 0; r < outputHeight; r++) {
+            for (int c = 0; c < outputWidth; c++) {
+
+                double sum = 0.0;
+                for (int ch = 0; ch < depth; ch++) {
+                    for (int fr = 0; fr < fHeight; fr++) {
+                        for (int fc = 0; fc < fWidth; fc++) {
+                            int filterIndex = f*depth*fHeight*fWidth + ch*fHeight*fWidth + fr*fWidth + fc;
+                            int inputIndex = ch*iHeight*iWidth + (r+fr)*iWidth + (c+fc);
+//                            std::cout << "filterindex:" << filterIndex << std::endl;
+//                            std::cout << "inputindex :" << inputIndex << std::endl;
+                            sum += input.data[inputIndex] * filter.data[filterIndex];
+                        }
+                    }
+                }
+                sum /= depth*fHeight*fWidth;
+//                std::cout << std::endl;
+
+                int outputIndex = f*outputHeight*outputWidth + r*outputWidth + c;
+//                std::cout << "outputIndex:" << outputIndex << std::endl;
+//                std::cout << std::endl;
+                output.setValueAt_1D(outputIndex, sum);
+            }
+        }
+    }
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
@@ -339,6 +411,21 @@ void CUUnifiedBlob::CUDA_multiVectorReduction(CUUnifiedBlob &u, int numClasses, 
 
 void CUUnifiedBlob::CUDA_matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_update, int size) {
     cu_matrixMatrixUpdate_kernel<<<size, 1>>>(w.data, w_update.data);	
+}
+
+void CUUnifiedBlob::CUDA_vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim) {
+    cu_vectorSquashDerivative_kernel <<<numVecs, vecDim, vecDim*sizeof(double)>>>(v.data);
+}
+
+void CUUnifiedBlob::CUDA_convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output,
+                                                 int iHeight, int iWidth, int fHeight, int fWidth, int depth,
+                                                 int numFilters) {
+    int outputHeight = iHeight - fHeight + 1;
+    int outputWidth = iWidth - fWidth + 1;
+    dim3 blockDims(numFilters, outputHeight, outputWidth);
+    dim3 threadDims(depth, fHeight, fWidth);
+    int numThreads = depth*fHeight*fWidth;
+    cu_convolutionalDotProduct_kernel<<<blockDims,threadDims,numThreads*sizeof(double)>>>(input.data, filter.data, output.data, iHeight, iWidth);
 }
 
 __global__
@@ -579,4 +666,75 @@ void cu_matrixMatrixUpdate_kernel(double *w, double *w_error) {
     int tid = blockIdx.x;
     w[tid] += w_error[tid];
     w_error[tid] = 0;
+}
+
+__global__
+void cu_vectorSquashDerivative_kernel(double *v) {
+    int v_index = blockIdx.x;
+    int v_val_index = threadIdx.x;
+    int vecDim = blockDim.x;
+
+    extern __shared__
+    double shared_v_values[];
+    // reduce the square of the individual elements in shared mem
+    shared_v_values[v_val_index] = pow(v[v_index*vecDim + v_val_index], 2);
+    __syncthreads();
+
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        if (v_val_index % (2*s) == 0) {
+            shared_v_values[v_val_index] += shared_v_values[v_val_index + s];
+        }
+        __syncthreads();
+    }
+
+    // calc squashing func
+    if (v_val_index == 0) {
+        shared_v_values[0] += 1e-4;
+        shared_v_values[1] = pow(shared_v_values[0] + 1, 2);
+        shared_v_values[0] = sqrt(shared_v_values[0]); // normalization factor
+
+        shared_v_values[1] = 2*shared_v_values[0] / shared_v_values[1]; // derivative factor
+    }
+    __syncthreads();
+
+    v[v_index*vecDim + v_val_index] *= shared_v_values[1] / shared_v_values[0];
+}
+
+__global__
+void cu_convolutionalDotProduct_kernel(double *input, double *filter, double *output, int iHeight, int iWidth) {
+    int f = blockIdx.x;
+    int r = blockIdx.y;
+    int c = blockIdx.z;
+
+    int ch = threadIdx.x;
+    int fr = threadIdx.y;
+    int fc = threadIdx.z;
+
+    int outputHeight = iHeight - blockDim.y + 1;
+    int outputWidth = iWidth - blockDim.z + 1;
+
+    int tid = threadIdx.x*blockDim.y*blockDim.z + threadIdx.y*blockDim.z + threadIdx.z;
+
+    int filterIndex = f*blockDim.x*blockDim.y*blockDim.z + ch*blockDim.y*blockDim.z + fr*blockDim.z + fc;
+    int inputIndex = ch*iHeight*iWidth + (r+fr)*iWidth + (c+fc);
+    int outputIndex = f*outputHeight*outputWidth + r*outputWidth + c;
+
+    extern __shared__
+    double shared_matrix_dot[];
+
+    shared_matrix_dot[tid] = input[inputIndex] * filter[filterIndex];
+    __syncthreads();
+
+    for (unsigned int s = 1; s < blockDim.x*blockDim.y*blockDim.z; s *= 2) {
+        if (tid % (2*s) == 0) {
+            shared_matrix_dot[tid] += shared_matrix_dot[tid + s];
+        }
+        __syncthreads();
+    }
+
+    if (tid == 0) {
+        shared_matrix_dot[0] /= blockDim.x*blockDim.y*blockDim.z;
+        output[outputIndex] = shared_matrix_dot[0];
+//        output[outputIndex] = filterIndex;
+    }
 }

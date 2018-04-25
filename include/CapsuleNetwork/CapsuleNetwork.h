@@ -24,6 +24,9 @@ public:
     void train();
     void updateWeights();
 
+    void fullForwardPropagation(int imageIndex = 0);
+    long double fullBackwardPropagation(int imageIndex = 0);
+
     long double getTotalMarginLoss(int targetLabel, const vector<arma::vec>& output) const;
     double getMarginLoss(bool isPresent, const arma::vec& v_k) const;
     double getMarginLossGradient(bool isPresent, const arma::vec& v_k) const;

@@ -25,7 +25,7 @@ CapsuleNetwork::CapsuleNetwork() :
     reconstructionLayers.init();
 }
 
-vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool useTraining) {
+vector<arma::vec> CapsuleNetwork:: loadImageAndGetOutput(int imageIndex, bool useTraining) {
     FeatureMap image;
     if (useTraining) {
         image = MNISTReader::getInstance()->getTrainingImage(imageIndex).toFeatureMap();
@@ -201,14 +201,13 @@ void CapsuleNetwork::runEpoch() {
     for (int i = 0; i < data.size(); i++) {
         vector<arma::vec> output = loadImageAndGetOutput(i);
         vector<arma::vec> error = getErrorGradient(output, data[i].getLabel());
-        vector<arma::vec> imageError = getReconstructionError(output, i);
+//        vector<arma::vec> imageError = getReconstructionError(output, i);
 
         backPropagate(error);
-        backPropagate(imageError);
+//        backPropagate(imageError);
 
         if (i % Config::batchSize == Config::batchSize - 1) {
             updateWeights();
-//            loadImageAndPrintOutput(i);
         }
         pb.updateProgress(i);
     }
@@ -289,7 +288,7 @@ void CapsuleNetwork::updateWeights() {
     for (auto &cap : digitCaps) {
         cap.updateWeights();
     }
-    reconstructionLayers.batchUpdate();
+//    reconstructionLayers.batchUpdate();
 }
 
 void CapsuleNetwork::train() {
@@ -316,4 +315,20 @@ vector<double> CapsuleNetwork::getErrorGradientImage(const Image &truth, const v
         gradient[i] = networkOutput[i] * (1 - networkOutput[i]) * (truth[i] - networkOutput[i]);
     }
     return gradient;
+}
+
+void CapsuleNetwork::fullForwardPropagation(int imageIndex) {
+    vector<arma::vec> output = loadImageAndGetOutput(imageIndex, true);
+//    auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(output));
+}
+
+long double CapsuleNetwork::fullBackwardPropagation(int imageIndex) {
+    static auto &data = MNISTReader::getInstance()->trainingData;
+    vector<arma::vec> output = loadImageAndGetOutput(imageIndex);
+    HostTimer timer;
+    timer.start();
+    vector<arma::vec> error = getErrorGradient(output, data[imageIndex].getLabel());
+    backPropagate(error);
+    timer.stop();
+    return timer.getElapsedTime();
 }

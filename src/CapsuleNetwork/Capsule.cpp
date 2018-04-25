@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <Utils.h>
+#include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
 void Capsule::init(int iD, int oD, int inputs, int outputs) {
@@ -84,7 +85,7 @@ arma::vec Capsule::routingAlgorithm() {
     }
 
     arma::vec v;
-    for (int r = 0; r < numIterations; r++) {
+    for (int r = 0; r < Config::numIterations; r++) {
         softmax();
 
         // calculate s
