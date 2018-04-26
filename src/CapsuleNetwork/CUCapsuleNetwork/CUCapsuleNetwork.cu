@@ -29,17 +29,24 @@ CUCapsuleNetwork::CUCapsuleNetwork() : primaryCaps(Config::inputHeight, Config::
 }
 
 void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
-    FeatureMap image;
+    FeatureMap imageFeatureMap;
+    Image image;
     if (useTraining) {
-        image = MNISTReader::getInstance()->getTrainingImage(imageIndex).toFeatureMap();
+        image = MNISTReader::getInstance()->getTrainingImage(imageIndex);
     } else {
-        image = MNISTReader::getInstance()->getTestingImage(imageIndex).toFeatureMap();
+        image = MNISTReader::getInstance()->getTestingImage(imageIndex);
     }
+    imageFeatureMap = image.toFeatureMap();
 
-    primaryCaps.setInput({image});
+    primaryCaps.setInput({imageFeatureMap});
+    other_primaryCaps.setInput(image.toVectorOfDoubles());
+
     primaryCaps.calculateOutput();
+    other_primaryCaps.calculateOutput();
+
     vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
     to1DSquishedArrayOfVecs(Config::cnInnerDim, primaryCapsOutput, u, Config::numClasses);
+//    other_primaryCaps.squashAndRemapToU(u);
 
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, Config::cnInnerDim, Config::cnOuterDim, Config::cnNumTensorChannels*Config::numClasses);
 

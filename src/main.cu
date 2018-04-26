@@ -672,11 +672,11 @@ void test_CUCapsuleNetwork_forwardPropagation() {
     HostTimer timer;
 
     for (int i = 0; i < timings.size(); i++) {
-        timer.start();
-        capsNet.runEpoch();
-        timer.stop();
-//        timings[i] = capsNet.forwardAndBackPropagation(i, true);
-        timings[i] = timer.getElapsedTime();
+//        timer.start();
+//        capsNet.runEpoch();
+//        timer.stop();
+//        timings[i] = timer.getElapsedTime();
+        timings[i] = capsNet.forwardAndBackPropagation(i, true);
         for (auto d : timings) {
             cout << d << endl;
         }
@@ -684,15 +684,17 @@ void test_CUCapsuleNetwork_forwardPropagation() {
 }
 
 void test_CUUnifiedBlob_CUDA_convolutionalFP() {
-    int filterHeight = 23, filterWidth = 23, depth = 1, numFilters = 3;
-    int inputHeight = 28, inputWidth = 28;
+    int filterHeight = 3, filterWidth = 3, depth = 1, numFilters = 4;
+    int inputHeight = 10, inputWidth = 10;
     int outputHeight = inputHeight - filterHeight + 1,
             outputWidth = inputWidth - filterWidth + 1;
+    int numClasses = 3, dim = 2, flattenedTensorSize = outputHeight * outputWidth * (numFilters/dim);
 
     CUUnifiedBlob input(inputHeight * inputWidth * depth),
             filters(filterHeight * filterWidth * depth * numFilters),
             output(outputHeight * outputWidth * numFilters),
-            output_cuda_output(outputHeight * outputWidth * numFilters);
+            output_cuda_output(outputHeight * outputWidth * numFilters),
+            u(numClasses * dim * flattenedTensorSize);
 
     for (int f = 0; f < numFilters; f++) {
         for (int r = 0; r < filterHeight; r++) {
@@ -703,7 +705,7 @@ void test_CUUnifiedBlob_CUDA_convolutionalFP() {
                     index += c*depth;
                     index += d;
 
-                    filters.setValueAt_1D(index, index);
+                    filters.setValueAt_1D(index, index/100.0);
                 }
             }
         }
@@ -716,9 +718,12 @@ void test_CUUnifiedBlob_CUDA_convolutionalFP() {
     CUUnifiedBlob::convolutionalDotProduct(input, filters, output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
     CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filters, output_cuda_output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
     output.print("outputs", outputWidth);
-    output_cuda_output.print("output_cuda", outputWidth);
+//    assert(output == output_cuda_output);
 
-    assert(output == output_cuda_output);
+    CUUnifiedBlob::tensorFlatteningAndActivatedRemapping(u, output_cuda_output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
+
+    u.print("u", numClasses*dim);
+
 }
 
 int main() {
@@ -751,13 +756,12 @@ int main() {
 //	test_CUDA_backPropagationAndUpdate();
 
     test_CUUnifiedBlob_CUDA_convolutionalFP();
+//    test_CUCapsuleNetwork_forwardPropagation();
 
 //    test_forwardPropagationSpeedUpTimings();
 //    test_backwardPropagationSpeedupTimings();
 //    test_weightUpdateSpeedupTiming();
 //    test_epochSpeedupTimings();
-
-//    test_CUCapsuleNetwork_forwardPropagation();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

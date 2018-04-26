@@ -5,19 +5,23 @@
 #include <cassert>
 #include "ConvolutionalNetwork/CUConvolutionalNetwork/CUConvolutionalLayer.h"
 
-CUConvolutionalLayer::CUConvolutionalLayer(int iHeight, int iWidth, int numFilters, int fHeight, int fWidth) {
-    filterDepth = 1;
+CUConvolutionalLayer::CUConvolutionalLayer(int iHeight, int iWidth, int nFilters, int fHeight, int fWidth) {
+    numFilters = nFilters;
+    depth = 1;
     filterHeight = fHeight;
     filterWidth = fWidth;
 
     inputWidth = iWidth;
     inputHeight = iHeight;
 
-    filters.resize(numFilters);
-    for (auto& blob : filters) {
-        blob.resize(filterDepth * filterHeight * filterWidth);
-        blob.fillWithRandom();
-    }
+    int outputHeight = inputHeight - filterHeight + 1;
+    int outputWidth = inputWidth - filterWidth + 1;
+
+    input.resize(inputHeight*inputWidth*depth);
+    filter.resize(numFilters*depth*filterHeight*filterWidth);
+    output.resize(outputHeight*outputWidth*numFilters);
+
+    filter.fillWithRandom();
 }
 
 void CUConvolutionalLayer::setInput(std::vector<double> inputImage) {
@@ -28,5 +32,9 @@ void CUConvolutionalLayer::setInput(std::vector<double> inputImage) {
 }
 
 void CUConvolutionalLayer::calculateOutput() {
+    CUUnifiedBlob::convolutionalDotProduct(input, filter, output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+}
+
+void CUConvolutionalLayer::squashAndRemapToU(CUUnifiedBlob &u) {
 
 }

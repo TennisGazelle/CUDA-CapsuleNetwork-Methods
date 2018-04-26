@@ -327,22 +327,46 @@ void CUUnifiedBlob::convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob 
                         for (int fc = 0; fc < fWidth; fc++) {
                             int filterIndex = f*depth*fHeight*fWidth + ch*fHeight*fWidth + fr*fWidth + fc;
                             int inputIndex = ch*iHeight*iWidth + (r+fr)*iWidth + (c+fc);
-//                            std::cout << "filterindex:" << filterIndex << std::endl;
-//                            std::cout << "inputindex :" << inputIndex << std::endl;
                             sum += input.data[inputIndex] * filter.data[filterIndex];
                         }
                     }
                 }
                 sum /= depth*fHeight*fWidth;
-//                std::cout << std::endl;
 
                 int outputIndex = f*outputHeight*outputWidth + r*outputWidth + c;
-//                std::cout << "outputIndex:" << outputIndex << std::endl;
-//                std::cout << std::endl;
                 output.setValueAt_1D(outputIndex, sum);
             }
         }
     }
+}
+
+void CUUnifiedBlob::tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &flattenedTensor, CUUnifiedBlob &tensor,
+                                                          int height, int width, int depth, int numClasses, int dim) {
+    // go through each vector (depth first, then width, then height)
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            for (int d = 0; d < depth; d++) {
+                int vector_index = r*depth*width + c*depth + d;
+
+                arma::vec v(dim);
+                for (int dimIndex = 0; dimIndex < dim; dimIndex++) {
+                    int tensor_index = (d*dim + dimIndex)*height*width + r*width + c;
+                    v[dimIndex] = tensor.data[tensor_index];
+                }
+                // squash it
+                v = Utils::squish(v);
+
+                // save it in leftmost column
+                for (int dimIndex = 0; dimIndex < dim; dimIndex++) {
+                    for (int k = 0; k < numClasses; k++) {
+                        flattenedTensor.setValueAt_2D(vector_index, dimIndex + (k*dim), numClasses*dim, v[dimIndex]);
+                    }
+                }
+            }
+        }
+    }
+
+    // copy all elements from leftmost column over to other columns
 }
 
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,

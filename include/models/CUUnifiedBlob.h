@@ -86,6 +86,8 @@ public:
 
     static void convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
     static void CUDA_convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
+
+    static void tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &flattenedTensor, CUUnifiedBlob &tensor, int height, int width, int depth, int numClasses, int dim);
 private:
     void allocateMemory();
     void deallocateMemory();
