@@ -17,6 +17,7 @@ public:
     void copy(const CUUnifiedBlob& other);
     void resize(int newSize);
     void clear();
+    void CUDA_clear();
     void print(const std::string &msg = "", int width = 1);
     bool operator==(const CUUnifiedBlob &other) const;
     int getSize() const;
@@ -26,39 +27,14 @@ public:
     void setValueAt_2D(int x, int y, int xDim, double incomingValue);
     void setValueAt_3D(int x, int y, int z, int xDim, int yDim, double incomingValue);
 
-    static void matrixVectorMultiplication(CUUnifiedBlob &matrix,
-                                           CUUnifiedBlob &inputVector,
-                                           CUUnifiedBlob &outputVector,
-                                           int inputDim,
-                                           int outputDim);
-    static void CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
-                                                CUUnifiedBlob &inputVector,
-                                                CUUnifiedBlob &outputVector,
-                                                int inputDim,
-                                                int outputDim,
-                                                int numMultiplications);
+    static void matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim);
+    static void CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim, int numMultiplications);
 
-    static void vectorVectorSoftmax(CUUnifiedBlob &b,
-                                    CUUnifiedBlob &c,
-                                    int numClasses,
-                                    int tensorSize);
-    static void CUDA_vectorVectorSoftmax(CUUnifiedBlob &b,
-                                         CUUnifiedBlob &c,
-                                         int numClasses,
-                                         int tensorSize);
+    static void vectorVectorSoftmax(CUUnifiedBlob &b, CUUnifiedBlob &c, int numClasses, int tensorSize);
+    static void CUDA_vectorVectorSoftmax(CUUnifiedBlob &b, CUUnifiedBlob &c, int numClasses, int tensorSize);
 
-    static void weightReduceVectors(CUUnifiedBlob &u_hat,
-                                    CUUnifiedBlob &c,
-                                    CUUnifiedBlob &v,
-                                    int numClasses,
-                                    int tensorSize,
-                                    int dim);
-    static void CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
-                                         CUUnifiedBlob &c,
-                                         CUUnifiedBlob &v,
-                                         int numClasses,
-                                         int tensorSize,
-                                         int dim);
+    static void weightReduceVectors(CUUnifiedBlob &u_hat, CUUnifiedBlob &c, CUUnifiedBlob &v, int numClasses, int tensorSize, int dim);
+    static void CUDA_weightReduceVectors(CUUnifiedBlob &u_hat, CUUnifiedBlob &c, CUUnifiedBlob &v, int numClasses, int tensorSize, int dim);
 
     static void vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
     static void CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
@@ -88,6 +64,13 @@ public:
     static void CUDA_convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
 
     static void tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &flattenedTensor, CUUnifiedBlob &tensor, int height, int width, int depth, int numClasses, int dim);
+    static void CUDA_tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &flattenedTensor, CUUnifiedBlob &tensor, int height, int width, int depth, int numClasses, int dim);
+
+    static void reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifiedBlob &flattenedTensor, int height, int width, int depth, int numClasses, int dim);
+    static void CUDA_reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifiedBlob &flattenedTensor, int height, int width, int depth, int numClasses, int dim);
+
+    static void convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters, CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
+    static void CUDA_convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters, CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -96,6 +79,9 @@ private:
     double *data;
     bool isGPUAllocated;
 };
+
+__global__
+void cu_clearOut_kernel(double *data);
 
 __global__
 void cu_matrixVectorMultiplication_kernel(double *matrix, double *inputVector, double *outputVector, int inputDim,
@@ -133,4 +119,13 @@ void cu_vectorSquashDerivative_kernel(double *v);
 
 __global__
 void cu_convolutionalDotProduct_kernel(double *input, double *filter, double *output, int iHeight, int iWidth);
+
+__global__
+void cu_tensorFlatteningAndActivatedRemapping_kernel(double *flattenedTensor, double *tensor, int numClasses);
+
+__global__
+void cu_reconstructingTensorFromError_kernel(double *tensor, double *flattenedTensor, int numClasses);
+
+__global__
+void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, double *delta_filters, double *originalInput, double *newErrorGradient, int iHeight, int iWidth);
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

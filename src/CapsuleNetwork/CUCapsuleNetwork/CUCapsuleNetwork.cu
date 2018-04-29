@@ -38,15 +38,15 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
     }
     imageFeatureMap = image.toFeatureMap();
 
-    primaryCaps.setInput({imageFeatureMap});
+//    primaryCaps.setInput({imageFeatureMap});
     other_primaryCaps.setInput(image.toVectorOfDoubles());
 
-    primaryCaps.calculateOutput();
+//    primaryCaps.calculateOutput();
     other_primaryCaps.calculateOutput();
 
-    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
-    to1DSquishedArrayOfVecs(Config::cnInnerDim, primaryCapsOutput, u, Config::numClasses);
-//    other_primaryCaps.squashAndRemapToU(u);
+//    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
+//    to1DSquishedArrayOfVecs(Config::cnInnerDim, primaryCapsOutput, u, Config::numClasses);
+    other_primaryCaps.squashAndRemapToU(u);
 
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, Config::cnInnerDim, Config::cnOuterDim, Config::cnNumTensorChannels*Config::numClasses);
 

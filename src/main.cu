@@ -540,8 +540,8 @@ void test_CUUnifiedBlob_CUDA_multiVectorReduction() {
 	assert(delta_u == delta_u_cuda_output);
 }
 
-void test_CUDA_backPropagationAndUpdate() {
-    int numClasses = 3, flattenedTensorSize = 2, innerDim = 3, outerDim = 5;
+void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
+    int numClasses = 3, flattenedTensorSize = 12, innerDim = 3, outerDim = 5;
     CUUnifiedBlob
             u(innerDim * numClasses * flattenedTensorSize),
             delta_u(innerDim * numClasses * flattenedTensorSize),
@@ -549,7 +549,8 @@ void test_CUDA_backPropagationAndUpdate() {
             w_error(innerDim  * outerDim * numClasses * flattenedTensorSize),
             v_error(outerDim * numClasses),
             c(numClasses * flattenedTensorSize),
-            truth(numClasses);
+            truth(numClasses),
+            delta_u_feature_cube(flattenedTensorSize * innerDim);
             
     for (int t = 0; t < flattenedTensorSize; t++) {
         for (int k = 0; k < numClasses; k++) {
@@ -583,12 +584,16 @@ void test_CUDA_backPropagationAndUpdate() {
     u.print("u", innerDim*numClasses);
     delta_u.print("delta_u", innerDim*numClasses);
 
-    CUUnifiedBlob::CUDA_multiVectorReduction(delta_u, numClasses, flattenedTensorSize, innerDim);
-    delta_u.print("final delta_u", innerDim*numClasses);
-
 //    CUUnifiedBlob::matrixMatrixUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
-	CUUnifiedBlob::CUDA_matrixMatrixUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
+    CUUnifiedBlob::CUDA_matrixMatrixUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
     w.print("w updated", innerDim);
+
+
+    CUUnifiedBlob::CUDA_multiVectorReduction(delta_u, numClasses, flattenedTensorSize, innerDim);
+    sleep(1);
+    CUUnifiedBlob::reconstructingTensorFromError(delta_u_feature_cube, delta_u, 2, 2, 3, numClasses, innerDim);
+    delta_u.print("final delta_u", innerDim*numClasses);
+    delta_u_feature_cube.print("delta_u as a feature cube", 2);
 }
 
 void test_forwardPropagationSpeedUpTimings() {
@@ -720,10 +725,50 @@ void test_CUUnifiedBlob_CUDA_convolutionalFP() {
     output.print("outputs", outputWidth);
 //    assert(output == output_cuda_output);
 
-    CUUnifiedBlob::tensorFlatteningAndActivatedRemapping(u, output_cuda_output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
+//    CUUnifiedBlob::tensorFlatteningAndActivatedRemapping(u, output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
+    CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(u, output_cuda_output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
 
     u.print("u", numClasses*dim);
+}
 
+void test_CUUnifiedBlob_CUDA_convolutionalBP() {
+    int filterHeight = 2, filterWidth = 2, depth = 1, numFilters = 4;
+    int inputHeight = 5, inputWidth = 5;
+    int outputHeight = inputHeight - filterHeight + 1,
+            outputWidth = inputWidth - filterWidth + 1;
+
+    CUUnifiedBlob input(inputHeight * inputWidth * depth),
+            newErrorGradient(inputHeight * inputWidth * depth),
+            newErrorGradient_cuda_output(inputHeight * inputWidth * depth),
+            filters(filterHeight * filterWidth * depth * numFilters),
+            delta_filters(filterHeight * filterWidth * depth * numFilters),
+            delta_filters_cuda_output(filterHeight * filterWidth * depth * numFilters),
+            output(outputHeight * outputWidth * numFilters);
+
+    for (int ch = 0; ch < numFilters; ch++) {
+        for (int r = 0; r < outputHeight; r++) {
+            for (int c = 0; c < outputWidth; c++) {
+                int dh_index = ch*outputHeight*outputWidth + r*outputWidth + c;
+                double dh = double(dh_index);
+                output.setValueAt_1D(dh_index, r*outputWidth + c + ch);
+            }
+        }
+    }
+    filters.fillWithRandom();
+    input.fillWithRandom();
+
+    output.print("output-sized error gradient", outputWidth);
+    filters.print("filters", filterWidth);
+    input.print("original input", inputWidth);
+
+    CUUnifiedBlob::convolutionalBackPropFromError(output, filters, delta_filters, input, newErrorGradient, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+    newErrorGradient.print("input-sized resulting error gradient", inputWidth);
+    delta_filters.print("delta_filters", filterWidth);
+
+    CUUnifiedBlob::CUDA_convolutionalBackPropFromError(output, filters, delta_filters_cuda_output, input, newErrorGradient_cuda_output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+    sleep(1);
+    newErrorGradient_cuda_output.print("CUDA - input-sized resulting error gradient", inputWidth);
+    delta_filters_cuda_output.print("CUDA - delta_filters", filterWidth);
 }
 
 int main() {
@@ -753,9 +798,10 @@ int main() {
 //    test_CUUnifiedBlob_weightedTransMatrixVecMult();
 //    test_CUUnifiedBlob_vectorVectorMatrixProductAndSum();
 //    test_CUUnifiedBlob_CUDA_multiVectorReduction();
-//	test_CUDA_backPropagationAndUpdate();
+//    test_CUDA_backPropagationAndUpdateAndConvolutionalBP();
 
-    test_CUUnifiedBlob_CUDA_convolutionalFP();
+//    test_CUUnifiedBlob_CUDA_convolutionalFP();
+    test_CUUnifiedBlob_CUDA_convolutionalBP();
 //    test_CUCapsuleNetwork_forwardPropagation();
 
 //    test_forwardPropagationSpeedUpTimings();

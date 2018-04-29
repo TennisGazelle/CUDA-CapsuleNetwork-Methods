@@ -3,6 +3,7 @@
 //
 
 #include <cassert>
+#include <Config.h>
 #include "ConvolutionalNetwork/CUConvolutionalNetwork/CUConvolutionalLayer.h"
 
 CUConvolutionalLayer::CUConvolutionalLayer(int iHeight, int iWidth, int nFilters, int fHeight, int fWidth) {
@@ -32,9 +33,9 @@ void CUConvolutionalLayer::setInput(std::vector<double> inputImage) {
 }
 
 void CUConvolutionalLayer::calculateOutput() {
-    CUUnifiedBlob::convolutionalDotProduct(input, filter, output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+    CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filter, output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
 }
 
 void CUConvolutionalLayer::squashAndRemapToU(CUUnifiedBlob &u) {
-
+    CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(u, output, outputHeight, outputWidth, numFilters/Config::cnInnerDim, Config::numClasses, Config::cnInnerDim);
 }

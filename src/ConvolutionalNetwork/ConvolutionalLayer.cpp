@@ -82,7 +82,7 @@ vector<FeatureMap> ConvolutionalLayer::singleThreadedBackPropagate(const vector<
                         for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
                             // add a 'weighted' version of the output to the newErrorGradient
                             // dX[h:h+f, w:w+f] += W * dh(h,w)
-                            newErrorGradient[inputChannel][filterRow + outputRow][filterCol] += filters[outputChannel][inputChannel][filterRow][filterCol] * dh;
+                            newErrorGradient[inputChannel][filterRow + outputRow][filterCol + outputCol] += filters[outputChannel][inputChannel][filterRow][filterCol] * dh;
                             // get the update for the filters with the difference a "conv" of that error
                             // dW += X[h:h+f, w:w+f] * dH(h,w)
                             filterAdjustments[outputChannel][inputChannel][filterRow][filterCol] += inputMaps[inputChannel][filterRow + outputRow][filterCol + outputCol] * dh;
