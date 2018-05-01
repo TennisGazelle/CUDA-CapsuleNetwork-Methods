@@ -47,7 +47,7 @@ long double Utils::square_length(const arma::vec &vn) {
     for (auto& v : vn) {
         sum += pow(v, 2);
     }
-    return sum;
+    return sum + 1e-4;
 }
 
 double Utils::length(const arma::vec &vn) {

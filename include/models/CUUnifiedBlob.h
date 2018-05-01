@@ -23,6 +23,8 @@ public:
     int getSize() const;
     void fillWithRandom();
 
+    double getValueAt_1D(int location) const;
+    double getValueAt_2D(int x, int y , int xDim) const;
     void setValueAt_1D(int location, double incomingValue);
     void setValueAt_2D(int x, int y, int xDim, double incomingValue);
     void setValueAt_3D(int x, int y, int z, int xDim, int yDim, double incomingValue);
@@ -71,6 +73,9 @@ public:
 
     static void convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters, CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
     static void CUDA_convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters, CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
+
+    static void getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim);
+    static void CUDA_getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim);
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -79,6 +84,12 @@ private:
     double *data;
     bool isGPUAllocated;
 };
+
+// https://stackoverflow.com/questions/37566987/cuda-atomicadd-for-doubles-definition-error/37569519
+#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
+__device__
+double atomicAdd(double *addr, double val);
+#endif
 
 __global__
 void cu_clearOut_kernel(double *data);
@@ -128,4 +139,7 @@ void cu_reconstructingTensorFromError_kernel(double *tensor, double *flattenedTe
 
 __global__
 void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, double *delta_filters, double *originalInput, double *newErrorGradient, int iHeight, int iWidth);
+
+__global__
+void cu_getSquaredLength_kernel(double *v, double *lengths);
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

@@ -133,7 +133,7 @@ void ConvolutionalLayer::m_threading_BackPropagation(int inputMapIndex, const ve
                     for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
                         // add a 'weighted' version of the output to the newErrorGradient
                         // dX[h:h+f, w:w+f] += W * dh(h,w)
-                        newErrorGradient[inputMapIndex][filterRow + outputRow][filterCol] += filters[outputChannel][inputMapIndex][filterRow][filterCol] * dh;
+                        newErrorGradient[inputMapIndex][filterRow + outputRow][filterCol + outputCol] += filters[outputChannel][inputMapIndex][filterRow][filterCol] * dh;
                         // get the update for the filters with the difference a "conv" of that error
                         // dW += X[h:h+f, w:w+f] * dH(h,w)
                         filterAdjustments[outputChannel][inputMapIndex][filterRow][filterCol] += inputMaps[inputMapIndex][filterRow + outputRow][filterCol + outputCol] * dh;

@@ -38,15 +38,11 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
     }
     imageFeatureMap = image.toFeatureMap();
 
-//    primaryCaps.setInput({imageFeatureMap});
     other_primaryCaps.setInput(image.toVectorOfDoubles());
-
-//    primaryCaps.calculateOutput();
-    other_primaryCaps.calculateOutput();
-
-//    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
-//    to1DSquishedArrayOfVecs(Config::cnInnerDim, primaryCapsOutput, u, Config::numClasses);
+    other_primaryCaps.forwardPropagate();
     other_primaryCaps.squashAndRemapToU(u);
+
+//    u.print("u", Config::cnInnerDim * Config::numClasses);
 
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, Config::cnInnerDim, Config::cnOuterDim, Config::cnNumTensorChannels*Config::numClasses);
 
@@ -55,6 +51,10 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
         CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, v, Config::numClasses, flattenedTensorSize, Config::cnOuterDim);
         CUUnifiedBlob::CUDA_vectorSquash(v, Config::numClasses * flattenedTensorSize, Config::cnOuterDim);
         CUUnifiedBlob::CUDA_vectorVectorScalarProduct(u_hat, v, b, Config::numClasses, flattenedTensorSize, Config::cnOuterDim);
+
+//        b.print("b", Config::numClasses);
+//        c.print("c", Config::numClasses);
+//        v.print("v", Config::cnOuterDim);
     }
 }
 
@@ -70,13 +70,45 @@ void CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
     }
     truth.setValueAt_1D(label, 1);
 
+//    u.print("u", Config::numClasses*Config::cnInnerDim);
+
     CUUnifiedBlob::CUDA_vectorLossFunction(v, truth, Config::numClasses, Config::cnOuterDim);
     CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(u, c, w, v, Config::numClasses, flattenedTensorSize, Config::cnInnerDim, Config::cnOuterDim);
     CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_delta, v, u, Config::numClasses, flattenedTensorSize, Config::cnInnerDim, Config::cnOuterDim);
     CUUnifiedBlob::CUDA_multiVectorReduction(u, Config::numClasses, flattenedTensorSize, Config::cnInnerDim);
-    // TODO move error back to format for conv. layer
-    CUUnifiedBlob::CUDA_vectorSquashDerivative(u, flattenedTensorSize, Config::cnInnerDim);
 
+//    u.print("delta_u", Config::numClasses*Config::cnInnerDim);
+    CUUnifiedBlob::CUDA_vectorSquashDerivative(u, flattenedTensorSize*Config::numClasses, Config::cnInnerDim);
+//    cudaDeviceSynchronize();
+//    u.print("re-derived u", Config::numClasses*Config::cnInnerDim);
+    other_primaryCaps.desquashAndRemapToOutput(u);
+}
+
+bool CUCapsuleNetwork::testResults(int imageIndex, bool useTraining) {
+    int biggestVectorIndex = 0;
+    long double biggestVectorValue = 0.0;
+
+    int trueValue;
+    if (useTraining) {
+        trueValue = MNISTReader::getInstance()->trainingData[imageIndex].getLabel();
+    } else {
+        trueValue = MNISTReader::getInstance()->testingData[imageIndex].getLabel();
+    }
+
+    CUUnifiedBlob lengths(Config::numClasses);
+    CUUnifiedBlob::CUDA_getSquaredLength(v, lengths, Config::numClasses, Config::cnOuterDim);
+    cudaDeviceSynchronize();
+    for (int v_index = 0; v_index < Config::numClasses; v_index++) {
+        double sq_length = lengths.getValueAt_1D(v_index);
+        if (sq_length > biggestVectorValue) {
+            biggestVectorValue = sq_length;
+            biggestVectorIndex = v_index;
+        }
+    }
+
+    // we have the biggest, make sure it's right
+//    cout << "guessed: " << biggestVectorIndex << " actually: " << trueValue << endl;
+    return (biggestVectorIndex == trueValue);
 }
 
 long double CUCapsuleNetwork::forwardAndBackPropagation(int imageIndex, bool useTraining) {

@@ -46,7 +46,7 @@ void CUUnifiedBlob::clear() {
 }
 
 void CUUnifiedBlob::CUDA_clear() {
-    cu_clearOut_kernel<<<size,1>>>(data);
+    cu_clearOut_kernel << < size, 1 >> > (data);
 }
 
 void CUUnifiedBlob::resize(int newSize) {
@@ -95,9 +95,12 @@ bool CUUnifiedBlob::operator==(const CUUnifiedBlob &other) const {
 
     for (int i = 0; i < size; i++) {
         if (data[i] != other.data[i]) {
-            std::cout << "they didn't match at: " << i << std::endl;
-            std::cout << "this: " << data[i] << " other: " << other.data[i] << std::endl;
-            return false;
+            sleep(1);
+            if (data[i] != other.data[i]) {
+                std::cout << "they didn't match at: " << i << std::endl;
+                std::cout << "this: " << data[i] << " other: " << other.data[i] << std::endl;
+                return false;
+            }
         }
     }
 
@@ -112,6 +115,16 @@ void CUUnifiedBlob::fillWithRandom() {
     for (int i = 0; i < size; i++) {
         data[i] = Utils::getWeightRand(1);
     }
+}
+
+double CUUnifiedBlob::getValueAt_1D(int location) const {
+    assert(0 <= location && location < size);
+    return data[location];
+}
+
+double CUUnifiedBlob::getValueAt_2D(int x, int y, int xDim) const {
+    int location = x*xDim + y;
+    return getValueAt_1D(location);
 }
 
 void CUUnifiedBlob::setValueAt_1D(int location, double incomingValue) {
@@ -394,7 +407,7 @@ void CUUnifiedBlob::reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifi
     }
 }
 
-void CUUnifiedBlob::convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters, 
+void CUUnifiedBlob::convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters,
                                                    CUUnifiedBlob &delta_filters,
                                                    CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient,
                                                    int iHeight, int iWidth, int fHeight,
@@ -405,14 +418,15 @@ void CUUnifiedBlob::convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifi
     for (int ch = 0; ch < numFilters; ch++) {
         for (int r = 0; r < outputHeight; r++) {
             for (int c = 0; c < outputWidth; c++) {
-                int dh_index = ch*outputHeight*outputWidth + r*outputWidth + c;
+                int dh_index = ch * outputHeight * outputWidth + r * outputWidth + c;
                 double dh = error.data[dh_index];
 
                 for (int inputCh = 0; inputCh < depth; inputCh++) {
                     for (int fr = 0; fr < fHeight; fr++) {
                         for (int fc = 0; fc < fWidth; fc++) {
-                            int inputIndex = inputCh*iHeight*iWidth + (fr+r)*iWidth + (fc+c);
-                            int filterIndex = ch*depth*fHeight*fWidth + inputCh*fHeight*fWidth + fr*fWidth + fc;
+                            int inputIndex = inputCh * iHeight * iWidth + (fr + r) * iWidth + (fc + c);
+                            int filterIndex =
+                                    ch * depth * fHeight * fWidth + inputCh * fHeight * fWidth + fr * fWidth + fc;
                             // get the new error gradient (if it matters at all)
                             newErrorGradient.data[inputIndex] += filters.data[filterIndex] * dh;
                             // update the filters delta, but don't apply it to the actual filter until later
@@ -425,13 +439,23 @@ void CUUnifiedBlob::convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifi
     }
 }
 
+void CUUnifiedBlob::getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim) {
+    for (int v_index = 0; v_index < numClasses; v_index++) {
+        double sq_length = 0;
+        for (int i = 0; i < dim; i++) {
+            sq_length += v.data[v_index*dim+i]*v.data[v_index*dim+i];
+        }
+        lengths.data[v_index] = sq_length;
+    }
+}
+
 void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     CUUnifiedBlob &inputVector,
                                                     CUUnifiedBlob &outputVector,
                                                     int inputDim,
                                                     int outputDim,
                                                     int numMultiplications) {
-    cu_matrixVectorMultiplication_kernel <<<numMultiplications, outputDim>>> (matrix.data,
+    cu_matrixVectorMultiplication_kernel << < numMultiplications, outputDim >> > (matrix.data,
             inputVector.data,
             outputVector.data,
             inputDim,
@@ -510,11 +534,11 @@ void CUUnifiedBlob::CUDA_convolutionalDotProduct(CUUnifiedBlob &input, CUUnified
                                                  int numFilters) {
     int outputHeight = iHeight - fHeight + 1;
     int outputWidth = iWidth - fWidth + 1;
-    
+
     dim3 blockDims(numFilters, outputHeight, outputWidth);
     dim3 threadDims(depth, fHeight, fWidth);
     int numThreads = depth * fHeight * fWidth;
-    
+
     cu_convolutionalDotProduct_kernel << < blockDims, threadDims, numThreads * sizeof(double) >> >
                                                                   (input.data, filter.data, output.data, iHeight, iWidth);
 }
@@ -524,7 +548,7 @@ void CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &fl
                                                                int dim) {
     dim3 blockDims(depth, height, width);
     dim3 threadDims(dim);
-    cu_tensorFlatteningAndActivatedRemapping_kernel << < blockDims, threadDims, dim * sizeof(double) >> >
+    cu_tensorFlatteningAndActivatedRemapping_kernel <<< blockDims, threadDims, dim * sizeof(double) >> >
                                                                                 (flattenedTensor.data, tensor.data, numClasses);
 }
 
@@ -532,14 +556,15 @@ void CUUnifiedBlob::CUDA_reconstructingTensorFromError(CUUnifiedBlob &tensor, CU
                                                        int height, int width, int depth, int numClasses, int dim) {
     dim3 blockDims(depth, height, width);
     dim3 threadDims(dim);
-    cu_reconstructingTensorFromError_kernel<<<blockDims, threadDims>>>(tensor.data, flattenedTensor.data, numClasses);
+    cu_reconstructingTensorFromError_kernel <<< blockDims, threadDims >>>
+                                                            (tensor.data, flattenedTensor.data, numClasses);
 }
 
-void CUUnifiedBlob::CUDA_convolutionalBackPropFromError(CUUnifiedBlob &error, 
-                                                        CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters, 
-                                                        CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient, 
-                                                        int iHeight, int iWidth, 
-                                                        int fHeight, int fWidth, 
+void CUUnifiedBlob::CUDA_convolutionalBackPropFromError(CUUnifiedBlob &error,
+                                                        CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters,
+                                                        CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient,
+                                                        int iHeight, int iWidth,
+                                                        int fHeight, int fWidth,
                                                         int depth, int numFilters) {
     int outputHeight = iHeight - fHeight + 1;
     int outputWidth = iWidth - fWidth + 1;
@@ -547,7 +572,24 @@ void CUUnifiedBlob::CUDA_convolutionalBackPropFromError(CUUnifiedBlob &error,
     dim3 blockDims(numFilters, outputHeight, outputWidth);
     dim3 threadDims(depth, fHeight, fWidth);
 
-    cu_convolutionalBackPropFromError_kernel<<<blockDims, threadDims>>>(error.data, filters.data, delta_filters.data, originalInput.data, newErrorGradient.data, iHeight, iWidth);
+    cu_convolutionalBackPropFromError_kernel <<<blockDims,threadDims >>>
+                                                             (error.data, filters.data, delta_filters.data, originalInput.data, newErrorGradient.data, iHeight, iWidth);
+}
+
+void CUUnifiedBlob::CUDA_getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim) {
+    cu_getSquaredLength_kernel<<<numClasses, dim, dim*sizeof(double)>>>(v.data, lengths.data);
+}
+
+__device__
+double atomicAdd(double *addr, double val) {
+    unsigned long long int *address_as_ull = (unsigned long long int *) addr;
+    unsigned long long int old = *address_as_ull, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val + __longlong_as_double(assumed)));
+    } while (assumed != old);
+    return __longlong_as_double(old);
 }
 
 __global__
@@ -926,11 +968,15 @@ void cu_reconstructingTensorFromError_kernel(double *tensor, double *flattenedTe
     int dimIndex = threadIdx.x;
     int vector_index = r * depth * width + c * depth + d;
     int tensor_index = (d * dim + dimIndex) * height * width + r * width + c;
+    int error_index = (vector_index) * (numClasses*dim) + dimIndex;
+
+    tensor[tensor_index] = flattenedTensor[error_index];
 }
 
 __global__
-void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, double *delta_filters, 
-                                              double *originalInput, double *newErrorGradient, int iHeight, int iWidth) {
+void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, double *delta_filters,
+                                              double *originalInput, double *newErrorGradient, int iHeight,
+                                              int iWidth) {
     int ch = blockIdx.x;
     int r = blockIdx.y;
     int c = blockIdx.z;
@@ -939,18 +985,46 @@ void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, do
     int fr = threadIdx.y;
     int fc = threadIdx.z;
 
-    int tid = ch*gridDim.y*gridDim.z + r*gridDim.z + c;
-    int max_tid = gridDim.x*gridDim.y*gridDim.z;
+    int tid = ch * gridDim.y * gridDim.z + r * gridDim.z + c;
+    int max_tid = gridDim.x * gridDim.y * gridDim.z;
 
-    int dh_index = ch*gridDim.y*gridDim.z + r*gridDim.z + c;
+    int dh_index = ch * gridDim.y * gridDim.z + r * gridDim.z + c;
     double dh = error[dh_index];
 
-    int inputIndex = inputCh*iHeight*iWidth + (fr+r)*iWidth + (fc+c);
-    int filterIndex = ch*blockDim.x*blockDim.y*blockDim.z + inputCh*blockDim.y*blockDim.z + fr*blockDim.z + fc;
+    int inputIndex = inputCh * iHeight * iWidth + (fr + r) * iWidth + (fc + c);
+    int filterIndex =
+            ch * blockDim.x * blockDim.y * blockDim.z + inputCh * blockDim.y * blockDim.z + fr * blockDim.z + fc;
 
     //newErrorGradient[inputIndex] += filters[filterIndex] * dh;
-    //atomicAdd(&newErrorGradient[inputIndex], filters[filterIndex]*dh);
-    
+    atomicAdd(&newErrorGradient[inputIndex], filters[filterIndex] * dh);
+
     //delta_filters[filterIndex] += originalInput[inputIndex] * dh;
-    //atomicAdd(&delta_filters[filterIndex], originalInput*dh);
+    atomicAdd(&delta_filters[filterIndex], originalInput[inputIndex] * dh);
+}
+
+__global__
+void cu_getSquaredLength_kernel(double *v, double *lengths) {
+    int v_index = blockIdx.x;
+    int specificDim = threadIdx.x;
+    int dim = blockDim.x;
+
+    extern __shared__
+    double shared_v_values[];
+
+    shared_v_values[specificDim] = v[v_index*dim+specificDim] * v[v_index*dim+specificDim];
+    __syncthreads();
+
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        if (specificDim % (2 * s) == 0) {
+            shared_v_values[specificDim] += shared_v_values[specificDim + s];
+        }
+        __syncthreads();
+    }
+
+    if (specificDim == 0) {
+        lengths[v_index] = shared_v_values[0];
+    }
+
+    // find out who's the biggest, and save his value in the first number
+
 }

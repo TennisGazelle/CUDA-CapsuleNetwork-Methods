@@ -16,6 +16,7 @@ public:
     CUCapsuleNetwork();
     void forwardPropagation(int imageIndex, bool useTraining = true);
     void backPropagation(int imageIndex, bool useTraining = true);
+    bool testResults(int imageIndex, bool useTraining = true);
     long double forwardAndBackPropagation(int imageIndex, bool useTraining = true);
     void runEpoch();
     void updateWeights();
