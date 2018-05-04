@@ -15,6 +15,7 @@ public:
     static double getRandBetween(double lowerBound, double upperBound);
     static double getWeightRand(double n);
     static int reverseInt(int i);
+    static unsigned char reverseChar(char c);
     static long double square_length(const arma::vec &vn);
     static double length(const arma::vec &vn);
     static arma::vec squish(const arma::vec& input);

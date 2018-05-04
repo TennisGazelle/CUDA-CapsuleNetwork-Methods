@@ -25,7 +25,7 @@ private:
     void readMNISTData();
     void readDataWithLabels(const string& datafile, const string& labelfile, vector<Image>& dst);
 
-    static inline void grabFromFile(ifstream &fin, unsigned int &num);
+    static inline void grabFromFileAndReverse(ifstream &fin, unsigned int &num);
 };
 
 #endif //NEURALNETS_MNISTREADER_H

@@ -12,18 +12,19 @@ using namespace std;
 
 class Image : public vector<unsigned char> {
 public:
-    Image();
+    explicit Image(int height = 28, int width = 28);
     Image(size_t label, const vector<double>& input);
     void addRow(const vector<unsigned char> &row);
     void print() const;
     vector<double> toVectorOfDoubles() const;
-    void fromVectorOfDoubles(const vector<double>& input);
+    void fromVectorOfUnsignedChars(const vector<unsigned char> &input);
     FeatureMap toFeatureMap() const;
 
     size_t getLabel() const;
     void setLabel(unsigned char l);
 private:
     unsigned char label;
+    int height, width;
 };
 
 
