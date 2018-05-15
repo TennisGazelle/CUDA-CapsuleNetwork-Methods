@@ -16,21 +16,24 @@ public:
     CUCapsuleNetwork();
     void forwardPropagation(int imageIndex, bool useTraining = true);
     void backPropagation(int imageIndex, bool useTraining = true);
+    double getLoss();
     bool testResults(int imageIndex, bool useTraining = true);
     long double forwardAndBackPropagation(int imageIndex, bool useTraining = true);
     void runEpoch();
+    pair<double, long double> tally(bool useTraining = true);
+    void train();
     void updateWeights();
 
 private:
-    void to1DSquishedArrayOfVecs(size_t vectorDim, vector<FeatureMap> inputMaps, CUUnifiedBlob &output, int numClasses) const;
     unsigned int flattenedTensorSize;
-    ConvolutionalLayer primaryCaps;
-    CUConvolutionalLayer other_primaryCaps;
+    CUConvolutionalLayer CUPrimaryCaps;
     CUUnifiedBlob u, u_hat,
                   w, w_delta, w_velocity,
                   v,
                   b, c,
-                  truth;
+                  truth,
+                  losses,
+                  lengths;
 };
 
 

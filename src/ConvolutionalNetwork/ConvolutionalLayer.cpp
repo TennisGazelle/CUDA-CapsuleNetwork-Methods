@@ -165,7 +165,7 @@ void ConvolutionalLayer::printKernel(int channel) {
     cout << setprecision(3);
     cout << fixed;
     for (int ch = 0; ch < filterDepth; ch++) {
-        cout << "filter depth : " << ch << endl;
+        cout << "filter filterDepth : " << ch << endl;
         for (int r = 0; r < filterHeight; r++) {
             for (int c = 0; c < filterWidth; c++) {
                 cout << filters[channel][ch][r][c] << "\t";

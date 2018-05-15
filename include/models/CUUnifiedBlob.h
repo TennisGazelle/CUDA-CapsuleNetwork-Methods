@@ -29,8 +29,8 @@ public:
     void setValueAt_2D(int x, int y, int xDim, double incomingValue);
     void setValueAt_3D(int x, int y, int z, int xDim, int yDim, double incomingValue);
 
-    static void matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim);
-    static void CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim, int numMultiplications);
+    static void matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim, int numClasses, int tensorSize);
+    static void CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim, int numClasses, int tensorSize);
 
     static void vectorVectorSoftmax(CUUnifiedBlob &b, CUUnifiedBlob &c, int numClasses, int tensorSize);
     static void CUDA_vectorVectorSoftmax(CUUnifiedBlob &b, CUUnifiedBlob &c, int numClasses, int tensorSize);
@@ -56,11 +56,11 @@ public:
     static void multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim);
     static void CUDA_multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim);
 
-    static void matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, int size);
-    static void CUDA_matrixMatrixUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, int size);
+    static void elementWiseErrorUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, CUUnifiedBlob &w_velocity, int size);
+    static void CUDA_elementWiseErrorUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, CUUnifiedBlob &w_velocity, int size);
 
-    static void vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim);
-    static void CUDA_vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim);
+    static void vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim, int numClasses = 1);
+    static void CUDA_vectorSquashDerivative(CUUnifiedBlob &v, int numVecs, int vecDim, int numClasses = 1);
 
     static void convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
     static void CUDA_convolutionalDotProduct(CUUnifiedBlob &input, CUUnifiedBlob &filter, CUUnifiedBlob &output, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
@@ -76,6 +76,9 @@ public:
 
     static void getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim);
     static void CUDA_getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim);
+
+    static void getVectorLoss(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, CUUnifiedBlob &losses, int numClasses, int dim);
+    static void CUDA_getVectorLoss(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, CUUnifiedBlob &losses, int numClasses, int dim);
 private:
     void allocateMemory();
     void deallocateMemory();
@@ -90,6 +93,9 @@ private:
 __device__
 double atomicAdd(double *addr, double val);
 #endif
+
+__device__
+double sharedMemoryReduce(double *shared_mem, double thread_val);
 
 __global__
 void cu_clearOut_kernel(double *data);
@@ -123,10 +129,10 @@ __global__
 void cu_multiVectorReduction_kernel(double *u, int numClasses, int dim);
 
 __global__
-void cu_matrixMatrixUpdate_kernel(double *w, double *w_error);
+void cu_elementWiseErrorUpdate_kernel(double *w, double *w_error, double *w_velocity);
 
 __global__
-void cu_vectorSquashDerivative_kernel(double *v);
+void cu_vectorSquashDerivative_kernel(double *v, int numClasses);
 
 __global__
 void cu_convolutionalDotProduct_kernel(double *input, double *filter, double *output, int iHeight, int iWidth);
@@ -142,4 +148,7 @@ void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, do
 
 __global__
 void cu_getSquaredLength_kernel(double *v, double *lengths);
+
+__global__
+void cu_getVectorLoss_kernel(double *v, double *truthMap, double *losses);
 #endif //NEURALNETS_CUUNIFIEDBLOB_H

@@ -13,6 +13,7 @@
 #include <models/CUUnifiedBlob.h>
 #include <HostTimer.h>
 #include <CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h>
+#include <DeviceTimer.h>
 
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
@@ -269,7 +270,7 @@ void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
     }
 
 //    CUUnifiedBlob::matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
-    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim, numMultiples);
+    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim, numMultiples, 1);
 
     v.print("v", inputDim);
     w.print("w", inputDim);
@@ -277,13 +278,13 @@ void test_CUUnifiedBlob_CUDA_matrixVectorMultiplication() {
 }
 
 void test_CUUnifiedBlob_CUDA_softmax() {
-    int numClasses = 10, flattenedTensorSize = 45;
+    int numClasses = 10, flattenedTensorSize = 72;
     CUUnifiedBlob bMatrix(numClasses * flattenedTensorSize),
             cMatrix(numClasses * flattenedTensorSize);
 
     for (int k = 0; k < numClasses; k++) {
         for (int t = 0; t < flattenedTensorSize; t++) {
-            bMatrix.setValueAt_2D(t, k, numClasses, t);
+            bMatrix.setValueAt_2D(t, k, numClasses, double(t+1)/(10.0*(k+1)));
         }
     }
     cMatrix.clear();
@@ -403,7 +404,7 @@ void test_CUDA_forwardPropagation() {
         w.setValueAt_1D(i, Utils::getWeightRand(1));
     }
 
-    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, innerDim, outerDim, flattenedTensorSize * numClasses);
+    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, innerDim, outerDim, numClasses, flattenedTensorSize);
     sleep(1);
     u.print("u", innerDim * numClasses);
     w.print("w", innerDim * numClasses);
@@ -547,6 +548,7 @@ void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
             delta_u(innerDim * numClasses * flattenedTensorSize),
             w(innerDim * outerDim * numClasses * flattenedTensorSize),
             w_error(innerDim  * outerDim * numClasses * flattenedTensorSize),
+            w_velocities(innerDim * outerDim * numClasses * flattenedTensorSize),
             v_error(outerDim * numClasses),
             c(numClasses * flattenedTensorSize),
             truth(numClasses),
@@ -584,8 +586,8 @@ void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
     u.print("u", innerDim*numClasses);
     delta_u.print("delta_u", innerDim*numClasses);
 
-//    CUUnifiedBlob::matrixMatrixUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
-    CUUnifiedBlob::CUDA_matrixMatrixUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
+//    CUUnifiedBlob::elementWiseErrorUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
+    CUUnifiedBlob::CUDA_elementWiseErrorUpdate(w, w_error, w_velocities, numClasses * flattenedTensorSize * innerDim * outerDim);
     w.print("w updated", innerDim);
 
 
@@ -594,6 +596,25 @@ void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
     CUUnifiedBlob::reconstructingTensorFromError(delta_u_feature_cube, delta_u, 2, 2, 3, numClasses, innerDim);
     delta_u.print("final delta_u", innerDim*numClasses);
     delta_u_feature_cube.print("delta_u as a feature cube", 2);
+}
+
+void test_CUUnifiedBlob_getTotalLoss() {
+    int numClasses = 10, dim = 3;
+    CUUnifiedBlob v(numClasses * dim),
+            losses(numClasses),
+            losses_cuda_output(numClasses),
+            truthMap(numClasses);
+
+    v.fillWithRandom();
+    truthMap.setValueAt_1D(1, 1);
+
+    CUUnifiedBlob::getVectorLoss(v, truthMap, losses, numClasses, dim);
+    CUUnifiedBlob::CUDA_getVectorLoss(v, truthMap, losses_cuda_output, numClasses, dim);
+
+    v.print("v", dim);
+    truthMap.print("truth map");
+    losses.print("losses");
+    losses_cuda_output.print("losses from cuda");
 }
 
 void test_forwardPropagationSpeedUpTimings() {
@@ -610,20 +631,6 @@ void test_forwardPropagationSpeedUpTimings() {
         timings[i] = timer.getElapsedTime();
     }
 
-    for (auto d : timings) {
-        cout << d << endl;
-    }
-}
-
-void test_backwardPropagationSpeedupTimings() {
-    CapsuleNetwork seqCapsuleNetwork;
-    int statisticalTimings = 30;
-    vector<long double> timings(statisticalTimings);
-
-    // full forward propagate
-    for (int i = 0; i < timings.size(); i++) {
-        timings[i] = seqCapsuleNetwork.fullBackwardPropagation(i);
-    }
     for (auto d : timings) {
         cout << d << endl;
     }
@@ -651,30 +658,80 @@ void test_weightUpdateSpeedupTiming() {
     }
 }
 
-void test_epochSpeedupTimings_seq() {
+struct StatisticalTimings {
+    StatisticalTimings(int size = 30) {
+    	fp_seq.resize(size);
+    	bp_seq.resize(size);
+    	epoch_seq.resize(size);
+    	fp_par.resize(size);
+    	bp_par.resize(size);
+    	epoch_par.resize(size);
+    }
+	vector<long double> fp_seq, bp_seq, epoch_seq;
+	vector<long double> fp_par, bp_par, epoch_par;
+};
+
+void test_epochSpeedupTimings_seq_par() {
     CapsuleNetwork seqCapsuleNetwork;
-    int statisticalTimings = 30;
-    vector<long double> timings(statisticalTimings);
-    HostTimer timer;
+    CUCapsuleNetwork CUDANetwork;
+    int numTimings = 30;
+    StatisticalTimings st(numTimings);
+    HostTimer hostTimer;
+    DeviceTimer deviceTimer;
 
     // full forward propagate
-    for (int i = 0; i < timings.size(); i++) {
-        timer.start();
-        seqCapsuleNetwork.runEpoch();
-        timer.stop();
-        timings[i] = timer.getElapsedTime();
-        for (auto d : timings) {
-            cout << d << endl;
+    for (int i = 0; i < numTimings; i++) {
+        hostTimer.start();
+        seqCapsuleNetwork.fullForwardPropagation();
+        hostTimer.stop();
+        st.fp_seq[i] = hostTimer.getElapsedTime();
+
+        deviceTimer.start();
+        CUDANetwork.forwardPropagation(i);
+        deviceTimer.stop();
+        st.fp_par[i] = deviceTimer.getElapsedTime();
+    
+        hostTimer.start();
+        seqCapsuleNetwork.fullBackwardPropagation();
+        hostTimer.stop();
+        st.bp_seq[i] = hostTimer.getElapsedTime();
+
+        deviceTimer.start();
+        CUDANetwork.backPropagation(i);
+        deviceTimer.stop();
+        st.bp_par[i] = deviceTimer.getElapsedTime();
+
+//        hostTimer.start();
+//        seqCapsuleNetwork.runEpoch();
+//        hostTimer.stop();
+//        st.epoch_seq[i] = hostTimer.getElapsedTime();
+        
+//        deviceTimer.start();
+//        CUDANetwork.runEpoch();
+//        deviceTimer.stop();
+//        st.epoch_par[i] = deviceTimer.getElapsedTime();
+
+        for (int i = 0; i < numTimings; i++) {
+            cout << st.fp_seq[i] << "\t";
+            cout << st.bp_seq[i] << "\t";
+            cout << st.epoch_seq[i] << "\t";
+
+            cout << st.fp_par[i] << "\t";
+            cout << st.bp_par[i] << "\t";
+            cout << st.epoch_par[i] << "\t";
+            cout << endl;
         }
     }
-
 }
 
-void test_epochSpeedupTimings_CUDA() {
+void test_epochAccuracy_CUDA() {
     CUCapsuleNetwork cuCapsuleNetwork;
-    cuCapsuleNetwork.forwardPropagation(0, true);
-    cuCapsuleNetwork.testResults(0, true);
-    cuCapsuleNetwork.backPropagation(0, true);
+//    cuCapsuleNetwork.forwardPropagation(0, true);
+//    cuCapsuleNetwork.testResults(0, true);
+//    cuCapsuleNetwork.backPropagation(0, true);
+//    cuCapsuleNetwork.runEpoch();
+    cuCapsuleNetwork.train();
+//    cuCapsuleNetwork.tally();
 }
 
 void test_CUCapsuleNetwork_forwardPropagation() {
@@ -772,11 +829,11 @@ void test_CUUnifiedBlob_CUDA_convolutionalBP() {
 
     CUUnifiedBlob::convolutionalBackPropFromError(output, filters, delta_filters, input, newErrorGradient, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
     newErrorGradient.print("input-sized resulting error gradient", inputWidth);
-    delta_filters.print("delta_filters", filterWidth);
+    delta_filters.print("filter_error", filterWidth);
 
     CUUnifiedBlob::CUDA_convolutionalBackPropFromError(output, filters, delta_filters_cuda_output, input, newErrorGradient_cuda_output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
     newErrorGradient_cuda_output.print("CUDA - input-sized resulting error gradient", inputWidth);
-    delta_filters_cuda_output.print("CUDA - delta_filters", filterWidth);
+    delta_filters_cuda_output.print("CUDA - filter_error", filterWidth);
 }
 
 int main() {
@@ -808,6 +865,8 @@ int main() {
 //    test_CUUnifiedBlob_CUDA_multiVectorReduction();
 //    test_CUDA_backPropagationAndUpdateAndConvolutionalBP();
 
+//    test_CUUnifiedBlob_getTotalLoss();
+
 //    test_CUUnifiedBlob_CUDA_convolutionalFP();
 //    test_CUUnifiedBlob_CUDA_convolutionalBP();
 //    test_CUCapsuleNetwork_forwardPropagation();
@@ -815,8 +874,9 @@ int main() {
 //    test_forwardPropagationSpeedUpTimings();
 //    test_backwardPropagationSpeedupTimings();
 //    test_weightUpdateSpeedupTiming();
-//    test_epochSpeedupTimings_seq();
-    test_epochSpeedupTimings_CUDA();
+//    test_epochSpeedupTimings_seq_par();
+
+    test_epochAccuracy_CUDA();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

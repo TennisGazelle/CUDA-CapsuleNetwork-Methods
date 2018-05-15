@@ -18,7 +18,7 @@ public:
 
     static const int inputHeight = 28, inputWidth = 28;
     static const int cnInnerDim = 8, cnOuterDim = 16;
-    static const int cnNumTensorChannels = 32;
+    static const int cnNumTensorChannels = 3;
     static const int numClasses = 10;
 
     static const int batchSize = 250;

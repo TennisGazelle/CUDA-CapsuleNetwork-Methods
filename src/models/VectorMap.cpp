@@ -13,7 +13,7 @@ VectorMap::VectorMap(size_t height, size_t width) {
 }
 
 vector<VectorMap> VectorMap::toSquishedVectorMap(size_t vectorLength, const vector<FeatureMap> inputMaps) {
-    // assuming that the depth of these maps is divisible of the resulting depth (it should be)
+    // assuming that the filterDepth of these maps is divisible of the resulting filterDepth (it should be)
     size_t height = inputMaps[0].size();
     size_t width = inputMaps[0][0].size();
     size_t depth = inputMaps.size()/vectorLength;
@@ -21,10 +21,10 @@ vector<VectorMap> VectorMap::toSquishedVectorMap(size_t vectorLength, const vect
     vector<VectorMap> output(depth, VectorMap(height, width));
     for (size_t r = 0; r < height; r++) {
         for (size_t c = 0; c < width; c++) {
-            // make a vector for every "depth" vectors
+            // make a vector for every "filterDepth" vectors
             arma::vec v(vectorLength);
             size_t depthInOutput = 0;
-            // go down the depth of the input at this position
+            // go down the filterDepth of the input at this position
             for (int d = 0; d < inputMaps.size(); d++) {
                 if (d%vectorLength == vectorLength-1) {
                     // squash and save
@@ -38,7 +38,7 @@ vector<VectorMap> VectorMap::toSquishedVectorMap(size_t vectorLength, const vect
 }
 
 vector<arma::vec> VectorMap::toSquishedArrayOfVecs(size_t vectorDim, vector<FeatureMap> inputMaps) {
-    // assuming that the depth of these maps is divisible of the resulting depth (it should be)
+    // assuming that the filterDepth of these maps is divisible of the resulting filterDepth (it should be)
     size_t height = inputMaps[0].size();
     size_t width = inputMaps[0][0].size();
     size_t totalLength = height*width*inputMaps.size()/vectorDim;
@@ -47,9 +47,9 @@ vector<arma::vec> VectorMap::toSquishedArrayOfVecs(size_t vectorDim, vector<Feat
     output.reserve(totalLength);
     for (size_t r = 0; r < height; r++) {
         for (size_t c = 0; c < width; c++) {
-            // make a vector for every "depth" vectors
+            // make a vector for every "filterDepth" vectors
             arma::vec v(vectorDim);
-            // go down the depth of the input at this position
+            // go down the filterDepth of the input at this position
             for (int d = 0; d < inputMaps.size(); d++) {
                 if (d%vectorDim == vectorDim-1) {
                     // squash and save as I go...
@@ -65,7 +65,7 @@ vector<arma::vec> VectorMap::toSquishedArrayOfVecs(size_t vectorDim, vector<Feat
 
 vector<FeatureMap> VectorMap::toArrayOfFeatureMaps(size_t desiredHeight, size_t desiredWidth, size_t desiredDepth,
                                                    const vector<arma::vec> &arrayOfVecs) {
-    // assuming that desired depth is a factor of the list of Arrays
+    // assuming that desired filterDepth is a factor of the list of Arrays
 
     // assuming all vectors are of the same size
     size_t vectorDim = arrayOfVecs[0].size();

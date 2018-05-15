@@ -8,20 +8,21 @@
 
 CUConvolutionalLayer::CUConvolutionalLayer(int iHeight, int iWidth, int nFilters, int fHeight, int fWidth) {
     numFilters = nFilters;
-    depth = 1;
+    filterDepth = 1;
     filterHeight = fHeight;
     filterWidth = fWidth;
 
     inputWidth = iWidth;
     inputHeight = iHeight;
 
-    outputHeight = inputHeight - filterHeight + 1;
-    outputWidth = inputWidth - filterWidth + 1;
+    outputHeight = inputHeight - filterHeight;
+    outputWidth = inputWidth - filterWidth;
 
-    input.resize(inputHeight*inputWidth*depth);
-    delta_input.resize(inputHeight*inputWidth*depth);
-    filter.resize(numFilters*depth*filterHeight*filterWidth);
-    delta_filters.resize(numFilters*depth*filterHeight*filterWidth);
+    input.resize(inputHeight*inputWidth*filterDepth);
+    delta_input.resize(inputHeight*inputWidth*filterDepth);
+    filter.resize(numFilters*filterDepth*filterHeight*filterWidth);
+    filter_error.resize(numFilters*filterDepth*filterHeight*filterWidth);
+    filter_velocities.resize(numFilters*filterDepth*filterHeight*filterWidth);
     output.resize(outputHeight*outputWidth*numFilters);
 
     filter.fillWithRandom();
@@ -35,17 +36,25 @@ void CUConvolutionalLayer::setInput(std::vector<double> inputImage) {
 }
 
 void CUConvolutionalLayer::forwardPropagate() {
-    CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filter, output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+    CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filter, output, inputHeight, inputWidth, filterHeight, filterWidth, filterDepth, numFilters);
 }
 
 void CUConvolutionalLayer::squashAndRemapToU(CUUnifiedBlob &u) {
     CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(u, output, outputHeight, outputWidth, numFilters/Config::cnInnerDim, Config::numClasses, Config::cnInnerDim);
+    output.CUDA_clear();
 }
 
-void CUConvolutionalLayer::desquashAndRemapToOutput(CUUnifiedBlob &delta_u) {
-    CUUnifiedBlob::CUDA_reconstructingTensorFromError(output, delta_u, outputHeight, outputWidth, depth, Config::numClasses, Config::cnInnerDim);
+void CUConvolutionalLayer::remapErrorToOutput(CUUnifiedBlob &delta_u) {
+    CUUnifiedBlob::CUDA_reconstructingTensorFromError(output, delta_u, outputHeight, outputWidth, filterDepth, Config::numClasses, Config::cnInnerDim);
+//    output.print("cvlayer error output", outputWidth);
 }
 
 void CUConvolutionalLayer::backpropagate() {
-    CUUnifiedBlob::CUDA_convolutionalBackPropFromError(output, filter, delta_filters, input, delta_input, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+    CUUnifiedBlob::CUDA_convolutionalBackPropFromError(output, filter, filter_error, input, delta_input, inputHeight, inputWidth, filterHeight, filterWidth, filterDepth, numFilters);
+//    filter.print("filter", filterWidth);
+//    filter_error.print("delta filter", filterWidth);
+}
+
+void CUConvolutionalLayer::updateError() {
+    CUUnifiedBlob::CUDA_elementWiseErrorUpdate(filter, filter_error, filter_velocities, numFilters * filterDepth * filterHeight * filterWidth);
 }

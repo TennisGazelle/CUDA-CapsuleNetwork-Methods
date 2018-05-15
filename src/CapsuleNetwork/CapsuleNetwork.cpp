@@ -255,11 +255,9 @@ double CapsuleNetwork::getMarginLoss(bool isPresent, const arma::vec &v_k) const
     const double vLength = Utils::length(v_k);
 
     if (isPresent) {
-        double lhs = pow(max(0.0, m_plus - vLength), 2);
-        return lhs;
+        return pow(max(0.0, m_plus - vLength), 2);
     } else {
-        double rhs = lambda * pow(max(0.0, vLength - m_minus), 2);
-        return rhs;
+        return lambda * pow(max(0.0, vLength - m_minus), 2);
     }
 }
 
@@ -322,13 +320,9 @@ void CapsuleNetwork::fullForwardPropagation(int imageIndex) {
 //    auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(output));
 }
 
-long double CapsuleNetwork::fullBackwardPropagation(int imageIndex) {
+void CapsuleNetwork::fullBackwardPropagation(int imageIndex) {
     static auto &data = MNISTReader::getInstance()->trainingData;
     vector<arma::vec> output = loadImageAndGetOutput(imageIndex);
-    HostTimer timer;
-    timer.start();
     vector<arma::vec> error = getErrorGradient(output, data[imageIndex].getLabel());
     backPropagate(error);
-    timer.stop();
-    return timer.getElapsedTime();
 }

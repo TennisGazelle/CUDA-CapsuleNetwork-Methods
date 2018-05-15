@@ -15,15 +15,16 @@ public:
     void setInput(std::vector<double> inputImage);
     void forwardPropagate();
     void squashAndRemapToU(CUUnifiedBlob &u);
-    void desquashAndRemapToOutput(CUUnifiedBlob &delta_u);
+    void remapErrorToOutput(CUUnifiedBlob &delta_u);
     void backpropagate();
+    void updateError();
 
 private:
     int inputHeight = 0, inputWidth = 0;
     int outputHeight = 0, outputWidth = 0;
-    int depth, filterHeight, filterWidth, numFilters;
+    int filterDepth, filterHeight, filterWidth, numFilters;
 
-    CUUnifiedBlob input, delta_input, filter, output, delta_filters;
+    CUUnifiedBlob input, delta_input, filter, filter_error, filter_velocities, output;
 //    std::vector<CUUnifiedBlob> filters;
 //    CUUnifiedBlob filter;
 };
