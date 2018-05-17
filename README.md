@@ -1,5 +1,5 @@
-# Neural Nets
-By Daniel Lopez
+# A CUDA implementation of Capsule Networks 
+#### By Daniel Lopez
 Computer Science Graduate Student at the University of Nevada, Reno.
 
 Three implementations of Neural Nets, built on top of one another for CUDA implementation and further researach/development.
@@ -31,22 +31,28 @@ This project is build with CMake and only uses the armadillo library as dependen
 Instructions for [Armadillo download](http://arma.sourceforge.net) installation may be found on [their website](http://arma.sourceforge.net).
 However, the folowing should work fine
 ```bash
-sudo apt-get install libarmadillo-dev
+> sudo apt-get install libarmadillo-dev
 ```
 
 ## Building
 ```bash
-mkdir build
-cd build
-cmake .. # or cmake --build . --target NeuralNets -- -j 4
-make
+> mkdir cmake-build-cubix # spelling of build directory is important
+> cd cmake-build-cubix
+> cmake .. # or cmake --build . --target NeuralNets -- -j 4
+> make
 ```
 ## Running
 ```bash
-cd build/
-./NeuralNets
+> cd cmake-build-cubix/
+> ./NeuralNets
 ```
 Ignore, the segmentation fault error shown at the end; this is a destructor error and does not affect the speed up performance of the assignment.
+
+## Running on `Cubix`
+```bash
+> cd slurm
+> ./run.py
+```
 
 __IMPORTANT PLEASE NOTE:__ 
 Given the chosen design pattern (which will be modified in the future), the variable size of the internal number of tensor channels is stored as a `static const int` per every run of the program
