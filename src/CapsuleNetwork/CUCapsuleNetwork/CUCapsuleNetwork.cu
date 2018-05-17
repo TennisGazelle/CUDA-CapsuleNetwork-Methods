@@ -9,6 +9,7 @@
 #include <Utils.h>
 #include <ProgressBar.h>
 #include <HostTimer.h>
+#include <CUDAUtils.h>
 #include "CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h"
 
 CUCapsuleNetwork::CUCapsuleNetwork() : CUPrimaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels * Config::cnInnerDim, 22, 28-6) {
@@ -88,24 +89,22 @@ void CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
     CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_delta, v, u, Config::numClasses, flattenedTensorSize, Config::cnInnerDim, Config::cnOuterDim);
 //    w_delta.print("delta w, one at a time", Config::cnInnerDim);
 
-
     CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(u, c, w, v, Config::numClasses, flattenedTensorSize, Config::cnInnerDim, Config::cnOuterDim);
 //    u.print("delta u", Config::cnOuterDim * Config::numClasses);
 
     CUUnifiedBlob::CUDA_multiVectorReduction(u, Config::numClasses, flattenedTensorSize, Config::cnInnerDim);
-//    u.print("delta u, left reduced", Config::cnOuterDim * Config::numClasses);
-
-//    u.print("delta_u", Config::numClasses*Config::cnInnerDim);
-//    assert(!std::isnan(u.getValueAt_1D(0)));
+//    u.print("delta u, left reduced", Config::cnInnerDim * Config::numClasses);
 
     CUUnifiedBlob::CUDA_vectorSquashDerivative(u, flattenedTensorSize, Config::cnInnerDim, Config::numClasses);
 //    u.print("un-squashed delta_u", Config::numClasses*Config::cnInnerDim);
+
     CUPrimaryCaps.remapErrorToOutput(u);
     CUPrimaryCaps.backpropagate();
+//    cout << "after bp in conv. layer" << endl;
 }
 
 double CUCapsuleNetwork::getLoss() {
-    CUUnifiedBlob::getVectorLoss(v, truth, losses, Config::numClasses, Config::cnOuterDim);
+    CUUnifiedBlob::CUDA_getVectorLoss(v, truth, losses, Config::numClasses, Config::cnOuterDim);
     cudaDeviceSynchronize();
     double loss = 0.0;
     for (int i = 0; i < Config::numClasses; i++) {
@@ -157,6 +156,8 @@ void CUCapsuleNetwork::runEpoch() {
     for (int i = 0; i < data.size(); i++) {
         forwardPropagation(i, true);
         backPropagation(i, true);
+        auto error = cudaDeviceSynchronize();
+        CUDAUtils::handleError(error);
 
         if (i % Config::batchSize == Config::batchSize - 1) {
             updateWeights();

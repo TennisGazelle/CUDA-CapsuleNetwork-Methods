@@ -68,9 +68,9 @@ void CUUnifiedBlob::copy(const CUUnifiedBlob &other) {
 void CUUnifiedBlob::print(const std::string &msg, int width) {
     cudaDeviceSynchronize();
     if (!msg.empty()) {
-        std::cout << msg << std::endl;
+        std::cout << msg << ", size: " << size << std::endl;
     }
-    int bufferSize = std::min(size, 1000);
+    int bufferSize = std::min(size, 10000);
     for (int i = 0; i < bufferSize; i++) {
         std::cout << data[i] << "\t";
         if (((i + 1) % width) == 0) {
@@ -440,10 +440,15 @@ void CUUnifiedBlob::convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifi
     int outputHeight = iHeight - fHeight + 1;
     int outputWidth = iWidth - fWidth + 1;
 
+    int highestFilter = 0;
+    int highestDH = 0;
+    int highestInput = 0;
+
     for (int ch = 0; ch < numFilters; ch++) {
         for (int r = 0; r < outputHeight; r++) {
             for (int c = 0; c < outputWidth; c++) {
                 int dh_index = ch * outputHeight * outputWidth + r * outputWidth + c;
+                highestDH = max(dh_index, highestDH);
                 double dh = error.data[dh_index];
 
                 for (int inputCh = 0; inputCh < depth; inputCh++) {
@@ -451,8 +456,10 @@ void CUUnifiedBlob::convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifi
                         for (int fc = 0; fc < fWidth; fc++) {
                             int inputIndex = (inputCh * iHeight * iWidth) + ((fr + r) * iWidth) + (fc + c);
                             int filterIndex = (ch * depth * fHeight * fWidth) + (inputCh * fHeight * fWidth) + (fr * fWidth) + fc;
+                            highestInput = max(inputIndex, highestInput);
+                            highestFilter = max(filterIndex, highestFilter);
                             // get the new error gradient (if it matters at all)
-                            newErrorGradient.data[inputIndex] += filters.data[filterIndex] * dh;
+                            //newErrorGradient.data[inputIndex] += filters.data[filterIndex] * dh;
                             // update the filters delta, but don't apply it to the actual filter until later
                             delta_filters.data[filterIndex] += originalInput.data[inputIndex] * dh;
                         }
@@ -461,6 +468,10 @@ void CUUnifiedBlob::convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifi
             }
         }
     }
+
+//    std::cout << "highest filter index: " << highestFilter << ", max filter is: " << delta_filters.size << std::endl;
+//    std::cout << "highest input index : " << highestInput << ", max input  is:" << originalInput.size << std::endl;
+//    std::cout << "highest dh index    : " << highestDH << " max dh     is: " << error.size << std::endl;
 }
 
 void CUUnifiedBlob::getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim) {
@@ -580,8 +591,8 @@ void CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUni
 }
 
 void CUUnifiedBlob::CUDA_multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim) {
-    dim3 blockDims(tensorSize);
-    cu_multiVectorReduction_kernel <<< blockDims, dim >>> (u.data, numClasses, dim);
+    dim3 blockDims(tensorSize, dim);
+    cu_multiVectorReduction_kernel <<< blockDims, numClasses, numClasses*sizeof(double) >>> (u.data, numClasses, dim);
 }
 
 void CUUnifiedBlob::CUDA_elementWiseErrorUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, CUUnifiedBlob &w_velocity, int size) {
@@ -617,7 +628,7 @@ void CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &fl
 
 void CUUnifiedBlob::CUDA_reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifiedBlob &flattenedTensor,
                                                        int height, int width, int depth, int numClasses, int dim) {
-    dim3 blockDims(depth, height, width);
+    dim3 blockDims(depth/dim, height, width);
     dim3 threadDims(dim);
     cu_reconstructingTensorFromError_kernel <<< blockDims, threadDims >>>
                                                             (tensor.data, flattenedTensor.data, numClasses);
@@ -648,18 +659,20 @@ void CUUnifiedBlob::CUDA_getVectorLoss(CUUnifiedBlob &v, CUUnifiedBlob &truthMap
     cu_getVectorLoss_kernel<<<numClasses, dim, dim*sizeof(double)>>>(v.data, truthMap.data, losses.data);
 }
 
-
-__device__
-double atomicAdd(double *addr, double val) {
-    unsigned long long int *address_as_ull = (unsigned long long int *) addr;
-    unsigned long long int old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed,
-                        __double_as_longlong(val + __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
-}
+//#ifdef ATOMIC_ADD_DEFINITION_REQUIRED
+//#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
+//__device__
+//double atomicAdd(double *addr, double val) {
+//    unsigned long long int *address_as_ull = (unsigned long long int *) addr;
+//    unsigned long long int old = *address_as_ull, assumed;
+//    do {
+//        assumed = old;
+//        old = atomicCAS(address_as_ull, assumed,
+//                        __double_as_longlong(val + __longlong_as_double(assumed)));
+//    } while (assumed != old);
+//    return __longlong_as_double(old);
+//}
+//#endif
 
 __device__
 double sharedMemoryReduce(double *shared_mem, double thread_val) {
@@ -926,13 +939,25 @@ cu_vectorVectorMatrixProductAndSum_kernel(double *w_error, double *v_error, doub
 __global__
 void cu_multiVectorReduction_kernel(double *u, int numClasses, int dim) {
     int t = blockIdx.x;
-    int d = threadIdx.x;
+    int d = blockIdx.y;
+    int k = threadIdx.x;
 
-    for (int i = 1; i < numClasses; i++) {
-        int u_element_index = t * numClasses + i;
-        u[t * numClasses * dim + d] += u[u_element_index * dim + d];
-        u[u_element_index * dim + d] = 0;
-    }
+    extern __shared__
+    double shared_v_values[];
+    shared_v_values[k] = u[(t*numClasses +k)*dim + d];
+    u[(t*numClasses+k)*dim + d] = 0;
+    __syncthreads();
+
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        if (d % (2 * s) == 0) {
+            shared_v_values[d] += shared_v_values[d + s];
+        }
+        __syncthreads();
+     }
+
+     if (k == 0) {
+     	u[(t*numClasses+k)*dim+d] = shared_v_values[0];
+     }
 }
 
 __global__
@@ -948,7 +973,7 @@ void cu_vectorSquashDerivative_kernel(double *v, int numClasses) {
     int t = blockIdx.x;
     int dim = blockDim.x;
     int specificDim = threadIdx.x;
-    int row_dim = t * numClasses * dim;
+    int row_dim = numClasses * dim;
 
     extern __shared__
     double shared_v_values[];
@@ -968,12 +993,11 @@ void cu_vectorSquashDerivative_kernel(double *v, int numClasses) {
         shared_v_values[1] = (shared_v_values[0] + 1) * (shared_v_values[0] + 1);
         shared_v_values[0] += 1e-4;
         shared_v_values[0] = sqrt(shared_v_values[0]); // normalization factor
-
         shared_v_values[1] = 2 * shared_v_values[0] / shared_v_values[1]; // derivative factor
     }
     __syncthreads();
 
-    v[t * row_dim + specificDim] *= shared_v_values[1] / shared_v_values[0];
+    v[row_dim + specificDim] *= shared_v_values[1] / shared_v_values[0];
 }
 
 __global__
@@ -1068,11 +1092,11 @@ void cu_reconstructingTensorFromError_kernel(double *tensor, double *flattenedTe
     int d = blockIdx.x;
 
     int dimIndex = threadIdx.x;
-    int vector_index = r * depth * width + c * width + d;
-    int tensor_index = (d * dim + dimIndex) * height * width + r * width + c;
-    int error_index = (vector_index) * (numClasses*dim) + dimIndex;
+    int vector_index = r * width * depth + c * depth + d;
+    int tensor_index = r * depth * dim * width + c * depth * dim + d * depth + dimIndex;
+    int output_index = vector_index * (numClasses * dim) + (dimIndex);
 
-    tensor[tensor_index] = flattenedTensor[error_index];
+    tensor[tensor_index] = flattenedTensor[output_index];
 }
 
 __global__
@@ -1093,10 +1117,27 @@ void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, do
     int inputIndex = (inputCh * iHeight * iWidth) + ((fr + r) * iWidth) + (fc + c);
     int filterIndex = (ch * blockDim.x * blockDim.y * blockDim.z) + (inputCh * blockDim.y * blockDim.z) + (fr * blockDim.z) + fc;
 
-    //newErrorGradient[inputIndex] += filters[filterIndex] * dh;
-    atomicAdd(&newErrorGradient[inputIndex], filters[filterIndex] * dh);
-    //filter_error[filterIndex] += originalInput[inputIndex] * dh;
-    atomicAdd(&delta_filters[filterIndex], originalInput[inputIndex] * dh);
+    //removed since newErrorGradient isn't really passed on to a higher conv. layer... yet.
+    //atomicAdd(&newErrorGradient[inputIndex], filters[filterIndex] * dh);
+
+    //atomicAdd(&delta_filters[filterIndex], originalInput[inputIndex] * dh);
+    double val = originalInput[inputIndex] * dh;
+
+    /***
+     * This is supposed to be in the defined function (seen above) as `atomicADD`.
+     * Cubix doesn't like the precompiler guards put against it, hpcvis3 likes it.
+     * No reversion, inclusion of file or anything else likes to make this work.
+     * This code is here provisionally.
+     *
+     * This WILL be removed in the future
+     */
+    unsigned long long int *address_as_ull = (unsigned long long int *) &delta_filters[filterIndex];
+    unsigned long long int old = *address_as_ull, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val + __longlong_as_double(assumed)));
+    } while (assumed != old);
 }
 
 __global__

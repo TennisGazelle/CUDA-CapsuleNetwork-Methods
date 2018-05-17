@@ -13,7 +13,7 @@ batchfileTemplate = "#!/bin/bash\n" \
                     # "#SBATCH --time=24:00:00\n" \
 
 def slurm_run():
-    run_type = "largescale_with_reconstruction"
+    run_type = "neural_net_output"
     batchfile = batchfileTemplate.format(run_type)
     batchfilename = "CapsNet-{}-job.sh".format(run_type)
     # write this to a file first
@@ -23,7 +23,7 @@ def slurm_run():
     # submit batch job
     subprocess.run(["sbatch", batchfilename])
     # erase file
-    subprocess.run(["rm", "-rf", batchfilename])
+    subprocess.run(["rm", batchfilename])
 
 def recompile():
     my_env = os.environ.copy()

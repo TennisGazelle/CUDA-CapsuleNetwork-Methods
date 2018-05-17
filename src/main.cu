@@ -671,7 +671,7 @@ struct StatisticalTimings {
 	vector<long double> fp_par, bp_par, epoch_par;
 };
 
-void test_epochSpeedupTimings_seq_par() {
+void test_speedupTimings_seq_par() {
     CapsuleNetwork seqCapsuleNetwork;
     CUCapsuleNetwork CUDANetwork;
     int numTimings = 30;
@@ -727,6 +727,7 @@ void test_epochSpeedupTimings_seq_par() {
 void test_epochAccuracy_CUDA() {
     CUCapsuleNetwork cuCapsuleNetwork;
 //    cuCapsuleNetwork.forwardPropagation(0, true);
+//    cout << "Loss is: " << cuCapsuleNetwork.getLoss() << endl;
 //    cuCapsuleNetwork.testResults(0, true);
 //    cuCapsuleNetwork.backPropagation(0, true);
 //    cuCapsuleNetwork.runEpoch();
@@ -874,9 +875,9 @@ int main() {
 //    test_forwardPropagationSpeedUpTimings();
 //    test_backwardPropagationSpeedupTimings();
 //    test_weightUpdateSpeedupTiming();
-//    test_epochSpeedupTimings_seq_par();
+    test_speedupTimings_seq_par();
 
-    test_epochAccuracy_CUDA();
+//    test_epochAccuracy_CUDA();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

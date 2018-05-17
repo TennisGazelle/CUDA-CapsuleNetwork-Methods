@@ -89,10 +89,11 @@ private:
 };
 
 // https://stackoverflow.com/questions/37566987/cuda-atomicadd-for-doubles-definition-error/37569519
-#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
-__device__
-double atomicAdd(double *addr, double val);
-#endif
+//#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
+//#define ATOMIC_ADD_DEFINITION_REQUIRED
+//__device__
+//double atomicAdd(double *addr, double val);
+//#endif
 
 __device__
 double sharedMemoryReduce(double *shared_mem, double thread_val);

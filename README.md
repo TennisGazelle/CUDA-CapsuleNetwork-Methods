@@ -38,12 +38,26 @@ sudo apt-get install libarmadillo-dev
 ```bash
 mkdir build
 cd build
-cmake ..
+cmake .. # or cmake --build . --target NeuralNets -- -j 4
+make
 ```
 ## Running
 ```bash
 cd build/
 ./NeuralNets
 ```
+Ignore, the segmentation fault error shown at the end; this is a destructor error and does not affect the speed up performance of the assignment.
 
-Nothing too special comes up yet, look at the file `src/main.cpp` to see what you're supposed to do right now.
+__IMPORTANT PLEASE NOTE:__ 
+Given the chosen design pattern (which will be modified in the future), the variable size of the internal number of tensor channels is stored as a `static const int` per every run of the program
+The function in `main.cu` named `void test_speedupTimings_seq_par()` runs 30 runs of the intended trials, forward propagation, back propagation and epoch (epoch commented out for time purposes).
+
+To change and run these vary these values for all possible sizes shown in the paper: `A GPU Acceleration Method for Dynamically Routed Capsule Networks`, please perform the following
+
+1. Open `include/Config.h`
+2. Change variable `cnNumTensorChannels`, which may be found in line 21.
+3. Recompile with `make`
+4. Rerun with `./NeuralNets`
+
+Note this change doesn't require a recompile of 
+

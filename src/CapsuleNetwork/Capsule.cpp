@@ -7,11 +7,14 @@
 #include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
+Capsule::~Capsule() {
+
+}
+
 void Capsule::init(int iD, int oD, int inputs, int outputs) {
     inputDim = iD;
     outputDim = oD;
     numInputs = inputs;
-    numOutputs = outputs;
 
     weightMatrices.resize(numInputs);
     weightDeltas.resize(numInputs);
