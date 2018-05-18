@@ -29,15 +29,19 @@ def recompile():
     my_env = os.environ.copy()
     my_env["CUDA_BIN_PATH"] = "/usr/local/cuda-9.0"
     my_env["PATH"] = "/usr/local/cuda-9.0/bin:" + my_env["PATH"]
+    FNULL = open(os.devnull, 'w')
 
     subprocess.run(["rm", "-rf", cwd_directory])
     subprocess.run(["mkdir", cwd_directory])
     subprocess.run(["cmake", ".."], cwd=cwd_directory, env=my_env)
+    print("running first make (ignore this)...")
+    subprocess.run(["make"], cwd=cwd_directory, stdout=FNULL, stderr=FNULL)
+    print("running actual make...")
+    subprocess.run(["cmake", "--build", ".", "--target", "NeuralNets", "--", "-j", "4"], cwd=cwd_directory)
 
-    # subprocess.run(["sleep", "5s"])
-    # subprocess.run(["make"], cwd=cwd_directory, env=my_env)
-    # subprocess.run(["cmake", "--build", cwd_directory, "--target", "NeuralNets", "--", "-j", "4"])
 
 if __name__ == '__main__':
-    # recompile()
+    print("fresh recomiling to {}".format(cwd_directory))
+    recompile()
+    print("making batchfile and submitting to slurm (sbatch)")
     slurm_run()
