@@ -7,7 +7,7 @@
 
 
 #include "PerceptronLayer.h"
-#include "MNISTReader.h"
+#include "Datasets/MNISTReader.h"
 
 class MultilayerPerceptron {
 public:

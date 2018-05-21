@@ -3,7 +3,7 @@
 //
 
 #include <Config.h>
-#include <MNISTReader.h>
+#include <Datasets/MNISTReader.h>
 #include <models/VectorMap.h>
 #include <Utils.h>
 #include <cassert>

@@ -10,6 +10,7 @@
 #include <models/VectorMap.h>
 #include <cassert>
 #include <CapsuleNetwork/CapsuleNetwork.h>
+#include <Datasets/SmallNORBReader.h>
 
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
@@ -240,6 +241,11 @@ void test_CapsuleNetwork_multipleReconstruction() {
     }
 }
 
+void test_readingNORBDatasets() {
+    auto readerPtr = SmallNORBReader::getInstance();
+
+}
+
 int main() {
 //    test_SingleLayerCNN();
 //    test_CapsuleNetSquishing();
@@ -253,8 +259,10 @@ int main() {
 //    test_CapsuleNetwork_multipleReconstruction();
 
 //    test_CapsuleNetwork_Epoch();
-    test_NetworkTallyingTiming();
+//    test_NetworkTallyingTiming();
 
+
+    test_readingNORBDatasets();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

@@ -5,14 +5,14 @@
 #include <fstream>
 #include <iostream>
 #include <Utils.h>
-#include "MNISTReader.h"
+#include "Datasets/MNISTReader.h"
 
 MNISTReader* MNISTReader::instance = nullptr;
 
 MNISTReader* MNISTReader::getInstance() {
     if (instance == nullptr) {
         instance = new MNISTReader;
-        instance->readMNISTData();
+        instance->readData();
     }
     return instance;
 }
@@ -23,7 +23,7 @@ MNISTReader::~MNISTReader() {
     }
 }
 
-void MNISTReader::readMNISTData() {
+void MNISTReader::readData() {
     readDataWithLabels("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte", trainingData);
     readDataWithLabels("../data/t10k-images-idx3-ubyte", "../data/t10k-labels-idx1-ubyte", testingData);
 }
@@ -37,31 +37,27 @@ void MNISTReader::readDataWithLabels(const string &datafile, const string &label
         cerr << "Something went wrong in reading..." << endl;
         return;
     }
-    grabFromFile(fin, magicNumber);
-    grabFromFile(fin, numImages);
-    grabFromFile(fin, numRows);
-    grabFromFile(fin, numCols);
+    grabFromFileAndReverse(fin, magicNumber);
+    grabFromFileAndReverse(fin, numImages);
+    grabFromFileAndReverse(fin, numRows);
+    grabFromFileAndReverse(fin, numCols);
 
     for (int i = 0; i < numImages; i++) {
         Image image;
-
         for (int r = 0; r < numRows; r++) {
             vector<unsigned char> row(numCols);
-
             for (int c = 0; c < numCols; c++) {
                 fin.read((char*)&row[c], sizeof(row[c]));
             }
-
             image.addRow(row);
         }
-
         dst.push_back(image);
     }
     fin.close();
 
     fin.open(labelfile, ios::binary);
-    grabFromFile(fin, magicNumber);
-    grabFromFile(fin, labels);
+    grabFromFileAndReverse(fin, magicNumber);
+    grabFromFileAndReverse(fin, labels);
     for (int i = 0; i < labels; i++) {
         unsigned char temp;
         fin.read((char*)&temp, 1);
@@ -74,15 +70,7 @@ void MNISTReader::readDataWithLabels(const string &datafile, const string &label
 
 }
 
-void MNISTReader::grabFromFile(ifstream &fin, unsigned int &num) {
+void MNISTReader::grabFromFileAndReverse(ifstream &fin, unsigned int &num) {
     fin.read((char*)&num, sizeof(num));
     num = Utils::reverseInt(num);
-}
-
-const Image& MNISTReader::getTrainingImage(int index) const {
-    return trainingData[index];
-}
-
-const Image& MNISTReader::getTestingImage(int index) const {
-    return testingData[index];
 }

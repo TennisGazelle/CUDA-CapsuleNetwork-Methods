@@ -42,6 +42,13 @@ int Utils::reverseInt(int i) {
            ((int) c4);
 }
 
+unsigned char Utils::reverseChar(char c) {
+    c = (c & 0xF0) >> 4 | (c & 0x0F) << 4;
+    c = (c & 0xCC) >> 2 | (c & 0x33) << 2;
+    c = (c & 0xAA) >> 1 | (c & 0x55) << 1;
+    return c;
+}
+
 long double Utils::square_length(const arma::vec &vn) {
     long double sum = 0.0;
     for (auto& v : vn) {

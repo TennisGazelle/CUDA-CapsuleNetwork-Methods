@@ -6,13 +6,13 @@
 #include <cassert>
 #include "models/Image.h"
 
-Image::Image() {
-    reserve(28*28);
+Image::Image(int pHeight, int pWidth) : height(pHeight), width(pWidth) {
+    resize(height * width);
 }
 
 Image::Image(size_t label, const vector<double> &input) {
     this->label = (unsigned char) label;
-    resize(28*28);
+    resize(height*width);
     assert (size() == input.size());
     for (int i = 0; i < size(); i++) {
         (*this)[i] = (unsigned char)(input[i] * 256.0);
@@ -27,11 +27,11 @@ void Image::print() const {
     int index = 0;
     cout << "A [" << int(label) << "]" << endl;
     for (unsigned int i = 0; i < size(); i++) {
-        if (!(i % 28)) {
+        if (!(i % width)) {
             cout << index++ << ": ";
         }
         cout << (int) at(i) << '\t';
-        if (!((i+1) % 28)) {
+        if (!((i+1) % width)) {
             cout << endl;
         }
     }
@@ -46,9 +46,9 @@ vector<double> Image::toVectorOfDoubles() const {
     return result;
 }
 
-void Image::fromVectorOfDoubles(const vector<double> &input) {
+void Image::fromVectorOfUnsignedChars(const vector<unsigned char> &input) {
     for (int i = 0; i < size(); i++) {
-        (*this)[i] = (unsigned char)(input[i] * 256.0);
+        (*this)[i] = 255 - input[i];
     }
 }
 
