@@ -12,7 +12,7 @@ MNISTReader* MNISTReader::instance = nullptr;
 MNISTReader* MNISTReader::getInstance() {
     if (instance == nullptr) {
         instance = new MNISTReader;
-        instance->readMNISTData();
+        instance->readData();
     }
     return instance;
 }
@@ -23,7 +23,7 @@ MNISTReader::~MNISTReader() {
     }
 }
 
-void MNISTReader::readMNISTData() {
+void MNISTReader::readData() {
     readDataWithLabels("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte", trainingData);
     readDataWithLabels("../data/t10k-images-idx3-ubyte", "../data/t10k-labels-idx1-ubyte", testingData);
 }
@@ -73,12 +73,4 @@ void MNISTReader::readDataWithLabels(const string &datafile, const string &label
 void MNISTReader::grabFromFileAndReverse(ifstream &fin, unsigned int &num) {
     fin.read((char*)&num, sizeof(num));
     num = Utils::reverseInt(num);
-}
-
-const Image& MNISTReader::getTrainingImage(int index) const {
-    return trainingData[index];
-}
-
-const Image& MNISTReader::getTestingImage(int index) const {
-    return testingData[index];
 }

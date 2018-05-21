@@ -6,20 +6,20 @@
 #define NEURALNETS_SMALLNORBREADER_H
 
 #include <models/Image.h>
+#include "DataReader.h"
 
 using namespace std;
 
-class SmallNORBReader {
+class SmallNORBReader : public DataReader {
 public:
     ~SmallNORBReader();
     static SmallNORBReader* getInstance();
 
-    vector<Image> trainingData, testingData;
 private:
     static SmallNORBReader* instance;
     SmallNORBReader() = default;
-    void readNORBData();
-    void readDataWithLabels(const string &datafile, const string &label);
+    void readData();
+    void readDataWithLabels(const string &datafile, const string &label, vector<Image> &dst);
 
     static inline void grabFromFile(ifstream &fin, unsigned int &num);
     static void readHeaderFromFile(ifstream &fin, unsigned int &magicNumber, vector<unsigned int>& dimSizes);

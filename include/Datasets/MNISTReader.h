@@ -8,24 +8,22 @@
 #include <vector>
 #include <string>
 #include "models/Image.h"
+#include "DataReader.h"
 
 using namespace std;
 
-class MNISTReader {
+class MNISTReader : public DataReader {
 public:
     ~MNISTReader();
     static MNISTReader* getInstance();
-    const Image& getTrainingImage(int index) const;
-    const Image& getTestingImage(int index) const;
 
-    vector<Image> trainingData, testingData;
 private:
     static MNISTReader* instance;
     MNISTReader() = default;
-    void readMNISTData();
+    void readData();
     void readDataWithLabels(const string& datafile, const string& labelfile, vector<Image>& dst);
 
-    static inline void grabFromFileAndReverse(ifstream &fin, unsigned int &num);
+    static void grabFromFileAndReverse(ifstream &fin, unsigned int &num);
 };
 
 #endif //NEURALNETS_MNISTREADER_H
