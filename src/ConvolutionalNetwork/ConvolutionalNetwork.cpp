@@ -11,8 +11,7 @@
 #include <HostTimer.h>
 #include "ConvolutionalNetwork/ConvolutionalNetwork.h"
 
-ConvolutionalNetwork::ConvolutionalNetwork() {
-    // TODO flesh this out
+ConvolutionalNetwork::ConvolutionalNetwork(const Config& incomingConfig) : config(incomingConfig) {
 }
 
 ConvolutionalNetwork::~ConvolutionalNetwork() {
@@ -30,12 +29,12 @@ ConvolutionalNetwork::~ConvolutionalNetwork() {
 }
 
 void ConvolutionalNetwork::init() {
-    layers.push_back(new ConvolutionalLayer(Config::inputHeight, Config::inputHeight, 16, 10, 10));
+    layers.push_back(new ConvolutionalLayer(config.inputHeight, config.inputHeight, 16, 10, 10));
 //    layers.push_back(new PoolingLayer(layers[0], MAX, 2, 2, 2));
     layers.push_back(new ConvolutionalLayer(layers[0], 32, 5, 5));
 //    layers.push_back(new PoolingLayer(layers[2], MAX, 2, 5, 5));
 
-    finalLayers = new MultilayerPerceptron(layers[layers.size()-1]->getOutputSize1D(), 10, {16});
+    finalLayers = new MultilayerPerceptron(config, layers[layers.size()-1]->getOutputSize1D(), 10, {16});
     finalLayers->init();
 }
 
@@ -60,7 +59,7 @@ vector<double> ConvolutionalNetwork::loadImageAndGetOutput(int imageIndex, bool 
 
 void ConvolutionalNetwork::train() {
     vector<double> history;
-    for (size_t i = 0; i < Config::numEpochs; i++) {
+    for (size_t i = 0; i < config.numEpochs; i++) {
         cout << "EPOCH ITERATION:" << i << endl;
         runEpoch();
         history.push_back(tally(false));
@@ -143,9 +142,8 @@ void ConvolutionalNetwork::runEpoch() {
 
         backPropagate(error);
 
-        if (i % Config::batchSize == 0 || i == tallyData.size()-1) {
+        if (i % config.batchSize == 0 || i == tallyData.size()-1) {
             batchUpdate();
-            Config::getInstance()->updateLearningRate();
         }
         progressBar.updateProgress(i);
     }

@@ -9,7 +9,8 @@
 #include <HostTimer.h>
 #include "MultilayerPerceptron/MultilayerPerceptron.h"
 
-MultilayerPerceptron::MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes) {
+MultilayerPerceptron::MultilayerPerceptron(const Config& incomingConfig, size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes)
+        : config(incomingConfig) {
     layerSizes.push_back(inputLayerSize);
     layerSizes.insert(layerSizes.end(), hiddenLayerSizes.begin(), hiddenLayerSizes.end());
     layerSizes.push_back(outputLayerSize);
@@ -94,10 +95,10 @@ vector<double> MultilayerPerceptron::loadImageAndGetOutput(int imageIndex, bool 
 }
 
 void MultilayerPerceptron::train() {
-    cout << "training with " << Config::numEpochs << " epochs..." << endl;
+    cout << "training with " << config.numEpochs << " epochs..." << endl;
 
     vector<double> history;
-    for (unsigned int i = 0; i < Config::numEpochs; i++) {
+    for (unsigned int i = 0; i < config.numEpochs; i++) {
         cout << "=================" << endl;
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
@@ -122,7 +123,7 @@ void MultilayerPerceptron::runEpoch(){
         desired[data[i].getLabel()] = 1.0;
 
         for (unsigned int j = 0; j < desired.size(); j++) {
-            switch (Config::getInstance()->at) {
+            switch (config.at) {
                 case SIGMOID:
                 default:
                     desired[j] = networkOutput[j] * (1-networkOutput[j]) * (desired[j] - networkOutput[j]);
@@ -131,9 +132,8 @@ void MultilayerPerceptron::runEpoch(){
 
         // back-propagate!
         backPropagateError(desired);
-        if (i+1 % Config::batchSize == 0 || data.size()-1) {
+        if (i+1 % config.batchSize == 0 || data.size()-1) {
             batchUpdate();
-            Config::getInstance()->updateLearningRate();
         }
 
         progressBar.updateProgress(i);
@@ -145,7 +145,7 @@ void MultilayerPerceptron::batchUpdate() {
 }
 
 vector<double> MultilayerPerceptron::backPropagateError(const vector<double> &error) {
-    return layers[layers.size()-1].backPropagate(error);
+    return layers[layers.size()-1].backPropagate(error, config.learningRate);
 }
 
 void MultilayerPerceptron::writeToFile() {

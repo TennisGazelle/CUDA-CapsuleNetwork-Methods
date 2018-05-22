@@ -12,20 +12,35 @@
 #include <thread>
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
-CapsuleNetwork::CapsuleNetwork() :
-        primaryCaps(Config::inputHeight, Config::inputWidth, Config::cnNumTensorChannels * Config::cnInnerDim, 28 - 6,
+CapsuleNetwork::CapsuleNetwork(const Config& incomingConfig) :
+        config(incomingConfig),
+        primaryCaps(incomingConfig.inputHeight, incomingConfig.inputWidth,
+                    incomingConfig.cnNumTensorChannels * incomingConfig.cnInnerDim,
+                    28 - 6,
                     28 - 6),
-        digitCaps(Config::numClasses),
-        reconstructionLayers(Config::numClasses * Config::cnOuterDim, Config::inputHeight * Config::inputWidth,
+        digitCaps(incomingConfig.numClasses),
+        reconstructionLayers(incomingConfig,
+                             incomingConfig.numClasses * incomingConfig.cnOuterDim,
+                             incomingConfig.inputHeight * incomingConfig.inputWidth,
                              {28 * 28}) {
-    auto totalNumVectors = 6 * 6 * Config::cnNumTensorChannels;
+    auto totalNumVectors = 6 * 6 * incomingConfig.cnNumTensorChannels;
+
     for (auto &capsule : digitCaps) {
-        capsule.init(Config::cnInnerDim, Config::cnOuterDim, totalNumVectors, Config::numClasses);
+        capsule.init(incomingConfig.cnInnerDim, incomingConfig.cnOuterDim, totalNumVectors, incomingConfig.numClasses, incomingConfig.numIterations);
     }
     reconstructionLayers.init();
 }
 
-vector<arma::vec> CapsuleNetwork:: loadImageAndGetOutput(int imageIndex, bool useTraining) {
+CapsuleNetwork::~CapsuleNetwork() {
+    for (auto& v : interimOutput) {
+        v.reset();
+    }
+    for (auto& v : interimError) {
+        v.reset();
+    }
+}
+
+vector<arma::vec> CapsuleNetwork::loadImageAndGetOutput(int imageIndex, bool useTraining) {
     FeatureMap image;
     if (useTraining) {
         image = MNISTReader::getInstance()->getTrainingImage(imageIndex).toFeatureMap();
@@ -36,12 +51,12 @@ vector<arma::vec> CapsuleNetwork:: loadImageAndGetOutput(int imageIndex, bool us
     primaryCaps.setInput({image});
     primaryCaps.calculateOutput();
     vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
-    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(Config::cnInnerDim, primaryCapsOutput);
+    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(config.cnInnerDim, primaryCapsOutput);
 
     // for each of the digitCaps, make them accept this as input
     vector<arma::vec> outputs(digitCaps.size());
 
-    if (Config::getInstance()->multithreaded) {
+    if (config.multithreaded) {
         static thread workers[10];
         for (int i = 0; i < digitCaps.size(); i++) {
             workers[i] = thread(&CapsuleNetwork::m_threading_loadCapsuleAndGetOutput, this, i, vectorMapOutput);
@@ -189,7 +204,7 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
         auto errorGradient = getMarginLossGradient(i == targetLabel, output[i]);
         // loss(v)
         auto rawMarginLoss = getMarginLoss(i == targetLabel, output[i]);
-        error[i] = Config::getInstance()->getLearningRate() * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
+        error[i] = config.learningRate * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
     }
     return error;
 }
@@ -199,30 +214,34 @@ void CapsuleNetwork::runEpoch() {
 
     ProgressBar pb(data.size());
     for (int i = 0; i < data.size(); i++) {
-        vector<arma::vec> output = loadImageAndGetOutput(i);
-        vector<arma::vec> error = getErrorGradient(output, data[i].getLabel());
-//        vector<arma::vec> imageError = getReconstructionError(output, i);
+        interimOutput = loadImageAndGetOutput(i);
+        interimError = getErrorGradient(interimOutput, data[i].getLabel());
+        backPropagate();
 
-        backPropagate(error);
-//        backPropagate(imageError);
+//        interimError = getReconstructionError(output, i);
+//        backPropagate();
 
-        if (i % Config::batchSize == Config::batchSize - 1) {
+        if (i % config.batchSize == config.batchSize - 1) {
             updateWeights();
         }
         pb.updateProgress(i);
     }
 }
 
-void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
-    assert (error.size() == digitCaps.size());
-    assert (error[0].size() == 16);
+void CapsuleNetwork::backPropagate() {
+    backPropagate(interimError);
+}
 
-    auto flattenedTensorSize = 6 * 6 * Config::cnNumTensorChannels;
+void CapsuleNetwork::backPropagate(const vector<arma::vec>& error) {
+    assert (interimError.size() == digitCaps.size());
+    assert (interimError[0].size() == 16);
+
+    auto flattenedTensorSize = 6 * 6 * config.cnNumTensorChannels;
 
     vector<arma::vec> primaryCapsError(flattenedTensorSize, arma::vec(8, arma::fill::zeros));
     // given the error, put this in the last layer and get the error, and give it to the Conv. net
-    for (int i = 0; i < error.size(); i++) {
-        vector<arma::vec> subset = digitCaps[i].backPropagate(error[i]);
+    for (int i = 0; i < interimError.size(); i++) {
+        vector<arma::vec> subset = digitCaps[i].backPropagate(interimError[i]);
         for (int j = 0; j < flattenedTensorSize; j++) {
             primaryCapsError[i] += subset[i];
         }
@@ -233,7 +252,7 @@ void CapsuleNetwork::backPropagate(vector<arma::vec> error) {
     }
     // translate to feature maps
     vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6,
-                                                                   Config::cnNumTensorChannels * Config::cnInnerDim,
+                                                                   config.cnNumTensorChannels * config.cnInnerDim,
                                                                    primaryCapsError);
     // give back to the conv net here.
     primaryCaps.backPropagate(convError);
@@ -291,7 +310,7 @@ void CapsuleNetwork::updateWeights() {
 
 void CapsuleNetwork::train() {
     vector<pair<double, long double>> history;
-    for (size_t i = 0; i < Config::numEpochs; i++) {
+    for (size_t i = 0; i < config.numEpochs; i++) {
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
         history.push_back(tally(false));
@@ -316,13 +335,12 @@ vector<double> CapsuleNetwork::getErrorGradientImage(const Image &truth, const v
 }
 
 void CapsuleNetwork::fullForwardPropagation(int imageIndex) {
-    vector<arma::vec> output = loadImageAndGetOutput(imageIndex, true);
+    interimOutput = loadImageAndGetOutput(imageIndex, true);
 //    auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(output));
 }
 
 void CapsuleNetwork::fullBackwardPropagation(int imageIndex) {
-    static auto &data = MNISTReader::getInstance()->trainingData;
-    vector<arma::vec> output = loadImageAndGetOutput(imageIndex);
-    vector<arma::vec> error = getErrorGradient(output, data[imageIndex].getLabel());
-    backPropagate(error);
+    auto &data = MNISTReader::getInstance()->trainingData;
+    interimError = getErrorGradient(interimOutput, data[imageIndex].getLabel());
+    backPropagate();
 }

@@ -4,17 +4,17 @@
 
 #include <cassert>
 #include <Utils.h>
-#include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
 Capsule::~Capsule() {
 
 }
 
-void Capsule::init(int iD, int oD, int inputs, int outputs) {
+void Capsule::init(int iD, int oD, int inputs, int outputs, int r) {
     inputDim = iD;
     outputDim = oD;
     numInputs = inputs;
+    numIterations = r;
 
     weightMatrices.resize(numInputs);
     weightDeltas.resize(numInputs);
@@ -88,7 +88,7 @@ arma::vec Capsule::routingAlgorithm() {
     }
 
     arma::vec v;
-    for (int r = 0; r < Config::numIterations; r++) {
+    for (int r = 0; r < numIterations; r++) {
         softmax();
 
         // calculate s

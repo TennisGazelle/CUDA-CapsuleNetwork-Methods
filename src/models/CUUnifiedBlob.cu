@@ -675,8 +675,25 @@ void CUUnifiedBlob::CUDA_getVectorLoss(CUUnifiedBlob &v, CUUnifiedBlob &truthMap
 //#endif
 
 __device__
-double sharedMemoryReduce(double *shared_mem, double thread_val) {
-    return 0.0;
+double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex) {
+    // load shared memory
+    shared_mem[kernelIndex] = thread_val;
+    __syncthreads();
+
+    thread_val = isinf(thread_val) ? 0.0 : thread_val; // clear out if isinf
+
+    // reduce
+    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+        int index = 2*s*kernelIndex;
+
+        if ((index+s) < blockDim.x && !isinf(shared_mem[index] + shared_mem[index+s])) {
+            shared_mem[index] += shared_mem[index + s];
+        }
+        __syncthreads();
+    }
+
+    // return index [0]
+    return shared_mem[0];
 }
 
 __global__
@@ -711,11 +728,11 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
     int t = threadIdx.x;
     int k = blockIdx.x;
 
-    double my_exp_bs[3]; // make this dynamic and only as needed
+    double my_exp_bs[8]; // make this dynamic and only as needed
     extern __shared__
     double shared_b_exps[];
 
-    shared_b_exps[t] = 0.0;
+    double initial_value = 0.0;
     for (int i = 0; (i * 1024) < tensorSize; i++) {
         int tensorRowIndex = (i*1024) + t;
         int b_index = (tensorRowIndex * numClasses) + k;
@@ -724,19 +741,11 @@ void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int ten
         if (isnan(my_exp_bs[i])) {
             my_exp_bs[i] = 0;
         }
+        initial_value += my_exp_bs[i];
         shared_b_exps[t] += my_exp_bs[i];
     }
-    __syncthreads();
 
-    if (isinf(shared_b_exps[t])) {
-        shared_b_exps[t] = 0;
-    }
-    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-        if (t % (2 * s) == 0 && (t+s) < blockDim.x && !isinf(shared_b_exps[t] + shared_b_exps[t+s])) {
-            shared_b_exps[t] += shared_b_exps[t + s];
-        }
-        __syncthreads();
-    }
+    sharedMemoryReduce(shared_b_exps, initial_value, t);
 
     for (int i = 0; i * 1024 < tensorSize; i++) {
         int tensorRowIndex = i*1024 + t;
@@ -758,22 +767,16 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
     extern __shared__
     double shared_v_vec[];
 
-    shared_v_vec[t] = 0;
+    double initial_value = 0.0;
 
     // if tensorsize > 1024, add them to the shared mem as well
     for (int i = 0; i * 1024 < tensorSize; i++) {
         int u_hat_offset = i * 1024 * numClasses * dim;
         int c_offset = i * 1024 * numClasses;
-        shared_v_vec[t] += u_hat[u_hat_index + specificDim + u_hat_offset] * c[c_index + c_offset];
+        initial_value += u_hat[u_hat_index + specificDim + u_hat_offset] * c[c_index + c_offset];
     }
-    __syncthreads();
 
-    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-        if (t % (2 * s) == 0 && (t+s) < blockDim.x && !isinf(shared_v_vec[t] + shared_v_vec[t+s])) {
-            shared_v_vec[t] += shared_v_vec[t + s];
-        }
-        __syncthreads();
-    }
+    sharedMemoryReduce(shared_v_vec, initial_value, t);
 
     if (t == 0) {
         v[k * dim + specificDim] = shared_v_vec[0];

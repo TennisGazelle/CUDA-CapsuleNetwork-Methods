@@ -11,7 +11,7 @@
 
 class ConvolutionalNetwork {
 public:
-    ConvolutionalNetwork();
+    ConvolutionalNetwork(const Config& incomingConfig);
     ~ConvolutionalNetwork();
 
     void init();
@@ -31,6 +31,8 @@ private:
     // contents
     vector<ICNLayer*> layers;
     MultilayerPerceptron* finalLayers;
+
+    Config config;
 };
 
 

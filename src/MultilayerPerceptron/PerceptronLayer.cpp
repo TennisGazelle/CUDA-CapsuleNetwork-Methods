@@ -80,43 +80,39 @@ void PerceptronLayer::m_threading_forwardPropagate(int index) {
     output[index] = perceptrons[index].evaluate(input);
 }
 
-vector<double> PerceptronLayer::backPropagate(const vector<double>& errorGradient) {
+vector<double> PerceptronLayer::backPropagate(const vector<double>& errorGradient, double learningRate) {
     // error check
     assert(errorGradient.size() == outputSize);
 
-    singleThreadedBackPropagate(errorGradient);
-//    if (Config::getInstance()->multithreaded) {
-//        multiThreadedBackPropagate(errorGradient);
-//    } else {
-//    }
+    singleThreadedBackPropagate(errorGradient, learningRate);
 
     vector<double> previousErrorGradient = calculateErrorGradients(errorGradient);
 
     if (parent != nullptr) {
-        return parent->backPropagate(previousErrorGradient);
+        return parent->backPropagate(previousErrorGradient, learningRate);
     }
     return previousErrorGradient;
 }
 
-void PerceptronLayer::singleThreadedBackPropagate(const vector<double> &errorGradient) {
+void PerceptronLayer::singleThreadedBackPropagate(const vector<double> &errorGradient, double learningRate) {
     // collect the nudges reported by every perceptron
     for (unsigned int pIndex = 0; pIndex < perceptrons.size(); pIndex++) {
-        perceptrons[pIndex].selfAdjust(errorGradient[pIndex], input);
+        perceptrons[pIndex].selfAdjust(errorGradient[pIndex], input, learningRate);
     }
 }
 
-void PerceptronLayer::multiThreadedBackPropagate(const vector<double> &errorGradient) {
+void PerceptronLayer::multiThreadedBackPropagate(const vector<double> &errorGradient, double learningRate) {
     thread workers[perceptrons.size()];
     for (unsigned int i = 0; i < perceptrons.size(); i++) {
-        workers[i] = thread(&PerceptronLayer::m_threading_backPropagate, this, i, errorGradient[i]);
+        workers[i] = thread(&PerceptronLayer::m_threading_backPropagate, this, i, errorGradient[i], learningRate);
     }
     for (auto& w : workers) {
         w.join();
     }
 }
 
-void PerceptronLayer::m_threading_backPropagate(int index, double errorGradient) {
-    perceptrons[index].selfAdjust(errorGradient, input);
+void PerceptronLayer::m_threading_backPropagate(int index, double errorGradient, double learningRate) {
+    perceptrons[index].selfAdjust(errorGradient, input, learningRate);
 }
 
 vector<double> PerceptronLayer::calculateErrorGradients(const vector<double> &previousErrorGradient) {

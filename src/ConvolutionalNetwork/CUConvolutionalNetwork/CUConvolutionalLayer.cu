@@ -6,7 +6,8 @@
 #include <Config.h>
 #include "ConvolutionalNetwork/CUConvolutionalNetwork/CUConvolutionalLayer.h"
 
-CUConvolutionalLayer::CUConvolutionalLayer(int iHeight, int iWidth, int nFilters, int fHeight, int fWidth) {
+CUConvolutionalLayer::CUConvolutionalLayer(const Config& incomingConfig, int iHeight, int iWidth, int nFilters, int fHeight, int fWidth)
+        : config(incomingConfig) {
     numFilters = nFilters;
     filterDepth = 1;
     filterHeight = fHeight;
@@ -28,7 +29,7 @@ CUConvolutionalLayer::CUConvolutionalLayer(int iHeight, int iWidth, int nFilters
     filter.fillWithRandom();
 }
 
-void CUConvolutionalLayer::setInput(std::vector<double> inputImage) {
+void CUConvolutionalLayer::setInput(const std::vector<double>& inputImage) {
     assert(inputImage.size() == input.getSize());
     for(int i = 0; i < input.getSize(); i++) {
         input.setValueAt_1D(i, inputImage[i]);
@@ -40,12 +41,12 @@ void CUConvolutionalLayer::forwardPropagate() {
 }
 
 void CUConvolutionalLayer::squashAndRemapToU(CUUnifiedBlob &u) {
-    CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(u, output, outputHeight, outputWidth, numFilters/Config::cnInnerDim, Config::numClasses, Config::cnInnerDim);
+    CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(u, output, outputHeight, outputWidth, numFilters/config.cnInnerDim, config.numClasses, config.cnInnerDim);
     output.CUDA_clear();
 }
 
 void CUConvolutionalLayer::remapErrorToOutput(CUUnifiedBlob &delta_u) {
-    CUUnifiedBlob::CUDA_reconstructingTensorFromError(output, delta_u, outputHeight, outputWidth, filterDepth, Config::numClasses, Config::cnInnerDim);
+    CUUnifiedBlob::CUDA_reconstructingTensorFromError(output, delta_u, outputHeight, outputWidth, filterDepth, config.numClasses, config.cnInnerDim);
 //    output.print("cvlayer error output", outputWidth);
 }
 

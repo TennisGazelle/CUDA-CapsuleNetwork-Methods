@@ -7,33 +7,26 @@
 
 #include <models/ActivationType.h>
 
-class Config {
-public:
-    static Config* getInstance();
-    void updateLearningRate();
-    double getLearningRate() const;
-    void resetLearningRate();
+struct Config {
+    bool multithreaded = false;
 
-    static const bool multithreaded = false;
+    int inputHeight = 28, inputWidth = 28;
+    int cnInnerDim = 8, cnOuterDim = 16;
+    int cnNumTensorChannels = 40;
+    int numClasses = 10;
 
-    static const int inputHeight = 28, inputWidth = 28;
-    static const int cnInnerDim = 8, cnOuterDim = 16;
-    static const int cnNumTensorChannels = 40;
-    static const int numClasses = 10;
-
-    static const int batchSize = 250;
-    static const int numEpochs = 600;
-    static const int numIterations = 3;
+    int batchSize = 250;
+    int numEpochs = 600;
+    int numIterations = 3;
     double learningRate = 0.01;
 
     const ActivationType at = SIGMOID;
-private:
-    Config();
-    static Config* instance;
-    const double learningRate_alpha = 0.9999999;
+
     int learningRate_t = 0;
+    const double learningRate_alpha = 0.9999999;
     double momentum = 0.9;
 };
 
+static Config globalConfig;
 
 #endif //NEURALNETS_CONFIG_H

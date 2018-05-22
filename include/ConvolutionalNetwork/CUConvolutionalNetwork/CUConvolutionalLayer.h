@@ -8,11 +8,12 @@
 
 #include <models/CUUnifiedBlob.h>
 #include <vector>
+#include <Config.h>
 
 class CUConvolutionalLayer {
 public:
-    CUConvolutionalLayer(int iHeight, int iWidth, int numFilters, int fHeight, int fWidth);
-    void setInput(std::vector<double> inputImage);
+    CUConvolutionalLayer(const Config& incomingConfig, int iHeight, int iWidth, int numFilters, int fHeight, int fWidth);
+    void setInput(const std::vector<double>& inputImage);
     void forwardPropagate();
     void squashAndRemapToU(CUUnifiedBlob &u);
     void remapErrorToOutput(CUUnifiedBlob &delta_u);
@@ -25,8 +26,7 @@ private:
     int filterDepth, filterHeight, filterWidth, numFilters;
 
     CUUnifiedBlob input, delta_input, filter, filter_error, filter_velocities, output;
-//    std::vector<CUUnifiedBlob> filters;
-//    CUUnifiedBlob filter;
+    Config config;
 };
 
 

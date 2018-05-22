@@ -15,10 +15,12 @@
 #include <CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h>
 #include <DeviceTimer.h>
 
+Config testing_config;
+
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
     ConvolutionalLayer layer(28, 28, 256, 9, 9);
-    MultilayerPerceptron mp(layer.getOutputSize1D(), 10, {});
+    MultilayerPerceptron mp(testing_config, layer.getOutputSize1D(), 10, {});
 
     mp.init();
     layer.setInput({image.toFeatureMap()});
@@ -128,7 +130,7 @@ void test_FeatureMapsFromVectorMap() {
 }
 
 void test_CapsuleNetwork_ForwardPropagation() {
-    CapsuleNetwork capsuleNetwork;
+    CapsuleNetwork capsuleNetwork(testing_config);
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
 
     for (int i = 0; i < 10; i++) {
@@ -137,7 +139,7 @@ void test_CapsuleNetwork_ForwardPropagation() {
 }
 
 void test_CapsuleNetwork_BackPropagation() {
-    CapsuleNetwork capsuleNetwork;
+    CapsuleNetwork capsuleNetwork(testing_config);
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
     vector<arma::vec> error = capsuleNetwork.getErrorGradient(output,
                                                               MNISTReader::getInstance()->trainingData[0].getLabel());
@@ -150,7 +152,7 @@ void test_CapsuleNetwork_BackPropagation() {
 }
 
 void test_CapsuleNetwork_Epoch() {
-    CapsuleNetwork capsuleNetwork;
+    CapsuleNetwork capsuleNetwork(testing_config);
 
     auto &data = MNISTReader::getInstance()->trainingData;
     const size_t batchSize = 250;
@@ -170,7 +172,7 @@ void test_CapsuleNetwork_Epoch() {
 }
 
 void test_CapsuleNetwork_getMarginLoss() {
-    CapsuleNetwork capsuleNetwork;
+    CapsuleNetwork capsuleNetwork(testing_config);
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
     double totalLoss = capsuleNetwork.getTotalMarginLoss(MNISTReader::getInstance()->trainingData[0].getLabel(),
                                                          output);
@@ -179,9 +181,9 @@ void test_CapsuleNetwork_getMarginLoss() {
 }
 
 void test_NetworkTallyingTiming() {
-    MultilayerPerceptron mp(784, 10, {16, 16});
-    ConvolutionalNetwork cnn;
-    CapsuleNetwork capsNet;
+    MultilayerPerceptron mp(testing_config, 784, 10, {16, 16});
+    ConvolutionalNetwork cnn(testing_config);
+    CapsuleNetwork capsNet(testing_config);
 
 //    mp.init();
 //    cnn.init();
@@ -200,7 +202,7 @@ void test_NetworkTallyingTiming() {
 }
 
 void test_CapsuleNetwork_reconstruction() {
-    CapsuleNetwork capsuleNetwork;
+    CapsuleNetwork capsuleNetwork(testing_config);
     int targetLabel = (int) MNISTReader::getInstance()->trainingData[0].getLabel();
 
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
@@ -225,7 +227,7 @@ void test_CapsuleNetwork_reconstruction() {
 }
 
 void test_CapsuleNetwork_multipleReconstruction() {
-    CapsuleNetwork capsuleNetwork;
+    CapsuleNetwork capsuleNetwork(testing_config);
     for (int i = 0; i < 10; i++) {
         int targetLabel = (int) MNISTReader::getInstance()->trainingData[0].getLabel();
 
@@ -284,7 +286,7 @@ void test_CUUnifiedBlob_CUDA_softmax() {
 
     for (int k = 0; k < numClasses; k++) {
         for (int t = 0; t < flattenedTensorSize; t++) {
-            bMatrix.setValueAt_2D(t, k, numClasses, double(t+1)/(10.0*(k+1)));
+            bMatrix.setValueAt_2D(t, k, numClasses, double(t+1)/(1.0*(k+1)));
         }
     }
     cMatrix.clear();
@@ -618,7 +620,7 @@ void test_CUUnifiedBlob_getTotalLoss() {
 }
 
 void test_forwardPropagationSpeedUpTimings() {
-    CapsuleNetwork seqCapsuleNetwork;
+    CapsuleNetwork seqCapsuleNetwork(testing_config);
     int statisticalTimings = 30;
     vector<long double> timings(statisticalTimings);
     HostTimer timer;
@@ -637,7 +639,7 @@ void test_forwardPropagationSpeedUpTimings() {
 }
 
 void test_weightUpdateSpeedupTiming() {
-    CapsuleNetwork seqCapsuleNetwork;
+    CapsuleNetwork seqCapsuleNetwork(testing_config);
     int statisticalTimings = 30;
     vector<long double> timings(statisticalTimings);
     HostTimer timer;
@@ -662,18 +664,21 @@ struct StatisticalTimings {
     StatisticalTimings(int size = 30) {
     	fp_seq.resize(size);
     	bp_seq.resize(size);
+        image_seq.resize(size);
     	epoch_seq.resize(size);
+
     	fp_par.resize(size);
     	bp_par.resize(size);
+        image_par.resize(size);
     	epoch_par.resize(size);
     }
-	vector<long double> fp_seq, bp_seq, epoch_seq;
-	vector<long double> fp_par, bp_par, epoch_par;
+	vector<long double> fp_seq, bp_seq, image_seq, epoch_seq;
+	vector<long double> fp_par, bp_par, image_par, epoch_par;
 };
 
 void test_speedupTimings_seq_par() {
-    CapsuleNetwork seqCapsuleNetwork;
-    CUCapsuleNetwork CUDANetwork;
+    CapsuleNetwork seqCapsuleNetwork(testing_config);
+    CUCapsuleNetwork CUDANetwork(testing_config);
     int numTimings = 30;
     StatisticalTimings st(numTimings);
     HostTimer hostTimer;
@@ -682,7 +687,7 @@ void test_speedupTimings_seq_par() {
     // full forward propagate
     for (int i = 0; i < numTimings; i++) {
         hostTimer.start();
-        seqCapsuleNetwork.fullForwardPropagation();
+        seqCapsuleNetwork.fullForwardPropagation(i);
         hostTimer.stop();
         st.fp_seq[i] = hostTimer.getElapsedTime();
 
@@ -692,7 +697,7 @@ void test_speedupTimings_seq_par() {
         st.fp_par[i] = deviceTimer.getElapsedTime();
     
         hostTimer.start();
-        seqCapsuleNetwork.fullBackwardPropagation();
+        seqCapsuleNetwork.fullBackwardPropagation(i);
         hostTimer.stop();
         st.bp_seq[i] = hostTimer.getElapsedTime();
 
@@ -700,6 +705,18 @@ void test_speedupTimings_seq_par() {
         CUDANetwork.backPropagation(i);
         deviceTimer.stop();
         st.bp_par[i] = deviceTimer.getElapsedTime();
+
+        hostTimer.start();
+        seqCapsuleNetwork.fullForwardPropagation(i);
+        seqCapsuleNetwork.fullBackwardPropagation(i);
+        hostTimer.stop();
+        st.image_seq[i] = hostTimer.getElapsedTime();
+
+        deviceTimer.start();
+        CUDANetwork.forwardPropagation(i);
+        CUDANetwork.backPropagation(i);
+        deviceTimer.stop();
+        st.image_par[i] = deviceTimer.getElapsedTime();
 
 //        hostTimer.start();
 //        seqCapsuleNetwork.runEpoch();
@@ -714,10 +731,12 @@ void test_speedupTimings_seq_par() {
         for (int i = 0; i < numTimings; i++) {
             cout << st.fp_seq[i] << "\t";
             cout << st.bp_seq[i] << "\t";
+            cout << st.image_seq[i] << "\t";
             cout << st.epoch_seq[i] << "\t";
 
             cout << st.fp_par[i] << "\t";
             cout << st.bp_par[i] << "\t";
+            cout << st.image_par[i] << "\t";
             cout << st.epoch_par[i] << "\t";
             cout << endl;
         }
@@ -725,7 +744,7 @@ void test_speedupTimings_seq_par() {
 }
 
 void test_epochAccuracy_CUDA() {
-    CUCapsuleNetwork cuCapsuleNetwork;
+    CUCapsuleNetwork cuCapsuleNetwork(testing_config);
 //    cuCapsuleNetwork.forwardPropagation(0, true);
 //    cout << "Loss is: " << cuCapsuleNetwork.getLoss() << endl;
 //    cuCapsuleNetwork.testResults(0, true);
@@ -736,7 +755,7 @@ void test_epochAccuracy_CUDA() {
 }
 
 void test_CUCapsuleNetwork_forwardPropagation() {
-    CUCapsuleNetwork capsNet;
+    CUCapsuleNetwork capsNet(testing_config);
     int statisticalTimings = 30;
     vector<long double> timings(statisticalTimings);
     HostTimer timer;

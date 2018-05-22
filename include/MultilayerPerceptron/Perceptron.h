@@ -17,7 +17,7 @@ public:
     void populateFromFileRow(const vector<double> &line);
     double evaluate(const vector<double> &input) const;
 
-    void selfAdjust(const double error, const vector<double> input);
+    void selfAdjust(const double error, const vector<double> input, double learningRate);
     void adjustWeight(const double total);
     vector<double> reportDesire() const;
     double getWeightAt(int i) const;
@@ -25,7 +25,7 @@ public:
 
 private:
     void adjustBias(const double error);
-    void recordWeightAdjustment(const double error, const vector<double> prevInput);
+    void recordWeightAdjustment(const double error, const vector<double> prevInput, double learningRate);
     void calculateDesires();
 
     double bias;

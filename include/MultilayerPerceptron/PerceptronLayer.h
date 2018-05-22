@@ -20,7 +20,7 @@ public:
 
     void forwardPropagate();
     // returns the error gradient of the last layer (the input layer) just in case you want it
-    vector<double> backPropagate(const vector<double>& errorGradient);
+    vector<double> backPropagate(const vector<double>& errorGradient, double learningRate);
     void updateError();
     void updateWeights(const double total);
     vector<double> calculateErrorGradients(const vector<double> &previousErrorGradient);
@@ -30,9 +30,9 @@ private:
     void multiThreadedForwardPropagate();
     void m_threading_forwardPropagate(int index);
 
-    void singleThreadedBackPropagate(const vector<double>& errorGradient);
-    void multiThreadedBackPropagate(const vector<double>& errorGradient);
-    void m_threading_backPropagate(int index, double errorGradient);
+    void singleThreadedBackPropagate(const vector<double>& errorGradient, double learningRate);
+    void multiThreadedBackPropagate(const vector<double>& errorGradient, double learningRate);
+    void m_threading_backPropagate(int index, double errorGradient, double learningRate);
 
 
     PerceptronLayer* parent;

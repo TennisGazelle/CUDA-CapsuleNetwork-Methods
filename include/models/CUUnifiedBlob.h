@@ -96,7 +96,7 @@ private:
 //#endif
 
 __device__
-double sharedMemoryReduce(double *shared_mem, double thread_val);
+double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex);
 
 __global__
 void cu_clearOut_kernel(double *data);

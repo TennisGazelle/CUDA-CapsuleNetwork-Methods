@@ -4,7 +4,6 @@
 
 #include <Utils.h>
 #include <cassert>
-#include <Config.h>
 #include "MultilayerPerceptron/Perceptron.h"
 
 Perceptron::Perceptron() : bias(0.0) {
@@ -41,18 +40,12 @@ double Perceptron::evaluate(const vector<double> &input) const {
         sum += weights[i] * input[i];
     }
     // activation function from all the weights
-    switch (Config::getInstance()->at) {
-        case SIGMOID:
-            return 1.0 / (1.0 + exp(-sum));
-        default:
-            cerr << "Perceptron activation type not defined" << endl;
-            exit(1);
-    }
+    return 1.0 / (1.0 + exp(-sum));
 }
 
-void Perceptron::selfAdjust(const double error, const vector<double> input) {
+void Perceptron::selfAdjust(const double error, const vector<double> input, double learningRate) {
     adjustBias(error);
-    recordWeightAdjustment(error, input);
+    recordWeightAdjustment(error, input, learningRate);
     calculateDesires();
 }
 
@@ -60,11 +53,11 @@ void Perceptron::adjustBias(const double error) {
 //    bias += 0.001 * (error);
 }
 
-void Perceptron::recordWeightAdjustment(const double error, const vector<double> prevInput) {
+void Perceptron::recordWeightAdjustment(const double error, const vector<double> prevInput, double learningRate) {
     // change w_i by factor of a_i
     for (unsigned int i = 0; i < weights.size(); i++) {
         // by a factor of the previous input for this neuron...
-        double adjustment = (Config::getInstance()->getLearningRate() * prevInput[i] * error);
+        double adjustment = (learningRate * prevInput[i] * error);
         weightAdjustment[i] += adjustment;
     }
 }

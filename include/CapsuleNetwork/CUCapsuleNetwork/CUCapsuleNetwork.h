@@ -10,10 +10,11 @@
 #include <ConvolutionalNetwork/ConvolutionalLayer.h>
 #include <armadillo>
 #include <ConvolutionalNetwork/CUConvolutionalNetwork/CUConvolutionalLayer.h>
+#include <Config.h>
 
 class CUCapsuleNetwork {
 public:
-    CUCapsuleNetwork();
+    CUCapsuleNetwork(const Config& incomingConfig);
     void forwardPropagation(int imageIndex, bool useTraining = true);
     void backPropagation(int imageIndex, bool useTraining = true);
     double getLoss();
@@ -34,6 +35,8 @@ private:
                   truth,
                   losses,
                   lengths;
+
+    Config config;
 };
 
 
