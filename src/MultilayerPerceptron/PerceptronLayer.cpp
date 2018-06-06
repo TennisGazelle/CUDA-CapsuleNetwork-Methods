@@ -50,7 +50,7 @@ void PerceptronLayer::forwardPropagate() {
         input = parent->output;
     }
     singleThreadedForwardPropagate();
-//    if (Config::getInstance()->multithreaded) {
+//    if (CapsNetConfig::getInstance()->multithreaded) {
 //        multiThreadedForwardPropagate();
 //    } else {
 //    }

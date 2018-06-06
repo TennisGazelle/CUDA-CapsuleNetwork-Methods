@@ -60,7 +60,7 @@ The function in `main.cu` named `void test_speedupTimings_seq_par()` runs 30 run
 
 To change and run these vary these values for all possible sizes shown in the paper: `A GPU Acceleration Method for Dynamically Routed Capsule Networks`, please perform the following
 
-1. Open `include/Config.h`
+1. Open `include/CapsNetConfig.h`
 2. Change variable `cnNumTensorChannels`, which may be found in line 21.
 3. Recompile with `make`
 4. Rerun with `./NeuralNets`

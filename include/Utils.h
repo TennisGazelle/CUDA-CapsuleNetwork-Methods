@@ -22,6 +22,10 @@ public:
     // the following are inverses of one another // not tested yet
     static std::vector<double> getAsOneDim(const std::vector<arma::vec>& input);
     static std::vector<arma::vec> asCapsuleVectors(int dim, int numVectors, const std::vector<double>& data);
+
+    // things for GA
+    static bool randomWithProbability(double prob);
+    static int getBinaryAsInt(const std::vector<bool> &subset);
 };
 
 

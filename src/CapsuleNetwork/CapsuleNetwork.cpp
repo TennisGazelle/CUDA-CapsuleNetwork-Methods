@@ -2,7 +2,7 @@
 // Created by daniellopez on 2/23/18.
 //
 
-#include <Config.h>
+#include <CapsNetConfig.h>
 #include <MNISTReader.h>
 #include <models/VectorMap.h>
 #include <Utils.h>
@@ -12,7 +12,7 @@
 #include <thread>
 #include "CapsuleNetwork/CapsuleNetwork.h"
 
-CapsuleNetwork::CapsuleNetwork(const Config& incomingConfig) :
+CapsuleNetwork::CapsuleNetwork(const CapsNetConfig& incomingConfig) :
         config(incomingConfig),
         primaryCaps(incomingConfig.inputHeight, incomingConfig.inputWidth,
                     incomingConfig.cnNumTensorChannels * incomingConfig.cnInnerDim,
@@ -117,7 +117,7 @@ void CapsuleNetwork::loadImageAndPrintOutput(int imageIndex, bool useTraining) {
     primaryCaps.setInput({image});
     primaryCaps.calculateOutput();
     auto primaryCapsOutput = primaryCaps.getOutput();
-    auto vectorMapOutput = VectorMap::toSquishedArrayOfVecs(8, primaryCapsOutput);
+    auto vectorMapOutput = VectorMap::toSquishedArrayOfVecs(config.cnInnerDim, primaryCapsOutput);
 
     // for each of the digitCaps, make them accept this as input
     int bestGuess = 0;
@@ -158,6 +158,7 @@ pair<double, long double> CapsuleNetwork::tally(bool useTraining) {
     }
 
     // go through all the datum
+    ProgressBar pb(tallyData.size());
     HostTimer timer;
     timer.start();
     for (int i = 0; i < tallyData.size(); i++) {
@@ -180,6 +181,7 @@ pair<double, long double> CapsuleNetwork::tally(bool useTraining) {
         if (guess == tallyData[i].getLabel()) {
             numCorrectlyClassified++;
         }
+        pb.updateProgress(i);
     }
     timer.stop();
 
@@ -199,7 +201,8 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
     // generate the derivative of the non-linear vector activation function
     for (int i = 0; i < error.size(); i++) {
         // d(squash())/dv
-        auto activationDerivativeLength = Utils::getSquashDerivativeLength(output[i]); // Note: this is the first derivative of the activation function
+        auto activationDerivativeLength = Utils::getSquashDerivativeLength(output[i]);
+        // Note: this is the first derivative of the activation function
         // d(loss(v))/d||v||
         auto errorGradient = getMarginLossGradient(i == targetLabel, output[i]);
         // loss(v)
@@ -234,11 +237,11 @@ void CapsuleNetwork::backPropagate() {
 
 void CapsuleNetwork::backPropagate(const vector<arma::vec>& error) {
     assert (interimError.size() == digitCaps.size());
-    assert (interimError[0].size() == 16);
+    assert (interimError[0].size() == config.cnOuterDim);
 
     auto flattenedTensorSize = 6 * 6 * config.cnNumTensorChannels;
 
-    vector<arma::vec> primaryCapsError(flattenedTensorSize, arma::vec(8, arma::fill::zeros));
+    vector<arma::vec> primaryCapsError(flattenedTensorSize, arma::vec(config.cnInnerDim, arma::fill::zeros));
     // given the error, put this in the last layer and get the error, and give it to the Conv. net
     for (int i = 0; i < interimError.size(); i++) {
         vector<arma::vec> subset = digitCaps[i].backPropagate(interimError[i]);
@@ -268,34 +271,28 @@ long double CapsuleNetwork::getTotalMarginLoss(int targetLabel, const vector<arm
 }
 
 double CapsuleNetwork::getMarginLoss(bool isPresent, const arma::vec &v_k) const {
-    const double m_plus = 0.9;
-    const double m_minus = 0.1;
-    const double lambda = 0.5;
     const double vLength = Utils::length(v_k);
 
     if (isPresent) {
-        return pow(max(0.0, m_plus - vLength), 2);
+        return pow(max(0.0, config.m_plus - vLength), 2);
     } else {
-        return lambda * pow(max(0.0, vLength - m_minus), 2);
+        return config.lambda * pow(max(0.0, vLength - config.m_minus), 2);
     }
 }
 
 double CapsuleNetwork::getMarginLossGradient(bool isPresent, const arma::vec &v_k) const {
     double t_k = isPresent ? 1.0 : 0.0;
-    const double m_plus = 0.9;
-    const double m_minus = 0.1;
-    const double lambda = 0.5;
-    const double vLength = Utils::length(v_k);
+    const double vector_length = Utils::length(v_k);
 
     double value;
-    if (vLength < m_plus) {
-        if (vLength <= m_minus) {
-            value = -2 * t_k * (m_plus - vLength);
+    if (vector_length < config.m_plus) {
+        if (vector_length <= config.m_minus) {
+            value = -2 * t_k * (config.m_plus - vector_length);
         } else {
-            value = 2 * ((lambda * (t_k - 1) * (m_minus - vLength)) + t_k * (vLength - m_plus));
+            value = 2 * ((config.lambda * (t_k - 1) * (config.m_minus - vector_length)) + t_k * (vector_length - config.m_plus));
         }
     } else {
-        value = 2 * lambda * (t_k - 1) * (m_minus - vLength);
+        value = 2 * config.lambda * (t_k - 1) * (config.m_minus - vector_length);
     }
     return value;
 }

@@ -7,11 +7,18 @@
 
 using namespace std;
 
-void CUDAUtils::handleError(cudaError_t error) {
+void CUDAUtils::handleError(cudaError_t error, const std::string& debugMsg) {
     if (error != cudaSuccess) {
         cerr << "CUDA error! - " << cudaGetErrorString(error) << endl;
+        if (!debugMsg.empty()) {
+        	cerr << "Debug Message: " << debugMsg << endl;
+        }
         exit(1);
     }
+}
+
+void CUDAUtils::checkForError(const std::string& locationMsg) {
+	handleError(cudaPeekAtLastError(), "Location: " + locationMsg);
 }
 
 __device__

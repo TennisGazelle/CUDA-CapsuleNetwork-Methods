@@ -10,13 +10,13 @@
 #include <ConvolutionalNetwork/ConvolutionalLayer.h>
 #include <armadillo>
 #include <ConvolutionalNetwork/CUConvolutionalNetwork/CUConvolutionalLayer.h>
-#include <Config.h>
+#include <CapsNetConfig.h>
 
 class CUCapsuleNetwork {
 public:
-    CUCapsuleNetwork(const Config& incomingConfig);
+    CUCapsuleNetwork(const CapsNetConfig& incomingConfig);
     void forwardPropagation(int imageIndex, bool useTraining = true);
-    void backPropagation(int imageIndex, bool useTraining = true);
+    double backPropagation(int imageIndex, bool useTraining = true);
     double getLoss();
     bool testResults(int imageIndex, bool useTraining = true);
     long double forwardAndBackPropagation(int imageIndex, bool useTraining = true);
@@ -24,6 +24,8 @@ public:
     pair<double, long double> tally(bool useTraining = true);
     void train();
     void updateWeights();
+
+    void test_detailedFP();
 
 private:
     unsigned int flattenedTensorSize;
@@ -36,7 +38,7 @@ private:
                   losses,
                   lengths;
 
-    Config config;
+    CapsNetConfig config;
 };
 
 

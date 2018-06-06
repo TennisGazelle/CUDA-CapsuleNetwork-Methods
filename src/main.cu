@@ -14,13 +14,16 @@
 #include <HostTimer.h>
 #include <CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h>
 #include <DeviceTimer.h>
+#include <GA/Individual.h>
+#include <GA/Population.h>
+#include <GA/GA.h>
 
-Config testing_config;
+CapsNetConfig testingConfig;
 
 void test_SingleLayerCNN() {
     auto image = MNISTReader::getInstance()->trainingData[0];
     ConvolutionalLayer layer(28, 28, 256, 9, 9);
-    MultilayerPerceptron mp(testing_config, layer.getOutputSize1D(), 10, {});
+    MultilayerPerceptron mp(testingConfig, layer.getOutputSize1D(), 10, {});
 
     mp.init();
     layer.setInput({image.toFeatureMap()});
@@ -130,7 +133,7 @@ void test_FeatureMapsFromVectorMap() {
 }
 
 void test_CapsuleNetwork_ForwardPropagation() {
-    CapsuleNetwork capsuleNetwork(testing_config);
+    CapsuleNetwork capsuleNetwork(testingConfig);
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
 
     for (int i = 0; i < 10; i++) {
@@ -139,7 +142,7 @@ void test_CapsuleNetwork_ForwardPropagation() {
 }
 
 void test_CapsuleNetwork_BackPropagation() {
-    CapsuleNetwork capsuleNetwork(testing_config);
+    CapsuleNetwork capsuleNetwork(testingConfig);
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
     vector<arma::vec> error = capsuleNetwork.getErrorGradient(output,
                                                               MNISTReader::getInstance()->trainingData[0].getLabel());
@@ -152,7 +155,7 @@ void test_CapsuleNetwork_BackPropagation() {
 }
 
 void test_CapsuleNetwork_Epoch() {
-    CapsuleNetwork capsuleNetwork(testing_config);
+    CapsuleNetwork capsuleNetwork(testingConfig);
 
     auto &data = MNISTReader::getInstance()->trainingData;
     const size_t batchSize = 250;
@@ -172,7 +175,7 @@ void test_CapsuleNetwork_Epoch() {
 }
 
 void test_CapsuleNetwork_getMarginLoss() {
-    CapsuleNetwork capsuleNetwork(testing_config);
+    CapsuleNetwork capsuleNetwork(testingConfig);
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
     double totalLoss = capsuleNetwork.getTotalMarginLoss(MNISTReader::getInstance()->trainingData[0].getLabel(),
                                                          output);
@@ -181,9 +184,9 @@ void test_CapsuleNetwork_getMarginLoss() {
 }
 
 void test_NetworkTallyingTiming() {
-    MultilayerPerceptron mp(testing_config, 784, 10, {16, 16});
-    ConvolutionalNetwork cnn(testing_config);
-    CapsuleNetwork capsNet(testing_config);
+    MultilayerPerceptron mp(testingConfig, 784, 10, {16, 16});
+    ConvolutionalNetwork cnn(testingConfig);
+    CapsuleNetwork capsNet(testingConfig);
 
 //    mp.init();
 //    cnn.init();
@@ -202,7 +205,7 @@ void test_NetworkTallyingTiming() {
 }
 
 void test_CapsuleNetwork_reconstruction() {
-    CapsuleNetwork capsuleNetwork(testing_config);
+    CapsuleNetwork capsuleNetwork(testingConfig);
     int targetLabel = (int) MNISTReader::getInstance()->trainingData[0].getLabel();
 
     vector<arma::vec> output = capsuleNetwork.loadImageAndGetOutput(0);
@@ -227,7 +230,7 @@ void test_CapsuleNetwork_reconstruction() {
 }
 
 void test_CapsuleNetwork_multipleReconstruction() {
-    CapsuleNetwork capsuleNetwork(testing_config);
+    CapsuleNetwork capsuleNetwork(testingConfig);
     for (int i = 0; i < 10; i++) {
         int targetLabel = (int) MNISTReader::getInstance()->trainingData[0].getLabel();
 
@@ -440,8 +443,8 @@ void test_CUUnifiedBlob_vectorLossFunction() {
     v.print("v", dim);
     truth.print("truth");
 
-    CUUnifiedBlob::vectorLossFunction(v, truth, numClasses, dim);
-    CUUnifiedBlob::CUDA_vectorLossFunction(v_cuda_output, truth, numClasses, dim);
+    CUUnifiedBlob::vectorLossFunction(v, truth, numClasses, dim, testingConfig.m_plus, testingConfig.m_minus, testingConfig.lambda);
+    CUUnifiedBlob::CUDA_vectorLossFunction(v_cuda_output, truth, numClasses, dim, testingConfig.m_plus, testingConfig.m_minus, testingConfig.lambda);
     sleep(1);
 
     assert(v == v_cuda_output);
@@ -479,7 +482,7 @@ void test_CUUnifiedBlob_weightedTransMatrixVecMult() {
     c.print("c", numClasses);
 
     CUUnifiedBlob::weightedTransMatrixVecMult(delta_u, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
-    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u_cuda_output, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u_cuda_output, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
 
 //    sleep(2);
 //    delta_u.print("delta_u", innerDim);
@@ -577,8 +580,8 @@ void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
     }
     truth.setValueAt_1D(1, 1);
 
-    CUUnifiedBlob::CUDA_vectorLossFunction(v_error, truth, numClasses, outerDim);
-    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+    CUUnifiedBlob::CUDA_vectorLossFunction(v_error, truth, numClasses, outerDim, testingConfig.m_plus, testingConfig.m_minus, testingConfig.lambda);
+    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
 	CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_error, v_error, u, numClasses, flattenedTensorSize, innerDim, outerDim);
 
     v_error.print("v_error", outerDim*numClasses);
@@ -589,7 +592,7 @@ void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
     delta_u.print("delta_u", innerDim*numClasses);
 
 //    CUUnifiedBlob::elementWiseErrorUpdate(w, w_error, numClasses * flattenedTensorSize * innerDim * outerDim);
-    CUUnifiedBlob::CUDA_elementWiseErrorUpdate(w, w_error, w_velocities, numClasses * flattenedTensorSize * innerDim * outerDim);
+    CUUnifiedBlob::CUDA_elementWiseErrorUpdate(w, w_error, w_velocities, w.getSize());
     w.print("w updated", innerDim);
 
 
@@ -610,8 +613,8 @@ void test_CUUnifiedBlob_getTotalLoss() {
     v.fillWithRandom();
     truthMap.setValueAt_1D(1, 1);
 
-    CUUnifiedBlob::getVectorLoss(v, truthMap, losses, numClasses, dim);
-    CUUnifiedBlob::CUDA_getVectorLoss(v, truthMap, losses_cuda_output, numClasses, dim);
+    CUUnifiedBlob::getVectorLoss(v, truthMap, losses, numClasses, dim, testingConfig.m_plus, testingConfig.m_minus, testingConfig.lambda);
+    CUUnifiedBlob::CUDA_getVectorLoss(v, truthMap, losses_cuda_output, numClasses, dim, testingConfig.m_plus, testingConfig.m_minus, testingConfig.lambda);
 
     v.print("v", dim);
     truthMap.print("truth map");
@@ -620,7 +623,7 @@ void test_CUUnifiedBlob_getTotalLoss() {
 }
 
 void test_forwardPropagationSpeedUpTimings() {
-    CapsuleNetwork seqCapsuleNetwork(testing_config);
+    CapsuleNetwork seqCapsuleNetwork(testingConfig);
     int statisticalTimings = 30;
     vector<long double> timings(statisticalTimings);
     HostTimer timer;
@@ -639,7 +642,7 @@ void test_forwardPropagationSpeedUpTimings() {
 }
 
 void test_weightUpdateSpeedupTiming() {
-    CapsuleNetwork seqCapsuleNetwork(testing_config);
+    CapsuleNetwork seqCapsuleNetwork(testingConfig);
     int statisticalTimings = 30;
     vector<long double> timings(statisticalTimings);
     HostTimer timer;
@@ -677,8 +680,8 @@ struct StatisticalTimings {
 };
 
 void test_speedupTimings_seq_par() {
-    CapsuleNetwork seqCapsuleNetwork(testing_config);
-    CUCapsuleNetwork CUDANetwork(testing_config);
+    CapsuleNetwork seqCapsuleNetwork(testingConfig);
+    CUCapsuleNetwork CUDANetwork(testingConfig);
     int numTimings = 30;
     StatisticalTimings st(numTimings);
     HostTimer hostTimer;
@@ -718,15 +721,15 @@ void test_speedupTimings_seq_par() {
         deviceTimer.stop();
         st.image_par[i] = deviceTimer.getElapsedTime();
 
-//        hostTimer.start();
-//        seqCapsuleNetwork.runEpoch();
-//        hostTimer.stop();
-//        st.epoch_seq[i] = hostTimer.getElapsedTime();
+        hostTimer.start();
+        seqCapsuleNetwork.runEpoch();
+        hostTimer.stop();
+        st.epoch_seq[i] = hostTimer.getElapsedTime();
         
-//        deviceTimer.start();
-//        CUDANetwork.runEpoch();
-//        deviceTimer.stop();
-//        st.epoch_par[i] = deviceTimer.getElapsedTime();
+        deviceTimer.start();
+        CUDANetwork.runEpoch();
+        deviceTimer.stop();
+        st.epoch_par[i] = deviceTimer.getElapsedTime();
 
         for (int i = 0; i < numTimings; i++) {
             cout << st.fp_seq[i] << "\t";
@@ -744,7 +747,7 @@ void test_speedupTimings_seq_par() {
 }
 
 void test_epochAccuracy_CUDA() {
-    CUCapsuleNetwork cuCapsuleNetwork(testing_config);
+    CUCapsuleNetwork cuCapsuleNetwork(testingConfig);
 //    cuCapsuleNetwork.forwardPropagation(0, true);
 //    cout << "Loss is: " << cuCapsuleNetwork.getLoss() << endl;
 //    cuCapsuleNetwork.testResults(0, true);
@@ -755,7 +758,7 @@ void test_epochAccuracy_CUDA() {
 }
 
 void test_CUCapsuleNetwork_forwardPropagation() {
-    CUCapsuleNetwork capsNet(testing_config);
+    CUCapsuleNetwork capsNet(testingConfig);
     int statisticalTimings = 30;
     vector<long double> timings(statisticalTimings);
     HostTimer timer;
@@ -856,6 +859,22 @@ void test_CUUnifiedBlob_CUDA_convolutionalBP() {
     delta_filters_cuda_output.print("CUDA - filter_error", filterWidth);
 }
 
+void test_bug_finding() {
+//    CapsuleNetwork seq(testingConfig);
+//    seq.runEpoch();
+    CUCapsuleNetwork capsnet(testingConfig);
+    capsnet.test_detailedFP();
+}
+
+GAConfig gaconfig;
+void test_GA_individual() {
+    gaconfig.populationSize = 10;
+    
+	Population p(gaconfig);
+	p.evaluate();
+	p.fullPrint();
+}
+
 int main() {
 //    test_SingleLayerCNNv_error();
 //    test_CapsuleNetSquishing();
@@ -894,9 +913,12 @@ int main() {
 //    test_forwardPropagationSpeedUpTimings();
 //    test_backwardPropagationSpeedupTimings();
 //    test_weightUpdateSpeedupTiming();
-    test_speedupTimings_seq_par();
+//    test_speedupTimings_seq_par();
 
 //    test_epochAccuracy_CUDA();
+//    test_bug_finding();
+
+    test_GA_individual();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();

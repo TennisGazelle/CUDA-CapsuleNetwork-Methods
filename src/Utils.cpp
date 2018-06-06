@@ -24,9 +24,9 @@ double Utils::getWeightRand(double n) {
 
     const double distributionHalfWidth = 2.4/n;
     const double stdDev =  distributionHalfWidth * 2 / 6;
-    static normal_distribution<> dis(0, stdDev);
+    static normal_distribution<> dis(0, 1);
 
-    return dis(gen);
+    return dis(gen)/100.0;
 }
 
 int Utils::reverseInt(int i) {
@@ -94,4 +94,18 @@ vector<arma::vec> Utils::asCapsuleVectors(int dim, int numVectors, const vector<
         }
     }
     return result;
+}
+
+bool Utils::randomWithProbability(double prob) {
+	double shot = double(rand())/double(RAND_MAX);
+	return (shot <= prob);
+}
+
+int Utils::getBinaryAsInt(const std::vector<bool> &subset) {
+	unsigned int power = subset.size()-1;
+	unsigned int sum = 0;
+	for (unsigned int i = 0; i < subset.size(); i++) {
+		sum += subset[i] * pow(2, power--);
+	}
+	return sum;
 }

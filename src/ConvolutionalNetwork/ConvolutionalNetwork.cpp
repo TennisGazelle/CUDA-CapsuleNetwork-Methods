@@ -7,11 +7,11 @@
 #include <ConvolutionalNetwork/PoolingLayer.h>
 #include <iostream>
 #include <ProgressBar.h>
-#include <Config.h>
+#include <CapsNetConfig.h>
 #include <HostTimer.h>
 #include "ConvolutionalNetwork/ConvolutionalNetwork.h"
 
-ConvolutionalNetwork::ConvolutionalNetwork(const Config& incomingConfig) : config(incomingConfig) {
+ConvolutionalNetwork::ConvolutionalNetwork(const CapsNetConfig& incomingConfig) : config(incomingConfig) {
 }
 
 ConvolutionalNetwork::~ConvolutionalNetwork() {

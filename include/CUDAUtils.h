@@ -6,10 +6,12 @@
 #define NEURALNETS_CUDAUTILS_H
 
 #include <CUDAClionHelper.h>
+#include <string>
 
 class CUDAUtils {
 public:
-    static void handleError(cudaError_t error);
+    static void handleError(cudaError_t error, const std::string& debugMsg = "");
+    static void checkForError(const std::string& locationMsg = "");
 };
 
 __device__

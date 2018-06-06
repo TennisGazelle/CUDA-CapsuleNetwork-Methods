@@ -12,7 +12,7 @@
 
 class CapsuleNetwork {
 public:
-    CapsuleNetwork(const Config& incomingConfig);
+    CapsuleNetwork(const CapsNetConfig& incomingConfig);
     ~CapsuleNetwork();
     vector<arma::vec> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     void m_threading_loadCapsuleAndGetOutput(int capsuleIndex, const vector<arma::vec> &input);
@@ -42,7 +42,7 @@ private:
     vector<arma::vec> interimOutput;
     vector<arma::vec> interimError;
 
-    Config config;
+    CapsNetConfig config;
 };
 
 

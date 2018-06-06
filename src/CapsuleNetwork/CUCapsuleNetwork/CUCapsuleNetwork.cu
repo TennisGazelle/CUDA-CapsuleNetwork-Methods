@@ -2,7 +2,7 @@
 // Created by daniellopez on 4/4/18.
 //
 
-#include <Config.h>
+#include <CapsNetConfig.h>
 #include <MNISTReader.h>
 #include <models/VectorMap.h>
 #include <cassert>
@@ -12,16 +12,18 @@
 #include <CUDAUtils.h>
 #include "CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h"
 
-CUCapsuleNetwork::CUCapsuleNetwork(const Config& incomingConfig) :
+CUCapsuleNetwork::CUCapsuleNetwork(const CapsNetConfig& incomingConfig) :
         config(incomingConfig),
         CUPrimaryCaps(incomingConfig, incomingConfig.inputHeight, incomingConfig.inputWidth, incomingConfig.cnNumTensorChannels * incomingConfig.cnInnerDim, 28-6, 28-6) {
 
     flattenedTensorSize = 6*6*config.cnNumTensorChannels;
 
     u.resize(config.cnInnerDim * config.numClasses * flattenedTensorSize);
+    
     w.resize(config.cnInnerDim * config.cnOuterDim * config.numClasses * flattenedTensorSize);
     w_delta.resize(config.cnInnerDim * config.cnOuterDim * config.numClasses * flattenedTensorSize);
     w_velocity.resize(config.cnInnerDim * config.cnOuterDim * config.numClasses * flattenedTensorSize);
+    
     u_hat.resize(config.cnOuterDim * config.numClasses * flattenedTensorSize);
     v.resize(config.numClasses * config.cnOuterDim);
     b.resize(config.numClasses * flattenedTensorSize);
@@ -48,8 +50,9 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
 //    u.print("u", config.cnInnerDim * config.numClasses);
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, config.cnInnerDim, config.cnOuterDim, config.numClasses, flattenedTensorSize);
 //    u_hat.print("u_hat", config.cnOuterDim);
+//    w.print("w", config.cnInnerDim);
 
-
+    b.CUDA_clear();
     for (int iter = 0; iter < config.numIterations; iter++) {
         CUUnifiedBlob::CUDA_vectorVectorSoftmax(b, c, config.numClasses, flattenedTensorSize);
 //        b.print("b", config.numClasses);
@@ -66,11 +69,9 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
 //        b.print("b", config.numClasses);
     }
 //    v.print("v - final", config.cnOuterDim);
-
-    b.CUDA_clear();
 }
 
-void CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
+double CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
     size_t label;
     if (useTraining) {
         label = MNISTReader::getInstance()->getTrainingImage(imageIndex).getLabel();
@@ -78,34 +79,47 @@ void CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
         label = MNISTReader::getInstance()->getTestingImage(imageIndex).getLabel();
     }
     truth.CUDA_clear();
-    truth.setValueAt_1D(label, 1);
+    truth.CUDA_setValueAt(label, 1.0);
+//    truth.print("truth in BP", config.numClasses);
 
 //    u.print("u", config.numClasses*config.cnInnerDim);
 //    cout << "true value: " << label << endl;
 //    v.print("v - final", config.cnOuterDim);
+    double loss = getLoss();
 
-    CUUnifiedBlob::CUDA_vectorLossFunction(v, truth, config.numClasses, config.cnOuterDim);
+    CUUnifiedBlob::CUDA_vectorLossFunction(v, truth, config.numClasses, config.cnOuterDim, config.m_plus, config.m_minus, config.lambda);
 //    v.print("delta v", config.cnOuterDim);
+    cudaDeviceSynchronize();
 
-    CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_delta, v, u, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
-//    w_delta.print("delta w, one at a time", config.cnInnerDim);
+    CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_delta, v, u_hat, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
+//    w_delta.print("w delta, one at a time", config.cnInnerDim*config.cnOuterDim);
 
-    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(u, c, w, v, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
-//    u.print("delta u", config.cnOuterDim * config.numClasses);
+    CUDAUtils::checkForError("before weighted trans matrix vec mult");
+    CUUnifiedBlob::CUDA_scaledDecompositionOfError(v, c, u_hat, config.numClasses, flattenedTensorSize, config.cnOuterDim);
+//    u_hat.print("delta_u_hat", config.cnOuterDim * config.numClasses);
 
+    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(u, w, u_hat, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
+//    u.print("delta u", config.cnInnerDim * config.numClasses);
+
+    CUDAUtils::checkForError("before multi vector reduction");
     CUUnifiedBlob::CUDA_multiVectorReduction(u, config.numClasses, flattenedTensorSize, config.cnInnerDim);
 //    u.print("delta u, left reduced", config.cnInnerDim * config.numClasses);
 
+    CUDAUtils::checkForError("before squash derivative");
     CUUnifiedBlob::CUDA_vectorSquashDerivative(u, flattenedTensorSize, config.cnInnerDim, config.numClasses);
-//    u.print("un-squashed delta_u", config.numClasses*config.cnInnerDim);
+    u.print("un-squashed delta_u", config.numClasses*config.cnInnerDim);
 
+    CUDAUtils::checkForError("the end of BP in capsnet, before primary caps conv.");
     CUPrimaryCaps.remapErrorToOutput(u);
     CUPrimaryCaps.backpropagate();
+    CUDAUtils::checkForError("after BP in primary caps.");
+    
 //    cout << "after bp in conv. layer" << endl;
+    return loss;
 }
 
 double CUCapsuleNetwork::getLoss() {
-    CUUnifiedBlob::CUDA_getVectorLoss(v, truth, losses, config.numClasses, config.cnOuterDim);
+    CUUnifiedBlob::CUDA_getVectorLoss(v, truth, losses, config.numClasses, config.cnOuterDim, config.m_plus, config.m_minus, config.lambda);
     cudaDeviceSynchronize();
     double loss = 0.0;
     for (int i = 0; i < config.numClasses; i++) {
@@ -151,14 +165,13 @@ long double CUCapsuleNetwork::forwardAndBackPropagation(int imageIndex, bool use
 }
 
 void CUCapsuleNetwork::runEpoch() {
-    auto &data = MNISTReader::getInstance()->trainingData;
+    auto &data = MNISTReader::getInstance()->testingData;
 
     ProgressBar pb(data.size());
     for (int i = 0; i < data.size(); i++) {
-        forwardPropagation(i, true);
-        backPropagation(i, true);
-        auto error = cudaDeviceSynchronize();
-        CUDAUtils::handleError(error);
+        forwardPropagation(i, false);
+        backPropagation(i, false);
+        CUDAUtils::checkForError("CUCapsuleNetwork::runEpoch()");
 
         if (i % config.batchSize == config.batchSize - 1) {
             updateWeights();
@@ -222,7 +235,32 @@ void CUCapsuleNetwork::train() {
 }
 
 void CUCapsuleNetwork::updateWeights() {
-    CUUnifiedBlob::CUDA_elementWiseErrorUpdate(w, w_delta, w_velocity,
-                                               config.numClasses * flattenedTensorSize * config.cnInnerDim * config.cnOuterDim);
+    cudaDeviceSynchronize();
+    CUUnifiedBlob::elementWiseErrorUpdate(w, w_delta, w_velocity, w.getSize());
     CUPrimaryCaps.updateError();
+    cudaDeviceSynchronize();
+}
+
+void CUCapsuleNetwork::test_detailedFP() {
+    vector<double> loss_history;
+    for (int i = 0; i < 1; i++) {
+        cout << "****" << i << "****" << endl;
+//        cout << "another forward prop" << endl;
+        forwardPropagation(0);
+//        CUUnifiedBlob::CUDA_getSquaredLength(v, lengths, config.numClasses, config.cnOuterDim);
+//        v.print("v - original FP", config.cnOuterDim);
+//        lengths.print("lengths");
+
+//        cout << "bp" << endl;
+        loss_history.push_back(backPropagation(0));
+        cout << i << "\t" << loss_history[i] << endl;
+//        losses.print("losses");
+
+//        cout << "update" << endl;
+        updateWeights();
+    }
+
+    for (int i = 0; i < loss_history.size(); i++) {
+    	cout << i << "\t" << loss_history[i] << endl;
+    }
 }

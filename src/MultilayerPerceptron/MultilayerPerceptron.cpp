@@ -5,11 +5,11 @@
 #include <iostream>
 #include <fstream>
 #include <ProgressBar.h>
-#include <Config.h>
+#include <CapsNetConfig.h>
 #include <HostTimer.h>
 #include "MultilayerPerceptron/MultilayerPerceptron.h"
 
-MultilayerPerceptron::MultilayerPerceptron(const Config& incomingConfig, size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes)
+MultilayerPerceptron::MultilayerPerceptron(const CapsNetConfig& incomingConfig, size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes)
         : config(incomingConfig) {
     layerSizes.push_back(inputLayerSize);
     layerSizes.insert(layerSizes.end(), hiddenLayerSizes.begin(), hiddenLayerSizes.end());
