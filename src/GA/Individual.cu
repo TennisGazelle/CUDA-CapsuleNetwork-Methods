@@ -7,16 +7,17 @@
 #include <Utils.h>
 #include <CapsuleNetwork/CapsuleNetwork.h>
 #include <CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h>
+#include <GA/CapsNetDAO.h>
 
-Individual::Individual(int expectedSize, const string& chromosome) 
+Individual::Individual(int bitstringSize, const string& chromosome)
         : loss_100 (0.0), loss_300 (0.0), 
         accuracy_100 (0.0), accuracy_300 (0.0) {
-    resize(expectedSize);
+    resize(bitstringSize);
     if (chromosome.empty()) {
     	generateRandom();
     	decodeChromosome();
-    } else if (chromosome.size() == expectedSize) {
-        for (int i = 0; i < expectedSize; i++) {
+    } else if (chromosome.size() == bitstringSize) {
+        for (int i = 0; i < bitstringSize; i++) {
         	(*this)[i] = (chromosome[i] == '1');
         }
         decodeChromosome();
@@ -133,18 +134,36 @@ void Individual::decodeChromosome() {
 
 void Individual::evaluate() {
     decodeChromosome();
-//    CapsuleNetwork network(capsNetConfig);
-//    network.runEpoch();
-//    auto fitness = network.tally(false);
-//    accuracy_100 = fitness.first;
-//    loss_100 = fitness.second;
 
-    loss_100 = capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels;
-    loss_100 += capsNetConfig.lambda * capsNetConfig.m_minus * capsNetConfig.m_plus;
-    loss_300 = loss_100*1.5*capsNetConfig.cnNumTensorChannels;
+    if (CapsNetDAO::getInstance()->isInDatabase(*this)) {
+        CapsNetDAO::getInstance()->getFromDatabase(*this);
+    } else {
+        constuctNetworkAndEvaluate();
+        CapsNetDAO::getInstance()->addToDatabase(*this);
+    }
+}
 
-    accuracy_100 = capsNetConfig.lambda * capsNetConfig.m_minus * capsNetConfig.m_plus / (capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels);
-    accuracy_300 = accuracy_100*1.5*capsNetConfig.cnNumTensorChannels;
+void Individual::constuctNetworkAndEvaluate() {
+    cout << "running this..." << endl;
+    fullPrint();
+    CUCapsuleNetwork network(capsNetConfig);
+    network.train();
+    auto fitness = network.tally(false);
+    accuracy_100 = fitness.first;
+    loss_100 = fitness.second;
+
+    network.train();
+    network.train();
+    fitness = network.tally(false);
+    accuracy_300 = fitness.first;
+    loss_300 = fitness.second;
+
+//    loss_100 = capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels;
+//    loss_100 += capsNetConfig.lambda * capsNetConfig.m_minus * capsNetConfig.m_plus;
+//    loss_300 = loss_100*1.5*capsNetConfig.lambda;
+//
+//    accuracy_100 = capsNetConfig.lambda * capsNetConfig.m_minus * capsNetConfig.m_plus / (capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels);
+//    accuracy_300 = accuracy_100*1.5*capsNetConfig.cnNumTensorChannels;
 }
 
 bool Individual::paredoDominates(const Individual &opponent) const {
@@ -167,27 +186,13 @@ void Individual::crossoverWith(Individual &other) {
     for (int i = crossoverPoint; i < size(); i++) {
         iter_swap(begin()+i, other.begin()+i);
     }
+    decodeChromosome();
+    other.decodeChromosome();
 }
 
 void Individual::mutate() {
     int mutationPoint = Utils::getRandBetween(0, size());
     (*this)[mutationPoint] = !at(mutationPoint);
-}
-
-CapsuleNetworkDAO::CapsuleNetworkDAO() {
-    
-}
-
-void CapsuleNetworkDAO::run() {
-    connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
-    work txn(c);
-    result rows = txn.exec("select * from tss_dev.users_features where classification = 2 limit 10;");
-
-    for (auto row : rows) {
-        cout << row[0].c_str() << endl;
-    }
-//    for (auto row : rows) {
-//        cout << "DATABASE ROW: " << row[0].c_str() << endl;
-//    }
+    decodeChromosome();
 }
 

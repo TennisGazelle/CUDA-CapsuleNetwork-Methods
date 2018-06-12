@@ -568,6 +568,7 @@ CUUnifiedBlob::CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlo
     dim3 blockDims(tensorSize, numClasses);
     cu_vectorVectorScalarProduct_kernel <<< blockDims, dim, dim * sizeof(double) >>>
                                                              (u_hat.data, v.data, b.data, numClasses, tensorSize, dim);
+    CUDAUtils::checkForError("CUUnifiedBlob::vectorVectorScalarProduct()");
 }
 
 void CUUnifiedBlob::CUDA_vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim,

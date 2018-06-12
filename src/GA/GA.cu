@@ -37,12 +37,12 @@ void GA::NSGARun() {
         cout << "Iteration (NSGA-II): " << i << endl;
         parentPop.getStatsFromIndividuals();
         collectStats();
-        parentPop.print();
+//        parentPop.print();
 
         makeNextGen(i != 0);
         NSGAStep();
     }
-    parentPop.fullPrint();    
+    parentPop.fullPrint();
 }
 
 void GA::NSGAStep() {

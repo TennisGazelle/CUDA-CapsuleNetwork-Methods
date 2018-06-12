@@ -7,16 +7,14 @@
 
 #include <vector>
 #include <string>
-#include <pqxx/pqxx>
 #include <CapsNetConfig.h>
 #include <GAConfig.h>
 
 using namespace std;
-using namespace pqxx;
 
 class Individual : public vector<bool> {
 public:
-    Individual(int expectedSize, const string& chromosome = "");
+    Individual(int bitstringSize, const string& chromosome = "");
     Individual(const Individual& src);
     void print() const;
     void fullPrint() const;
@@ -44,15 +42,7 @@ public:
 
 private:
     void generateRandom();
-};
-
-class CapsuleNetworkDAO {
-public:
-    CapsuleNetworkDAO();
-    void run();
-
-private:
-    string buildQuery();
+    void constuctNetworkAndEvaluate();
 };
 
 #endif //NEURALNETS_INDIVIDUAL_H

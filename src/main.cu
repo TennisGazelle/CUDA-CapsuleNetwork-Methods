@@ -17,6 +17,7 @@
 #include <GA/Individual.h>
 #include <GA/Population.h>
 #include <GA/GA.h>
+#include <GA/CapsNetDAO.h>
 
 CapsNetConfig testingConfig;
 
@@ -860,23 +861,26 @@ void test_CUUnifiedBlob_CUDA_convolutionalBP() {
 }
 
 void test_bug_finding() {
+    CapsNetConfig extremeConfig;
+//    extremeConfig.cnInnerDim = 9;
+//    extremeConfig.cnOuterDim = 27;
+//    extremeConfig.cnNumTensorChannels = 41;
+
 //    CapsuleNetwork seq(testingConfig);
 //    seq.runEpoch();
-    CUCapsuleNetwork capsnet(testingConfig);
-    capsnet.train();
-//    capsnet.test_detailedFP();
+    CUCapsuleNetwork capsnet(extremeConfig);
+//    capsnet.train();
+    capsnet.test_detailedFP();
 }
 
 GAConfig gaconfig;
 void test_GA_individual() {
-    gaconfig.populationSize = 100;
-    gaconfig.numIterations = 100;
+    gaconfig.populationSize = 5;
+    gaconfig.numIterations = 2;
     
-//    GA ga(gaconfig);
-//    ga.getParentPopulation().fullPrint();
-//    ga.NSGARun();
-//    ga.printStats();
-//    ga.getParentPopulation().fullPrint();
+    GA ga(gaconfig);
+    ga.NSGARun();
+    ga.printStats();
 
 //    Population p;
 //    p.generate(gaconfig.populationSize, gaconfig.bitstringSize);
@@ -884,8 +888,9 @@ void test_GA_individual() {
 //    p.evaluate();
 //    p.fullPrint();
 
-    CapsuleNetworkDAO dao;
-    dao.run();
+//    Individual indiv(gaconfig.bitstringSize, "101000101100100110011111100010100011");
+//    indiv.evaluate();
+//    indiv.fullPrint();
 }
 
 int main() {
@@ -929,9 +934,9 @@ int main() {
 //    test_speedupTimings_seq_par();
 
 //    test_epochAccuracy_CUDA();
-//    test_bug_finding();
+    test_bug_finding();
 
-    test_GA_individual();
+//    test_GA_individual();
 
 //    ConvolutionalNetwork cnn;
 //    cnn.init();
