@@ -180,7 +180,14 @@ CapsuleNetworkDAO::CapsuleNetworkDAO() {
 
 void CapsuleNetworkDAO::run() {
     connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
-    static work txn(c);
-    result r = txn.exec("");
+    work txn(c);
+    result rows = txn.exec("select * from tss_dev.users_features where classification = 2 limit 10;");
+
+    for (auto row : rows) {
+        cout << row[0].c_str() << endl;
+    }
+//    for (auto row : rows) {
+//        cout << "DATABASE ROW: " << row[0].c_str() << endl;
+//    }
 }
 

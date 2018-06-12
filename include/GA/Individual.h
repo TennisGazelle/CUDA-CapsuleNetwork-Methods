@@ -50,8 +50,9 @@ class CapsuleNetworkDAO {
 public:
     CapsuleNetworkDAO();
     void run();
+
 private:
-    
+    string buildQuery();
 };
 
 #endif //NEURALNETS_INDIVIDUAL_H

@@ -872,10 +872,10 @@ void test_GA_individual() {
     gaconfig.populationSize = 100;
     gaconfig.numIterations = 100;
     
-    GA ga(gaconfig);
+//    GA ga(gaconfig);
 //    ga.getParentPopulation().fullPrint();
-    ga.NSGARun();
-    ga.printStats();
+//    ga.NSGARun();
+//    ga.printStats();
 //    ga.getParentPopulation().fullPrint();
 
 //    Population p;
@@ -883,6 +883,9 @@ void test_GA_individual() {
 //    p.print();
 //    p.evaluate();
 //    p.fullPrint();
+
+    CapsuleNetworkDAO dao;
+    dao.run();
 }
 
 int main() {
