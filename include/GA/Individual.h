@@ -7,10 +7,12 @@
 
 #include <vector>
 #include <string>
+#include <pqxx/pqxx>
 #include <CapsNetConfig.h>
 #include <GAConfig.h>
 
 using namespace std;
+using namespace pqxx;
 
 class Individual : public vector<bool> {
 public:
@@ -44,5 +46,12 @@ private:
     void generateRandom();
 };
 
+class CapsuleNetworkDAO {
+public:
+    CapsuleNetworkDAO();
+    void run();
+private:
+    
+};
 
 #endif //NEURALNETS_INDIVIDUAL_H

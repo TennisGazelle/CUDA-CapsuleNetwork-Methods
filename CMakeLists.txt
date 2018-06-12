@@ -7,12 +7,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules")
 #set(CXX11_FLAGS -std=gnu++11)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread --std=c++11 -O3 -g")
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std c++11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread -Wall -O2 -D_MWAITXINTRIN_H_INCLUDED -D_FORCE_INLINES") # to get rid of issues with strcpy
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpthread -Wall -O0 -D_MWAITXINTRIN_H_INCLUDED -D_FORCE_INLINES") # to get rid of issues with strcpy
 
 # find the dependencies
 find_package(Armadillo REQUIRED)
 find_package(Threads REQUIRED)
 find_package(CUDA REQUIRED)
+find_package(PQXX REQUIRED)
 
 # set the includes and the src
 set(INCLUDES
@@ -30,4 +31,4 @@ cuda_add_executable(
         ${INCLUDES}
         )
 
-target_link_libraries(NeuralNets ${ARMADILLO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(NeuralNets ${ARMADILLO_LIBRARIES} ${PQXX_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

@@ -173,3 +173,14 @@ void Individual::mutate() {
     int mutationPoint = Utils::getRandBetween(0, size());
     (*this)[mutationPoint] = !at(mutationPoint);
 }
+
+CapsuleNetworkDAO::CapsuleNetworkDAO() {
+    
+}
+
+void CapsuleNetworkDAO::run() {
+    connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
+    static work txn(c);
+    result r = txn.exec("");
+}
+
