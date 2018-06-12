@@ -9,6 +9,11 @@
 
 using namespace std;
 
+int Utils::getRandBetween(int lowerBound, int upperBound) {
+    int randNum = rand() % (upperBound - lowerBound);
+    return randNum + lowerBound;
+}
+
 double Utils::getRandBetween(double lowerBound, double upperBound) {
     srand(2);
     static random_device rd;

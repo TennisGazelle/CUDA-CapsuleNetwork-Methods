@@ -1149,7 +1149,7 @@ void cu_reconstructingTensorFromError_kernel(double *tensor, double *flattenedTe
 
     int output_index = d*depth*height*width + dim_index*height*width +  r*width + c;
 
-    tensor[output_index] = output_index;
+    tensor[output_index] = flattenedTensor_index;
     //flattenedTensor[flattenedTensor_index];
 }
 

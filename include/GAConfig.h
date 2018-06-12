@@ -8,7 +8,10 @@
 struct GAConfig {
     unsigned int bitstringSize = 5+5+6+5+5+5+5;
     unsigned int populationSize = 100;
-    unsigned int iterationSize = 200;
+    unsigned int numIterations = 200;
+
+    double prob_mutation = 0.001;
+    double prob_crossover = 0.5;
 };
 
 #endif //NEURALNETS_GACONFIG_H

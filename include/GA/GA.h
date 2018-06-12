@@ -11,18 +11,19 @@
 class GA {
 public:
     GA(GAConfig incomingConfig);
-    void init();
-    void makeNextGen(bool useParedoToCompare = false);
-    void NSGAStep();
-    void NSGARun();
-    void run();
     void collectStats();
+    void printStats() const;
+
+    void makeNextGen(bool useCrowdingOperator = false);
+    void NSGARun();
     void printFeaturesOfBestIndividual() const;
+    Population getParentPopulation() const;
 
-
-    Population parentPop, childPop;
 private:
+    Population parentPop, childPop;
     GAConfig gaConfig;
+    vector<PopulationStats> accuracy100Timeline, accuracy300Timeline, loss100Timeline, loss300Timeline;
+    void NSGAStep();
 };
 
 

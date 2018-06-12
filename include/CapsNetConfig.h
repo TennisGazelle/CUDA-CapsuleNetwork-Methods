@@ -14,14 +14,15 @@ struct CapsNetConfig {
     const int numClasses = 10;
     const int numEpochs = 300;
     const int numIterations = 3;
+    const ActivationType at = SIGMOID;
 
     int cnInnerDim = 8, cnOuterDim = 16;
     int cnNumTensorChannels = 2;
     int batchSize = 250;
     double m_plus = 0.9, m_minus = 0.1, lambda = 0.5;
-    double learningRate = 0.1;
 
-    const ActivationType at = SIGMOID;
+    double learningRate = 0.1;
+    CapsNetConfig& operator=(const CapsNetConfig& other);
 };
 
 #endif //NEURALNETS_CONFIG_H

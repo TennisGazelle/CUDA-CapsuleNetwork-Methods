@@ -10,6 +10,7 @@
 
 class Utils {
 public:
+    static int getRandBetween(int lowerBound, int upperBound);
     static double getRandBetween(double lowerBound, double upperBound);
     static double getWeightRand(double n);
     static int reverseInt(int i);

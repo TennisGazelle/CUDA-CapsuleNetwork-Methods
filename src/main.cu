@@ -863,16 +863,26 @@ void test_bug_finding() {
 //    CapsuleNetwork seq(testingConfig);
 //    seq.runEpoch();
     CUCapsuleNetwork capsnet(testingConfig);
-    capsnet.test_detailedFP();
+    capsnet.train();
+//    capsnet.test_detailedFP();
 }
 
 GAConfig gaconfig;
 void test_GA_individual() {
-    gaconfig.populationSize = 10;
+    gaconfig.populationSize = 100;
+    gaconfig.numIterations = 100;
     
-	Population p(gaconfig);
-	p.evaluate();
-	p.fullPrint();
+    GA ga(gaconfig);
+//    ga.getParentPopulation().fullPrint();
+    ga.NSGARun();
+    ga.printStats();
+//    ga.getParentPopulation().fullPrint();
+
+//    Population p;
+//    p.generate(gaconfig.populationSize, gaconfig.bitstringSize);
+//    p.print();
+//    p.evaluate();
+//    p.fullPrint();
 }
 
 int main() {
