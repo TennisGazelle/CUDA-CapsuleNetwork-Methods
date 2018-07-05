@@ -57,7 +57,7 @@ void FeatureMap::print() const {
 //    cout << fixed << setprecision(7);
     for (auto row : (*this)) {
         for (auto col : row) {
-            cout << col << " ";
+            cout << col << "\t";
         }
         cout << endl;
     }

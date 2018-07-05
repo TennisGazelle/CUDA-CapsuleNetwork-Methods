@@ -18,10 +18,15 @@ public:
     void resize(int newSize);
     void clear();
     void CUDA_clear();
-    void print(const std::string &msg = "", int width = 1);
+    void print(const std::string &msg = "", int width = 1) const;
     bool operator==(const CUUnifiedBlob &other) const;
+    CUUnifiedBlob& operator=(const CUUnifiedBlob &other);
     int getSize() const;
     void fillWithRandom();
+    void fillSequentially();
+    int hasNan() const;
+    int hasInf() const;
+    bool isAllZeros() const;
 
     double getValueAt_1D(int location) const;
     double getValueAt_2D(int x, int y , int xDim) const;
@@ -51,13 +56,13 @@ public:
                                            double m_plus, double m_minus, double lambda);
 
     static void weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &c, CUUnifiedBlob &w, CUUnifiedBlob &v_error, int numClasses, int tensorSize, int innerDim, int outerDim);
-    static void CUDA_weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &w, CUUnifiedBlob &v_error, int numClasses, int tensorSize, int innerDim, int outerDim);
+    static void CUDA_weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &w, CUUnifiedBlob &delta_u_hat_error, int numClasses, int tensorSize, int innerDim, int outerDim);
 
     static void scaledDecompositionOfError(CUUnifiedBlob &delta_v, CUUnifiedBlob &c, CUUnifiedBlob &delta_u_hat, int numClasses, int tensorSize, int dim);
     static void CUDA_scaledDecompositionOfError(CUUnifiedBlob &delta_v, CUUnifiedBlob &c, CUUnifiedBlob &delta_u_hat, int numClasses, int tensorSize, int dim);
 
     static void vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUnifiedBlob &v_error, CUUnifiedBlob &old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
-    static void CUDA_vectorVectorMatrixProductAndSum(CUUnifiedBlob &w, CUUnifiedBlob &v_error, CUUnifiedBlob &old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
+    static void CUDA_vectorVectorMatrixProductAndSum(CUUnifiedBlob &w_delta, CUUnifiedBlob &delta_v, CUUnifiedBlob &old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
 
     static void multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim);
     static void CUDA_multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim);
@@ -74,14 +79,14 @@ public:
     static void tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &flattenedTensor, CUUnifiedBlob &tensor, int height, int width, int depth, int numClasses, int dim);
     static void CUDA_tensorFlatteningAndActivatedRemapping(CUUnifiedBlob &flattenedTensor, CUUnifiedBlob &tensor, int height, int width, int sDepth, int numClasses, int dim);
 
-    static void reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifiedBlob &flattenedTensor, int height, int width, int depth, int numClasses, int dim);
-    static void CUDA_reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifiedBlob &flattenedTensor, int height, int width, int depth, int numClasses, int dim);
+    static void reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifiedBlob &flattenedTensor, int height, int width, int vectorDepth, int numClasses, int dim);
+    static void CUDA_reconstructingTensorFromError(CUUnifiedBlob &tensor, CUUnifiedBlob &flattenedTensor, int height, int width, int vectorDepth, int numClasses, int dim);
 
     static void convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters, CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
     static void CUDA_convolutionalBackPropFromError(CUUnifiedBlob &error, CUUnifiedBlob &filters, CUUnifiedBlob &delta_filters, CUUnifiedBlob &originalInput, CUUnifiedBlob &newErrorGradient, int iHeight, int iWidth, int fHeight, int fWidth, int depth, int numFilters);
 
     static void getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim);
-    static void CUDA_getSquaredLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim);
+    static void CUDA_getLength(CUUnifiedBlob &v, CUUnifiedBlob &lengths, int numClasses, int dim);
 
     static void getVectorLoss(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, CUUnifiedBlob &losses, int numClasses, int dim,
                                   double m_plus, double m_minus, double lambda);
@@ -132,22 +137,19 @@ __global__
 void cu_vectorLossFunction_kernel(double *v, double *truthMap, double m_plus, double m_minus, double lambda);
 
 __global__
-void cu_weightedTransMatrixVecMult_kernel(double *delta_u, double *w, double *v_error, int innerDim, int outerDim);
+void cu_weightedTransMatrixVecMult_kernel(double *delta_u, double *w, double *delta_u_hat, int innerDim, int outerDim);
 
 __global__
 void cu_scaledDecompositionOfError(double *delta_v, double *c, double *delta_u_hat, int numClasses);
 
 __global__
-void cu_vectorVectorMatrixProductAndSum_kernel(double *w, double *v_error, double *old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
+void cu_vectorVectorMatrixProductAndSum_kernel(double *w, double *delta_v, double *old_u, int numClasses, int tensorSize, int innerDim, int outerDim);
 
 __global__
 void cu_multiVectorReduction_kernel(double *u, int numClasses, int dim);
 
 __global__
 void cu_elementWiseErrorUpdate_kernel(double *w, double *w_error, double *w_velocity);
-
-__global__
-void cu_errorUpdate_kernel(double *w);
 
 __global__
 void cu_vectorSquashDerivative_kernel(double *v, int numClasses);
@@ -165,7 +167,7 @@ __global__
 void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, double *delta_filters, double *originalInput, double *newErrorGradient, int iHeight, int iWidth);
 
 __global__
-void cu_getSquaredLength_kernel(double *v, double *lengths);
+void cu_getLength_kernel(double *v, double *lengths);
 
 __global__
 void cu_getVectorLoss_kernel(double *v, double *truthMap, double *losses, double m_plus, double m_minus, double lambda);

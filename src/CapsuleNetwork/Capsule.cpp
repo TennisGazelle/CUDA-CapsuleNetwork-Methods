@@ -25,6 +25,9 @@ void Capsule::init(int iD, int oD, int inputs, int outputs, int r) {
     for (int i = 0; i < numInputs; i++) {
         b[i] = 0.0;
         weightMatrices[i] = arma::mat(outputDim, inputDim, arma::fill::randn);
+        for (int j = 0; j < outputDim*inputDim; j++) {
+        	weightMatrices[i][j] = Utils::getWeightRand(0);
+        }
         weightDeltas[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
         weightVelocities[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
     }
@@ -54,6 +57,14 @@ vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
     vector<arma::vec> delta_u(numInputs);
     for (int i = 0; i < numInputs; i++) {
         delta_u[i] = c[i] * trans(weightMatrices[i]) * error;
+        arma::vec temp = delta_u[i];
+//        temp.t().print();
+//        cout << "c: " << c[i] << endl;
+//        error.print("error:");
+//        for (int j = 0; j < temp.size(); j++) {
+//            cout << temp[j] << "\t";
+//        }
+//        cout << endl;
 
         // calculate your damn deltas
         weightDeltas[i] -= error * trans(prevInput[i]);

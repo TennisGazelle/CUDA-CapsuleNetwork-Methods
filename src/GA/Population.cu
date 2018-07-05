@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <Utils.h>
 #include <assert.h>
+#include <thread>
 
 void Population::generate(int n, int bitstringSize) {
 	clear();
@@ -46,8 +47,13 @@ void Population::fullPrint() {
 }
 
 void Population::evaluate() {
+    vector<thread> indiv_threads;
     for (auto &indiv : (*this)) {
+//        indiv_threads.emplace_back(thread(&Individual::evaluate, indiv));
         indiv.evaluate();
+    }
+    for (auto& t : indiv_threads) {
+        t.join();
     }
 	getStatsFromIndividuals();
 }

@@ -49,11 +49,8 @@ void ConvolutionalLayer::calculateOutput() {
             for (int outputCol = 0; outputCol < inputWidth - filterWidth; outputCol++) {
                 double dotProduct = dotMatrixWithFilter(outputRow, outputCol, outputIndex);
                 // ReLu
-                if (dotProduct > 0) {
-                    outputMaps[outputIndex][outputRow][outputCol] = dotProduct;
-                } else {
-                    outputMaps[outputIndex][outputRow][outputCol] = 0;
-                }
+                outputMaps[outputIndex][outputRow][outputCol] = max(0.0, dotProduct);
+                outputMaps[outputIndex][outputRow][outputCol] = dotProduct;
 //                // Tangental Activation
 //                double e_z = exp(dotProduct);
 //                double e_zn = exp(-dotProduct);

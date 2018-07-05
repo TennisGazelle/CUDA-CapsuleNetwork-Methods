@@ -25,6 +25,7 @@ private:
     static CapsNetDAO* instance;
     void run_sql(const string& sql, result& output);
     void commit_sql(const string& sql, result& output);
+    string host;
 };
 
 

@@ -51,11 +51,11 @@ vector<arma::vec> VectorMap::toSquishedArrayOfVecs(size_t vectorDim, vector<Feat
             arma::vec v(vectorDim);
             // go down the filterDepth of the input at this position
             for (int d = 0; d < inputMaps.size(); d++) {
+                v[d%vectorDim] = inputMaps[d][r][c];
                 if (d%vectorDim == vectorDim-1) {
                     // squash and save as I go...
                     output.push_back(Utils::squish(v));
                 }
-                v[d%vectorDim] = inputMaps[d][r][c];
             }
         }
     }

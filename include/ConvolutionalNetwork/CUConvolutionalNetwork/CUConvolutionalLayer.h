@@ -10,6 +10,8 @@
 #include <vector>
 #include <CapsNetConfig.h>
 
+using namespace std;
+
 class CUConvolutionalLayer {
 public:
     CUConvolutionalLayer(const CapsNetConfig& incomingConfig, int iHeight, int iWidth, int numFilters, int fHeight, int fWidth);
@@ -20,7 +22,11 @@ public:
     void backpropagate();
     void updateError();
 
-private:
+    void printFilter() const;
+    void printInput() const;
+    void printOutput() const;
+
+//private:
     int inputHeight = 0, inputWidth = 0;
     int outputHeight = 0, outputWidth = 0;
     int filterDepth, filterHeight, filterWidth, numFilters;

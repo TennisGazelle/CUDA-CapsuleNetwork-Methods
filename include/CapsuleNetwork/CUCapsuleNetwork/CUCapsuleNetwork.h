@@ -11,21 +11,24 @@
 #include <armadillo>
 #include <ConvolutionalNetwork/CUConvolutionalNetwork/CUConvolutionalLayer.h>
 #include <CapsNetConfig.h>
+#include <CapsuleNetwork/CapsuleNetwork.h>
 
 class CUCapsuleNetwork {
 public:
     CUCapsuleNetwork(const CapsNetConfig& incomingConfig);
+    void initWithSeq(CapsuleNetwork& originalWeights);
     void forwardPropagation(int imageIndex, bool useTraining = true);
     double backPropagation(int imageIndex, bool useTraining = true);
     double getLoss();
     bool testResults(int imageIndex, bool useTraining = true);
     long double forwardAndBackPropagation(int imageIndex, bool useTraining = true);
-    void runEpoch();
+    long double runEpoch();
     pair<double, long double> tally(bool useTraining = true);
     void train();
     void updateWeights();
 
     void test_detailedFP();
+    void verificationTest();
 
 private:
     unsigned int flattenedTensorSize;
@@ -36,7 +39,8 @@ private:
                   b, c,
                   truth,
                   losses,
-                  lengths;
+                  lengths,
+                  cache;
 
     CapsNetConfig config;
 };

@@ -18,6 +18,7 @@
 #include <GA/Population.h>
 #include <GA/GA.h>
 #include <GA/CapsNetDAO.h>
+#include <argh/argh.h>
 
 CapsNetConfig testingConfig;
 
@@ -491,6 +492,66 @@ void test_CUUnifiedBlob_weightedTransMatrixVecMult() {
 //    assert(delta_u == delta_u_cuda_output);
 }
 
+void test_CUUnifiedBlob_matrixInverse() {
+    int inputDim = 8, outputDim = 16, numClasses = 2, tensorSize = 2;
+    CUUnifiedBlob v(inputDim * numClasses * tensorSize),
+            w(inputDim * outputDim * numClasses * tensorSize),
+            vv(outputDim * numClasses * tensorSize);
+
+    for (int i = 0; i < inputDim * numClasses * tensorSize; i++) {
+        v.setValueAt_1D(i, i);
+    }
+    w.fillWithRandom();
+
+//    CUUnifiedBlob::matrixVectorMultiplication(w, v, vv, inputDim, outputDim);
+    CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, v, vv, inputDim, outputDim, numClasses, tensorSize);
+
+    v.print("v", inputDim * numClasses);
+    w.print("w", inputDim * outputDim);
+    vv.print("vv", outputDim * numClasses);
+    v.clear();
+    v.print("clear v", inputDim);
+
+    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(v, w, vv, numClasses, tensorSize, inputDim, outputDim);
+    v.print("delta v", inputDim * numClasses);
+
+
+/*
+    int numClasses = 5, flattenedTensorSize = 2, innerDim = 3, outerDim = 5;
+    CUUnifiedBlob delta_u(innerDim * numClasses * flattenedTensorSize),
+            delta_u_cuda_output(innerDim * numClasses * flattenedTensorSize),
+            w(innerDim * outerDim * numClasses * flattenedTensorSize),
+            v_error(outerDim * numClasses),
+            c(numClasses * flattenedTensorSize);
+
+    for (int t = 0; t < flattenedTensorSize; t++) {
+        for (int k = 0; k < numClasses; k++) {
+            int w_index = (t*numClasses + k) * innerDim * outerDim;
+            int v_index = (k) * outerDim;
+
+
+            int i = (t+k+1);
+            c.setValueAt_2D(t, k, numClasses, 1.0/double(i)-0.9);
+            for (int row = 0; row < outerDim; row++) {
+                v_error.setValueAt_1D(row + v_index, double(row)/double(outerDim) - double(t+k));
+                for (int col = 0; col < innerDim; col++) {
+                    if (row == outerDim-1 || row == col) {
+                        w.setValueAt_1D(row*innerDim + col + w_index, i);
+                    }
+                }
+            }
+        }
+    }
+
+    w.print("w", innerDim);
+    v_error.print("v_error", outerDim);
+    c.print("c", numClasses);
+
+    CUUnifiedBlob::weightedTransMatrixVecMult(delta_u, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u_cuda_output, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+*/
+}
+
 void test_CUUnifiedBlob_vectorVectorMatrixProductAndSum() {
     int numClasses = 10, flattenedTensorSize = 1152, innerDim = 8, outerDim = 16;
     CUUnifiedBlob
@@ -533,15 +594,18 @@ void test_CUUnifiedBlob_CUDA_multiVectorReduction() {
 		    int i = t+k;
 			for (int d = 0; d < dim; d++) {
 				delta_u.setValueAt_2D(t, k*dim+d, numClasses*dim, i);
-				delta_u_cuda_output.setValueAt_2D(t, k*dim+d, numClasses*dim, i++);
+				delta_u_cuda_output.setValueAt_2D(t, k*dim+d, numClasses*dim, i);
+                i++;
 			}
 		}
 	}
    
 	delta_u.print("delta_u", numClasses*dim);
+    delta_u_cuda_output.print("delta_u_cuda_output", numClasses*dim);
 	CUUnifiedBlob::multiVectorReduction(delta_u, numClasses, tensorSize, dim);
 	CUUnifiedBlob::CUDA_multiVectorReduction(delta_u_cuda_output, numClasses, tensorSize, dim);
-    sleep(1);
+    cudaDeviceSynchronize();
+
     delta_u.print("reduced normal delta_u", numClasses*dim);
 	delta_u_cuda_output.print("reduced_delta_u_cuda_output", numClasses*dim);
 	assert(delta_u == delta_u_cuda_output);
@@ -598,10 +662,31 @@ void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
 
 
     CUUnifiedBlob::CUDA_multiVectorReduction(delta_u, numClasses, flattenedTensorSize, innerDim);
-    sleep(1);
     CUUnifiedBlob::reconstructingTensorFromError(delta_u_feature_cube, delta_u, 2, 2, 3, numClasses, innerDim);
     delta_u.print("final delta_u", innerDim*numClasses);
     delta_u_feature_cube.print("delta_u as a feature cube", 2);
+}
+
+void test_CUUnifiedBlob_reconstructingTensorFromError() {
+    int numClasses = 3, innerDim = 2, outerDim = 5;
+    int outputHeight = 2, outputWidth = 2, vectorTensorDepth = 2;
+
+    int numFilters = vectorTensorDepth * innerDim;
+    int flattenedTensorSize = outputHeight * outputWidth * vectorTensorDepth;
+
+    CUUnifiedBlob
+            delta_u(innerDim * numClasses * flattenedTensorSize),
+            delta_u_feature_cube(outputHeight * outputWidth * numFilters);
+
+    delta_u.fillSequentially();
+
+    CUUnifiedBlob::CUDA_multiVectorReduction(delta_u, numClasses, flattenedTensorSize, innerDim);
+    cudaDeviceSynchronize();
+    CUUnifiedBlob::CUDA_reconstructingTensorFromError(delta_u_feature_cube, delta_u, outputHeight, outputWidth,
+                                                 vectorTensorDepth, numClasses, innerDim);
+
+    delta_u.print("final delta_u", innerDim*numClasses);
+    delta_u_feature_cube.print("delta_u as a output cube", outputWidth);
 }
 
 void test_CUUnifiedBlob_getTotalLoss() {
@@ -681,6 +766,7 @@ struct StatisticalTimings {
 };
 
 void test_speedupTimings_seq_par() {
+    testingConfig.cnNumTensorChannels = 32;
     CapsuleNetwork seqCapsuleNetwork(testingConfig);
     CUCapsuleNetwork CUDANetwork(testingConfig);
     int numTimings = 30;
@@ -699,7 +785,7 @@ void test_speedupTimings_seq_par() {
         CUDANetwork.forwardPropagation(i);
         deviceTimer.stop();
         st.fp_par[i] = deviceTimer.getElapsedTime();
-    
+
         hostTimer.start();
         seqCapsuleNetwork.fullBackwardPropagation(i);
         hostTimer.stop();
@@ -722,15 +808,15 @@ void test_speedupTimings_seq_par() {
         deviceTimer.stop();
         st.image_par[i] = deviceTimer.getElapsedTime();
 
-        hostTimer.start();
-        seqCapsuleNetwork.runEpoch();
-        hostTimer.stop();
-        st.epoch_seq[i] = hostTimer.getElapsedTime();
-        
-        deviceTimer.start();
-        CUDANetwork.runEpoch();
-        deviceTimer.stop();
-        st.epoch_par[i] = deviceTimer.getElapsedTime();
+//        hostTimer.start();
+//        seqCapsuleNetwork.runEpoch();
+//        hostTimer.stop();
+//        st.epoch_seq[i] = hostTimer.getElapsedTime();
+//
+//        deviceTimer.start();
+//        CUDANetwork.runEpoch();
+//        deviceTimer.stop();
+//        st.epoch_par[i] = deviceTimer.getElapsedTime();
 
         for (int i = 0; i < numTimings; i++) {
             cout << st.fp_seq[i] << "\t";
@@ -778,7 +864,7 @@ void test_CUCapsuleNetwork_forwardPropagation() {
 
 void test_CUUnifiedBlob_CUDA_convolutionalFP() {
     int filterHeight = 3, filterWidth = 3, depth = 1, numFilters = 4;
-    int inputHeight = 10, inputWidth = 10;
+    int inputHeight = 5, inputWidth = 5;
     int outputHeight = inputHeight - filterHeight + 1,
             outputWidth = inputWidth - filterWidth + 1;
     int numClasses = 3, dim = 2, flattenedTensorSize = outputHeight * outputWidth * (numFilters/dim);
@@ -811,18 +897,19 @@ void test_CUUnifiedBlob_CUDA_convolutionalFP() {
 
     CUUnifiedBlob::convolutionalDotProduct(input, filters, output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
     CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filters, output_cuda_output, inputHeight, inputWidth, filterHeight, filterWidth, depth, numFilters);
+
     output.print("outputs", outputWidth);
     output_cuda_output.print("output_cuda_output", outputWidth);
 //    assert(output == output_cuda_output);
 
-    CUUnifiedBlob::tensorFlatteningAndActivatedRemapping(u, output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
-    CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(u_cuda_output, output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
-    u.print("u", numClasses*dim);
-    u_cuda_output.print("u_cuda_output", numClasses*dim);
+//    CUUnifiedBlob::tensorFlatteningAndActivatedRemapping(u, output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
+//    CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(u_cuda_output, output, outputHeight, outputWidth, numFilters/dim, numClasses, dim);
+//    u.print("u", numClasses*dim);
+//    u_cuda_output.print("u_cuda_output", numClasses*dim);
 }
 
 void test_CUUnifiedBlob_CUDA_convolutionalBP() {
-    int filterHeight = 2, filterWidth = 2, depth = 1, numFilters = 4;
+    int filterHeight = 3, filterWidth = 3, depth = 1, numFilters = 4;
     int inputHeight = 5, inputWidth = 5;
     int outputHeight = inputHeight - filterHeight + 1,
             outputWidth = inputWidth - filterWidth + 1;
@@ -860,23 +947,61 @@ void test_CUUnifiedBlob_CUDA_convolutionalBP() {
     delta_filters_cuda_output.print("CUDA - filter_error", filterWidth);
 }
 
+void test_mappingAndUnMapping() {
+    int numClasses = 3, innerDim = 2, outerDim = 5;
+    int outputHeight = 2, outputWidth = 2, vectorTensorDepth = 2;
+
+    int numFilters = vectorTensorDepth * innerDim;
+    int flattenedTensorSize = outputHeight * outputWidth * vectorTensorDepth;
+
+    CUUnifiedBlob
+            conv_output(outputHeight * outputWidth * numFilters),
+            delta_u(innerDim * numClasses * flattenedTensorSize),
+            delta_u_feature_cube(outputHeight * outputWidth * numFilters);
+
+    conv_output.fillSequentially();
+    CUUnifiedBlob::CUDA_tensorFlatteningAndActivatedRemapping(delta_u, conv_output, outputHeight, outputWidth, vectorTensorDepth, numClasses, innerDim);
+    CUUnifiedBlob::CUDA_reconstructingTensorFromError(delta_u_feature_cube, delta_u, outputHeight, outputWidth, vectorTensorDepth, numClasses, innerDim);
+
+    conv_output.print("original output", outputWidth);
+    delta_u.print("final delta_u", innerDim*numClasses);
+    delta_u_feature_cube.print("delta_u as a output cube", outputWidth);
+}
+
 void test_bug_finding() {
+    srand(0);
     CapsNetConfig extremeConfig;
 //    extremeConfig.cnInnerDim = 9;
-//    extremeConfig.cnOuterDim = 27;
-//    extremeConfig.cnNumTensorChannels = 41;
+    extremeConfig.cnOuterDim = 16;
+    extremeConfig.cnNumTensorChannels = 2;
 
 //    CapsuleNetwork seq(testingConfig);
+//    seq.train();
 //    seq.runEpoch();
     CUCapsuleNetwork capsnet(extremeConfig);
-//    capsnet.train();
-    capsnet.test_detailedFP();
+    capsnet.train();
+//    capsnet.test_detailedFP();
+
+//    CapsuleNetwork original(testingConfig);
+//    CUCapsuleNetwork copy(testingConfig);
+//    copy.initWithSeq(original);
+//
+//    cout << "SEQUENTIAL VERIFICATION : " << endl;
+//    original.verificationTest();
+//    cout << "PARALLEL VERIFICATION   : " << endl;
+//    copy.verificationTest();
+
+//    cout << "sequential: " << endl;
+//    original.loadImageAndPrintOutput(0);
+//    cout << "parallel: " << endl;
+//    copy.forwardPropagation(0);
+//    original.runEpoch();
 }
 
 GAConfig gaconfig;
 void test_GA_individual() {
-    gaconfig.populationSize = 5;
-    gaconfig.numIterations = 2;
+    gaconfig.populationSize = 30;
+    gaconfig.numIterations = 50;
     
     GA ga(gaconfig);
     ga.NSGARun();
@@ -893,7 +1018,87 @@ void test_GA_individual() {
 //    indiv.fullPrint();
 }
 
-int main() {
+int main(int argc, const char * argv[]) {
+    GAConfig gaconfig;
+    CapsNetConfig capsNetConfig;
+    argh::parser cmdl(argc, argv);
+    string usage = "Usage: ./NeuralNets {-g|-ga|-c|-caps} [MODE_SPECIFIC_PARAMETERS]...";
+
+    if (cmdl[{"-h", "--help"}]) {
+        cout << usage << endl;
+        cout << "Run a Capsule Network (sequentially or in parallel) or run genetic algorithm (GA) to evolve hyper-parameters in it." << endl;
+        cout << "Capsule Network, by default, is run in parallel (CUDA)." << endl;
+        cout << "GA communicates with PostgreSQL DB in 'hpcvis3.cse.unr.edu' by default." << endl;
+        cout << endl;
+
+        cout << "     GA Example: " << "./NeuralNets -g -p=100" << endl;
+        cout << "CapsNet Example: " << "./NeuralNets -c --batchsize=250" << endl;
+        cout << endl;
+
+        cout << "Genetic Algorithm Parameters (mode: '-g' or '-ga'):" << endl;
+        cout << "  -p, --population-size=INT" << '\t' << "Set population size to INT individuals " << "(default " << gaconfig.populationSize << ")" << endl;
+        cout << "  -i, --num-iterations=INT" << '\t' << "Run the GA for INT generations " << "(default " << gaconfig.numIterations << ")" << endl;
+        cout << "  -m, --prob-mutation=NUM" << '\t' << "Set the probability of mutation to NUM between 0 and 1 " << "(default" << gaconfig.prob_mutation << ")" << endl;
+        cout << "  -r, --prob-crossover=NUM" << '\t' << "Set the probability of crossover to num between 0 and 1 " << "(default" << gaconfig.prob_crossover << ")" << endl;
+        cout << "  -h, --database-host=HOSTNAME" << '\t' << "Look at database at HOSTNAME" << endl;
+        cout << endl;
+
+        cout << "Capsule Network Parameters (mode: '-c' or '-caps'):" << endl;
+        cout << "  -i, --inner-dim=NUM" << '\t' << "Set the inner dimension (lower level capsule) dimension" << endl;
+        cout << "  -d, --outer-dim=NUM" << endl;
+        cout << "  -p, --m-plus=NUM" << endl;
+        cout << "  -m, --m-minus=NUM" << endl;
+        cout << "  -l, --lambda=NUM" << endl;
+        cout << "  -b, --batch-size=INT" << endl;
+        cout << "  -t, --num-tensor-channels=INT" << endl;
+        cout << endl;
+
+        cout << "  --help" << '\t' << "display this help and exit" << endl;
+        cout << "Report bugs by yelling at the top of your lungs for 3 min." << endl;
+        cout << "Full documentation at: <http://www.github.com/TennisGazelle/CUDA-CapsuleNetwork-Methods>" << endl;
+        return 0;
+    }
+
+    if (!(cmdl[{"-g", "-ga"}] xor cmdl[{"-c", "-caps"}])) {
+        cout << usage << endl;
+        cout << "Try './NeuralNets --help' for more information" << endl;
+        return 0;
+    }
+
+    if (cmdl[{"-g", "--ga"}]) {
+        cmdl({"-p", "--population-size"}, gaconfig.populationSize) >> gaconfig.populationSize;
+        cmdl({"-i", "--num-iterations"}, gaconfig.numIterations) >> gaconfig.numIterations;
+        cmdl({"--prob-mutation"}, gaconfig.prob_mutation) >> gaconfig.prob_mutation;
+        cmdl({"--prob-crossover"}, gaconfig.prob_crossover) >> gaconfig.prob_crossover;
+
+        cout << "           Population Size: " << gaconfig.populationSize << endl;
+        cout << "            Num Iterations: " << gaconfig.numIterations << endl;
+        cout << "  Probability of Crossover: " << gaconfig.prob_crossover << endl;
+        cout << "   Probability of Mutation: " << gaconfig.prob_mutation << endl;
+
+//        GA ga(gaconfig);
+//        ga.NSGARun();
+//        ga.printStats();
+    } else if (cmdl[{"-c", "--caps"}]) {
+        cmdl({"-i", "--inner-dim"}, capsNetConfig.cnInnerDim) >> capsNetConfig.cnInnerDim;
+        cmdl({"-d", "--outer-dim"}, capsNetConfig.cnOuterDim) >> capsNetConfig.cnOuterDim;
+        cmdl({"-p", "--m-plus"}, capsNetConfig.m_plus) >> capsNetConfig.m_plus;
+        cmdl({"-m", "--m-minus"}, capsNetConfig.m_minus) >> capsNetConfig.m_minus;
+        cmdl({"-l", "--lambda"}, capsNetConfig.lambda) >> capsNetConfig.lambda;
+        cmdl({"-b", "--batch-size"}, capsNetConfig.batchSize) >> capsNetConfig.batchSize;
+        cmdl({"-t", "--num-tensor-channels"}, capsNetConfig.cnNumTensorChannels) >> capsNetConfig.cnNumTensorChannels;
+
+        cout << "        Inner Dim: " << capsNetConfig.cnInnerDim << endl;
+        cout << "        Outer Dim: " << capsNetConfig.cnOuterDim << endl;
+        cout << "           m_plus: " << capsNetConfig.m_plus << endl;
+        cout << "          m_minus: " << capsNetConfig.m_minus << endl;
+        cout << "           lambda: " << capsNetConfig.lambda << endl;
+        cout << "       Batch Size: " << capsNetConfig.batchSize << endl;
+        cout << "  Tensor Channels: " << capsNetConfig.cnNumTensorChannels << endl;
+
+        //CapsuleNetwork capsNetwork(capsNetConfig);
+    }
+
 //    test_SingleLayerCNNv_error();
 //    test_CapsuleNetSquishing();
 //    test_VectorMapFromFeatureMaps
@@ -921,20 +1126,23 @@ int main() {
 //    test_CUUnifiedBlob_vectorVectorMatrixProductAndSum();
 //    test_CUUnifiedBlob_CUDA_multiVectorReduction();
 //    test_CUDA_backPropagationAndUpdateAndConvolutionalBP();
+//    test_CUUnifiedBlob_reconstructingTensorFromError();
+//    test_CUUnifiedBlob_matrixInverse();
 
 //    test_CUUnifiedBlob_getTotalLoss();
 
 //    test_CUUnifiedBlob_CUDA_convolutionalFP();
 //    test_CUUnifiedBlob_CUDA_convolutionalBP();
 //    test_CUCapsuleNetwork_forwardPropagation();
+//    test_mappingAndUnMapping();
 
 //    test_forwardPropagationSpeedUpTimings();
 //    test_backwardPropagationSpeedupTimings();
 //    test_weightUpdateSpeedupTiming();
-//    test_speedupTimings_seq_par();
+    test_speedupTimings_seq_par();
 
 //    test_epochAccuracy_CUDA();
-    test_bug_finding();
+//    test_bug_finding();
 
 //    test_GA_individual();
 

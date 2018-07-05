@@ -15,7 +15,6 @@ int Utils::getRandBetween(int lowerBound, int upperBound) {
 }
 
 double Utils::getRandBetween(double lowerBound, double upperBound) {
-    srand(2);
     static random_device rd;
     static mt19937 gen(rd());
     static uniform_real_distribution<> dis(lowerBound, upperBound);
@@ -25,13 +24,13 @@ double Utils::getRandBetween(double lowerBound, double upperBound) {
 double Utils::getWeightRand(double n) {
     //get a normal distribution centered around 0 [-2.4/n, 2.4/n]
     static random_device rd;
-    static mt19937 gen(rd());
+    static mt19937 gen;
 
     const double distributionHalfWidth = 2.4/n;
-    const double stdDev =  distributionHalfWidth * 2 / 6;
+    const double stdDev = distributionHalfWidth * 2 / 6;
     static normal_distribution<> dis(0, 1);
 
-    return dis(gen)/100.0;
+    return dis(gen);
 }
 
 int Utils::reverseInt(int i) {
@@ -47,16 +46,16 @@ int Utils::reverseInt(int i) {
            ((int) c4);
 }
 
-long double Utils::square_length(const arma::vec &vn) {
-    long double sum = 0.0;
+double Utils::square_length(const arma::vec &vn) {
+    double sum = 0.0;
     for (auto& v : vn) {
         sum += pow(v, 2);
     }
-    return sum + 1e-4;
+    return sum + EPSILON;
 }
 
 double Utils::length(const arma::vec &vn) {
-    return (double) sqrt(square_length(vn) + 1e-4);
+    return sqrt(square_length(vn) + EPSILON);
 }
 
 double Utils::getSquashDerivativeLength(const arma::vec &input) {

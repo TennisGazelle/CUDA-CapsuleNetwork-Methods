@@ -34,6 +34,8 @@ public:
     double getMarginLossGradient(bool isPresent, const arma::vec& v_k) const;
     vector<double> getErrorGradientImage(const Image& truth, const vector<double>& networkOutput);
 
+    void verificationTest();
+
 private:
     ConvolutionalLayer primaryCaps; // this is basicaly the primary caps in a different form
     // PrimaryCaps -> DigitCaps;

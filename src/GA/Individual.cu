@@ -144,9 +144,9 @@ void Individual::evaluate() {
 }
 
 void Individual::constuctNetworkAndEvaluate() {
-    cout << "running this..." << endl;
+    cout << "running this..." << to_string() << endl;
     fullPrint();
-    CUCapsuleNetwork network(capsNetConfig);
+    CapsuleNetwork network(capsNetConfig);
     network.train();
     auto fitness = network.tally(false);
     accuracy_100 = fitness.first;

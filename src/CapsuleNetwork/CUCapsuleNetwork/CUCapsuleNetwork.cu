@@ -14,7 +14,11 @@
 
 CUCapsuleNetwork::CUCapsuleNetwork(const CapsNetConfig& incomingConfig) :
         config(incomingConfig),
-        CUPrimaryCaps(incomingConfig, incomingConfig.inputHeight, incomingConfig.inputWidth, incomingConfig.cnNumTensorChannels * incomingConfig.cnInnerDim, 28-6, 28-6) {
+        CUPrimaryCaps(incomingConfig,
+                      incomingConfig.inputHeight,
+                      incomingConfig.inputWidth,
+                      incomingConfig.cnNumTensorChannels * incomingConfig.cnInnerDim,
+                      28-6, 28-6) {
 
     flattenedTensorSize = 6*6*config.cnNumTensorChannels;
 
@@ -35,6 +39,40 @@ CUCapsuleNetwork::CUCapsuleNetwork(const CapsNetConfig& incomingConfig) :
     w.fillWithRandom();
 }
 
+void CUCapsuleNetwork::initWithSeq(CapsuleNetwork &originalWeights) {
+    //TODO: uncomment this, and include proper getters/setters for each W
+//    srand(0);
+//    // populate the w matrices
+//    double value;
+//    int index = 0;
+//    for (int l = 0; l < flattenedTensorSize; l++) {
+//    	for (int k = 0; k < config.numClasses; k++) {
+//
+//            for (int r = 0; r < config.cnOuterDim; r++) {
+//                for (int c = 0; c < config.cnInnerDim; c++) {
+//                    value = originalWeights.digitCaps[k].weightMatrices[l].at(r, c);
+//                    //cout << "original location, capsule: " << k << ", tensor level: " << l << ", coordinates(r,c): (" << r << ", " << c << ") ";
+//                    //cout << "index: " << index << " value: " << value << endl;
+//                    w.setValueAt_1D(index++, value);
+//                }
+//            }
+//        }
+//    }
+//
+//    // populate the filters from the original
+//    index = 0;
+//    for (int f = 0; f < originalWeights.primaryCaps.filters.size(); f++) {
+//        for (int ch = 0; ch < originalWeights.primaryCaps.filterDepth; ch++) {
+//            for (int r = 0; r < originalWeights.primaryCaps.filterHeight; r++) {
+//                for (int c = 0; c < originalWeights.primaryCaps.filterWidth; c++) {
+//                    value = originalWeights.primaryCaps.filters[f][ch][r][c];
+//                    CUPrimaryCaps.filter.setValueAt_1D(index++, value);
+//                }
+//            }
+//        }
+//    }
+}
+
 void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
     Image image;
     if (useTraining) {
@@ -49,8 +87,16 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
 
 //    u.print("u", config.cnInnerDim * config.numClasses);
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, config.cnInnerDim, config.cnOuterDim, config.numClasses, flattenedTensorSize);
-//    u_hat.print("u_hat", config.cnOuterDim);
-//    w.print("w", config.cnInnerDim);
+//    u_hat.print("u_hat", config.cnOuterDim * config.numClasses);
+//    if (u.hasNan() != -1) {
+//        cerr << "YELLING, u HAS A NAN; location: " << u.hasNan() << endl;
+//        exit(1);
+//    }
+//    if (u.hasInf() != -1) {
+//        cerr << "u has an inf" << u.hasInf() << endl;
+//        exit(1);
+//    }
+//    w.print("w", config.cnInnerDim*config.cnOuterDim*config.numClasses);
 
     b.CUDA_clear();
     for (int iter = 0; iter < config.numIterations; iter++) {
@@ -59,16 +105,64 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
 //        c.print("c", config.numClasses);
 
         CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, v, config.numClasses, flattenedTensorSize, config.cnOuterDim);
-//        u_hat.print("u_hat", config.numClasses * config.cnInnerDim);
-//        v.print("v", config.cnOuterDim);
-
+//        if (u_hat.isAllZeros()) {
+//            u_hat.print("u_hat", config.numClasses * config.cnInnerDim);
+//            cerr << "u_hat is all zeros" << endl;
+//            exit(1);
+//        }
+//        if (u_hat.hasInf() != -1) {
+//            cerr << "u_hat has an inf: " << u_hat.hasInf() << endl;
+//            u.print("u", config.cnInnerDim);
+//            w.print("w", config.cnInnerDim * config.cnOuterDim);
+//            u_hat.print("u_hat", config.cnOuterDim);
+//            exit(1);
+//        }
+//        v.print("v - iter: " + to_string(iter), config.cnOuterDim);
+//        if (v.hasNan() != -1) {
+//            cerr << "v HAS A NAN after weight reduction with u_hat and c; location: " << v.hasNan() << ", iteration:" << iter << endl;
+//            cerr << "dumping..." << endl;
+//            v.print("v", config.cnOuterDim);
+//            cerr << "checking u_hat...: " << u_hat.hasNan() << endl;
+//            exit(1);
+//        }
+//        if (v.hasInf() != -1) {
+//            cerr << "unsquashed v during routing algorithm: " << v.hasInf() << endl;
+//            v.print("squashed with inf", config.cnOuterDim);
+//            exit(1);
+//        }
         CUUnifiedBlob::CUDA_vectorSquash(v, config.numClasses * flattenedTensorSize, config.cnOuterDim);
 //        v.print("v - activated", config.cnOuterDim);
+//        if (v.hasNan() != -1) {
+//            cerr << "v_squashed HAS A NAN; location: " << v.hasNan() << ", iteration:" << iter << endl;
+//            v.print("squashed v with nan", config.cnOuterDim);
+//            cache.resize(v.getSize());
+//            CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, cache, config.numClasses, flattenedTensorSize, config.cnOuterDim);
+//            cache.print("v was originally...", config.cnOuterDim);
+//            u_hat.print("u_hat is...", config.cnOuterDim * config.numClasses);
+//            exit(1);
+//        }
 
         CUUnifiedBlob::CUDA_vectorVectorScalarProduct(u_hat, v, b, config.numClasses, flattenedTensorSize, config.cnOuterDim);
-//        b.print("b", config.numClasses);
+//        if (v.hasNan() != -1) {
+//            cerr << "v_squashed HAS A NAN after vector scalar product with u_hat; location: " << v.hasNan() << ", iteration:" << iter << endl;
+//            cerr << "checking u_hat...: " << u_hat.hasNan() << endl;
+//            exit(1);
+//        }
     }
+//    b.print("b", config.numClasses);
 //    v.print("v - final", config.cnOuterDim);
+//    if (v.isAllZeros()) {
+//        cerr << "v is all zeros at the end of a forward prop: here's a dump" << endl;
+//        CUPrimaryCaps.printFilter();
+//        CUPrimaryCaps.printOutput();
+//        CUPrimaryCaps.printInput();
+//        u.print("u", config.cnInnerDim * config.numClasses);
+//        w.print("w", config.cnInnerDim*config.cnOuterDim*config.numClasses);
+//        u_hat.print("u_hat", config.numClasses * config.cnInnerDim);
+//        b.print("b", config.numClasses);
+//        c.print("c", config.numClasses);
+//        exit(1);
+//    }
 }
 
 double CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
@@ -81,38 +175,50 @@ double CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
     truth.CUDA_clear();
     truth.CUDA_setValueAt(label, 1.0);
 //    truth.print("truth in BP", config.numClasses);
-
 //    u.print("u", config.numClasses*config.cnInnerDim);
 //    cout << "true value: " << label << endl;
 //    v.print("v - final", config.cnOuterDim);
     double loss = getLoss();
-
     CUUnifiedBlob::CUDA_vectorLossFunction(v, truth, config.numClasses, config.cnOuterDim, config.m_plus, config.m_minus, config.lambda);
+//    if (v.hasNan() != -1) {
+//        v.print("delta v", config.cnOuterDim);
+//        cerr << "delta_v HAS A NAN; location: " << v.hasNan() << endl;
+//        exit(1);
+//    }
 //    v.print("delta v", config.cnOuterDim);
-    cudaDeviceSynchronize();
 
-    CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_delta, v, u_hat, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
-//    w_delta.print("w delta, one at a time", config.cnInnerDim*config.cnOuterDim);
-
-    CUDAUtils::checkForError("before weighted trans matrix vec mult");
     CUUnifiedBlob::CUDA_scaledDecompositionOfError(v, c, u_hat, config.numClasses, flattenedTensorSize, config.cnOuterDim);
+//    b.print("b", config.numClasses);
+//    c.print("c", config.numClasses);
 //    u_hat.print("delta_u_hat", config.cnOuterDim * config.numClasses);
+
+    CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_delta, v, u, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
+//    w.print("w, one at a time", config.cnInnerDim*config.cnOuterDim*config.numClasses);
+//    w_delta.print("w delta, one at a time", config.cnInnerDim*config.cnOuterDim*config.numClasses);
 
     CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(u, w, u_hat, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
 //    u.print("delta u", config.cnInnerDim * config.numClasses);
 
-    CUDAUtils::checkForError("before multi vector reduction");
     CUUnifiedBlob::CUDA_multiVectorReduction(u, config.numClasses, flattenedTensorSize, config.cnInnerDim);
 //    u.print("delta u, left reduced", config.cnInnerDim * config.numClasses);
+//    if (u.hasNan() != -1) {
+//        cerr << "delta u has a nan: " << u.hasNan() << endl;
+//        cerr << "dumping..." << endl;
+//        u.print("left reduced delta_u", config.numClasses*config.cnInnerDim);
+//        exit(1);
+//    }
 
-    CUDAUtils::checkForError("before squash derivative");
     CUUnifiedBlob::CUDA_vectorSquashDerivative(u, flattenedTensorSize, config.cnInnerDim, config.numClasses);
-    u.print("un-squashed delta_u", config.numClasses*config.cnInnerDim);
+//    u.print("un-squashed delta_u", config.numClasses*config.cnInnerDim);
+//    if (u.hasNan() != -1) {
+//        cerr << "delta u has a nan after derivative: " << u.hasNan() << endl;
+//        cerr << "dumping..." << endl;
+//        u.print("unsquashed delta_u", config.numClasses*config.cnInnerDim);
+//        exit(1);
+//    }
 
-    CUDAUtils::checkForError("the end of BP in capsnet, before primary caps conv.");
     CUPrimaryCaps.remapErrorToOutput(u);
     CUPrimaryCaps.backpropagate();
-    CUDAUtils::checkForError("after BP in primary caps.");
     
 //    cout << "after bp in conv. layer" << endl;
     return loss;
@@ -139,7 +245,7 @@ bool CUCapsuleNetwork::testResults(int imageIndex, bool useTraining) {
         trueValue = MNISTReader::getInstance()->testingData[imageIndex].getLabel();
     }
 
-    CUUnifiedBlob::CUDA_getSquaredLength(v, lengths, config.numClasses, config.cnOuterDim);
+    CUUnifiedBlob::CUDA_getLength(v, lengths, config.numClasses, config.cnOuterDim);
     cudaDeviceSynchronize();
     for (int v_index = 0; v_index < config.numClasses; v_index++) {
         double sq_length = lengths.getValueAt_1D(v_index);
@@ -164,20 +270,22 @@ long double CUCapsuleNetwork::forwardAndBackPropagation(int imageIndex, bool use
     return ht.getElapsedTime();
 }
 
-void CUCapsuleNetwork::runEpoch() {
+long double CUCapsuleNetwork::runEpoch() {
     auto &data = MNISTReader::getInstance()->testingData;
 
+    long double totalLoss = 0.0;
     ProgressBar pb(data.size());
     for (int i = 0; i < data.size(); i++) {
         forwardPropagation(i, false);
-        backPropagation(i, false);
-        CUDAUtils::checkForError("CUCapsuleNetwork::runEpoch()");
+        totalLoss += backPropagation(i, false);
 
         if (i % config.batchSize == config.batchSize - 1) {
             updateWeights();
         }
         pb.updateProgress(i);
     }
+
+    return totalLoss;
 }
 
 pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
@@ -209,7 +317,7 @@ pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
     cout << "       Accuracy (out of " << tallyData.size() << "): "
          << double(numCorrectlyClassified) / double(tallyData.size()) * 100 << endl;
     cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
-    cout << "                  Average Loss: " << totalLoss << endl;
+    cout << "                    Total Loss: " << totalLoss << endl;
     return {
             double(numCorrectlyClassified) / double(tallyData.size()) * 100,
             totalLoss
@@ -222,12 +330,13 @@ void CUCapsuleNetwork::train() {
         cout << "EPOCH ITERATION: " << i << endl;
         runEpoch();
         history.push_back(tally(false));
+//        history.push_back({0, runEpoch()});
 
         // TODO file writing (and eventual reading)
 
         cout << endl;
         for (int j = 0; j < history.size(); j++) {
-            cout << j << ", " << history[j].first << ", " << history[j].second << endl;
+            cout << j << "\t" << history[j].first << "\t" << history[j].second << endl;
         }
     }
 
@@ -236,31 +345,59 @@ void CUCapsuleNetwork::train() {
 
 void CUCapsuleNetwork::updateWeights() {
     cudaDeviceSynchronize();
-    CUUnifiedBlob::elementWiseErrorUpdate(w, w_delta, w_velocity, w.getSize());
+    CUUnifiedBlob::CUDA_elementWiseErrorUpdate(w, w_delta, w_velocity, w.getSize());
     CUPrimaryCaps.updateError();
     cudaDeviceSynchronize();
 }
 
 void CUCapsuleNetwork::test_detailedFP() {
     vector<double> loss_history;
-    for (int i = 0; i < 1; i++) {
-        cout << "****" << i << "****" << endl;
-//        cout << "another forward prop" << endl;
-        forwardPropagation(0);
-//        CUUnifiedBlob::CUDA_getSquaredLength(v, lengths, config.numClasses, config.cnOuterDim);
+    unsigned int numCorrect = 0, batchSize = 3;
+
+    for (int i = 0; i < 1000; i++) {
+        int imageIndex = i%1;
+
+        forwardPropagation(imageIndex);
+        CUUnifiedBlob::CUDA_getLength(v, lengths, config.numClasses, config.cnOuterDim);
 //        v.print("v - original FP", config.cnOuterDim);
-//        lengths.print("lengths");
 
-//        cout << "bp" << endl;
-        loss_history.push_back(backPropagation(0));
-        cout << i << "\t" << loss_history[i] << endl;
-//        losses.print("losses");
+        if (testResults(imageIndex)) {
+            numCorrect++;
+        }
 
-//        cout << "update" << endl;
-        updateWeights();
+        loss_history.push_back(backPropagation(imageIndex));
+
+//        v.print("delta_v", config.cnOuterDim);
+
+        lengths.print("lengths", config.numClasses);
+
+        if (i%batchSize == batchSize-1) {
+//            w.print("w", config.cnInnerDim*config.cnOuterDim);
+//            w_delta.print("delta_w", config.cnInnerDim*config.cnOuterDim);
+//            u.print("delta u", config.cnInnerDim);
+//            losses.print("losses", config.numClasses);
+            updateWeights();
+        }
     }
+//    CUPrimaryCaps.printFilter();
 
     for (int i = 0; i < loss_history.size(); i++) {
     	cout << i << "\t" << loss_history[i] << endl;
     }
+    cout << "num correct: " << numCorrect << endl;
+}
+
+void CUCapsuleNetwork::verificationTest() {
+    forwardPropagation(0);
+//    CUPrimaryCaps.output.print("convolutional layer output", CUPrimaryCaps.outputWidth);
+//    u.print("u", config.numClasses * config.cnInnerDim);
+//    u_hat.print("u_hat", config.cnOuterDim);
+    v.print("output", config.cnOuterDim);
+
+    // back propagation
+    backPropagation(0);
+    v.print("delta v", config.cnOuterDim);
+    w_delta.print("w_delta", config.cnInnerDim);
+    u_hat.print("delta u_hat", config.numClasses * config.cnOuterDim);
+    u.print("delta u", config.numClasses * config.cnInnerDim);
 }

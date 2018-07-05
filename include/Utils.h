@@ -8,13 +8,15 @@
 #include <string>
 #include <armadillo>
 
+#define EPSILON 1e-4
+
 class Utils {
 public:
     static int getRandBetween(int lowerBound, int upperBound);
     static double getRandBetween(double lowerBound, double upperBound);
     static double getWeightRand(double n);
     static int reverseInt(int i);
-    static long double square_length(const arma::vec &vn);
+    static double square_length(const arma::vec &vn);
     static double length(const arma::vec &vn);
     static arma::vec squish(const arma::vec& input);
     static arma::vec safeNormalise(arma::vec input);

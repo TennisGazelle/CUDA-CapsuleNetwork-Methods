@@ -18,13 +18,13 @@ CapsuleNetwork::CapsuleNetwork(const CapsNetConfig& incomingConfig) :
                     incomingConfig.cnNumTensorChannels * incomingConfig.cnInnerDim,
                     28 - 6,
                     28 - 6),
-        digitCaps(incomingConfig.numClasses),
+        digitCaps((unsigned int)incomingConfig.numClasses),
         reconstructionLayers(incomingConfig,
                              incomingConfig.numClasses * incomingConfig.cnOuterDim,
                              incomingConfig.inputHeight * incomingConfig.inputWidth,
                              {28 * 28}) {
     auto totalNumVectors = 6 * 6 * incomingConfig.cnNumTensorChannels;
-
+    assert (digitCaps.size() == incomingConfig.numClasses);
     for (auto &capsule : digitCaps) {
         capsule.init(incomingConfig.cnInnerDim, incomingConfig.cnOuterDim, totalNumVectors, incomingConfig.numClasses, incomingConfig.numIterations);
     }
@@ -208,6 +208,10 @@ vector<arma::vec> CapsuleNetwork::getErrorGradient(const vector<arma::vec> &outp
         // loss(v)
         auto rawMarginLoss = getMarginLoss(i == targetLabel, output[i]);
         error[i] = config.learningRate * activationDerivativeLength * errorGradient * rawMarginLoss * normalise(output[i]);
+
+//        printf("raw sum of squares: %f\n", Utils::square_length(output[i]));
+//        printf("for class %d, length: %f, t_k: %i, activation: %f, gradient: %f, loss: %f\n",
+//               i, Utils::length(output[i]), i == targetLabel, activationDerivativeLength, errorGradient, rawMarginLoss);
     }
     return error;
 }
@@ -340,4 +344,89 @@ void CapsuleNetwork::fullBackwardPropagation(int imageIndex) {
     auto &data = MNISTReader::getInstance()->trainingData;
     interimError = getErrorGradient(interimOutput, data[imageIndex].getLabel());
     backPropagate();
+}
+
+void CapsuleNetwork::verificationTest() {
+    int imageIndex = 0;
+    FeatureMap image;
+    image = MNISTReader::getInstance()->getTrainingImage(imageIndex).toFeatureMap();
+
+    primaryCaps.setInput({image});
+    primaryCaps.calculateOutput();
+    vector<FeatureMap> primaryCapsOutput = primaryCaps.getOutput();
+//    cout << "conv. output" << endl;
+//    for (auto& map : primaryCapsOutput) {
+//        map.print();
+//    }
+//    cout << endl;
+
+    vector<arma::vec> vectorMapOutput = VectorMap::toSquishedArrayOfVecs(config.cnInnerDim, primaryCapsOutput);
+
+//    cout << "u vector..." << endl;
+//    for (auto& v : vectorMapOutput) {
+//        for (int i = 0; i < config.cnInnerDim; i++) {
+//            cout << v[i] << "\t";
+//        }
+//        cout << endl;
+//        v.t().print();
+//    }
+//    cout << endl;
+
+    // for each of the digitCaps, make them accept this as input
+//    cout << "u_hats" << endl;
+    for (int i = 0; i < digitCaps.size(); i++) {
+        digitCaps[i].forwardPropagate(vectorMapOutput);
+    }
+
+    cout << "capsule outputs" << endl;
+    vector<arma::vec> outputs(digitCaps.size());
+    for (int i = 0; i < digitCaps.size(); i++) {
+        outputs[i] = digitCaps[i].getOutput();
+//        outputs[i].t().print();
+        for (int j = 0; j < outputs[i].size(); j++) {
+            cout << outputs[i][j] << "\t";
+        }
+        cout << endl;
+    }
+    cout << endl;
+
+    // BACK PROPAGATION
+    cout << "\\delta \\mathbf{v}" << endl;
+    auto error = getErrorGradient(outputs, MNISTReader::getInstance()->getTrainingImage(imageIndex).getLabel());
+    for (int i = 0; i < digitCaps.size(); i++) {
+        error[i].t().print();
+    }
+
+
+    cout << endl;
+    cout << "delta u" << endl;
+    auto flattenedTensorSize = 6 * 6 * config.cnNumTensorChannels;
+    vector<arma::vec> delta_u(flattenedTensorSize, arma::vec(config.cnInnerDim, arma::fill::zeros));
+    // given the error, put this in the last layer and get the error, and give it to the Conv. net
+    for (int i = 0; i < error.size(); i++) {
+        vector<arma::vec> subset = digitCaps[i].backPropagate(error[i]);
+        for (int j = 0; j < flattenedTensorSize; j++) {
+            delta_u[i] += subset[i];
+        }
+
+//        if (i == 5) {
+//            cout << "\\delta \\mathbf{u}" << endl;
+//            for (int j = 0; j < flattenedTensorSize; j++) {
+//                subset[j].t().print();
+//            }
+//        }
+    }
+
+    // TODO: add getter for capsule W's and delta W's
+//    cout << endl;
+//    cout << "w - delta" << endl;
+//    for (int i = 0; i < digitCaps.size(); i++) {
+//        cout << "class: " << i << endl;
+//        for (int r = 0; r < config.cnOuterDim; r++) {
+//            for (int c = 0; c < config.cnInnerDim; c++) {
+//                cout << digitCaps[i].weightDeltas[0].at(r, c) << "\t";
+//            }
+//            cout << endl;
+//        }
+//    }
 }
