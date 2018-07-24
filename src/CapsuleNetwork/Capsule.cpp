@@ -25,9 +25,9 @@ void Capsule::init(int iD, int oD, int inputs, int outputs, int r) {
     for (int i = 0; i < numInputs; i++) {
         b[i] = 0.0;
         weightMatrices[i] = arma::mat(outputDim, inputDim, arma::fill::randn);
-        for (int j = 0; j < outputDim*inputDim; j++) {
-        	weightMatrices[i][j] = Utils::getWeightRand(0);
-        }
+//        for (int j = 0; j < outputDim*inputDim; j++) {
+//        	weightMatrices[i][j] = Utils::getWeightRand(0);
+//        }
         weightDeltas[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
         weightVelocities[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
     }
@@ -57,13 +57,14 @@ vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
     vector<arma::vec> delta_u(numInputs);
     for (int i = 0; i < numInputs; i++) {
         delta_u[i] = c[i] * trans(weightMatrices[i]) * error;
-        arma::vec temp = delta_u[i];
+//        arma::vec temp = c[i] * error;
 //        temp.t().print();
 //        cout << "c: " << c[i] << endl;
 //        error.print("error:");
 //        for (int j = 0; j < temp.size(); j++) {
 //            cout << temp[j] << "\t";
 //        }
+//        weightMatrices[i].t().print("with c as: " + to_string(c[i]));
 //        cout << endl;
 
         // calculate your damn deltas
@@ -90,6 +91,10 @@ arma::vec Capsule::routingAlgorithm() {
     for (size_t i = 0; i < weightMatrices.size(); i++) {
         // go multiply each by the weight matrix
         u_hat[i] = weightMatrices[i] * prevInput[i];
+//        for (int j = 0; j < u_hat[i].size(); j++) {
+//            cout << u_hat[i][j] << "\t";
+//        }
+//        cout << endl;
     }
 
     // routing algorithm on page 3 starts here //

@@ -31,6 +31,10 @@ CUConvolutionalLayer::CUConvolutionalLayer(const CapsNetConfig& incomingConfig, 
     output.resize(outputHeight*outputWidth*numFilters);
 
     filter.fillWithRandom();
+
+    totalMemoryUsage += 2*(inputHeight*inputWidth*filterDepth);
+    totalMemoryUsage += 3*(numFilters*filterDepth*filterHeight*filterWidth);
+    totalMemoryUsage += outputHeight*outputWidth*numFilters;
 }
 
 void CUConvolutionalLayer::setInput(const std::vector<double>& inputImage) {
@@ -44,6 +48,12 @@ void CUConvolutionalLayer::forwardPropagate() {
 //    input.print("input as a feature map", inputWidth);
     cudaDeviceSynchronize();
     CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filter, output, inputHeight, inputWidth, filterHeight, filterWidth, filterDepth, numFilters);
+    if (output.CUDA_hasNan()) {
+        cerr << "convolutional output has a nan: " << output.hasNan() << endl;
+        output.print("output", outputWidth);
+        filter.print("filter", filterWidth);
+        exit(1);
+     }
 //    if (output.isAllZeros()) {
 //        cerr << "convolutional output is all zeros..." << endl;
 //        CUUnifiedBlob::CUDA_convolutionalDotProduct(input, filter, output, inputHeight, inputWidth, filterHeight, filterWidth, filterDepth, numFilters);
@@ -67,7 +77,7 @@ void CUConvolutionalLayer::remapErrorToOutput(CUUnifiedBlob &delta_u) {
 //    output.print("cvlayer error output", outputWidth);
 }
 
-void CUConvolutionalLayer::backpropagate() {
+void CUConvolutionalLayer::backPropagate() {
     CUUnifiedBlob::CUDA_convolutionalBackPropFromError(output, filter, filter_error, input, delta_input, inputHeight, inputWidth, filterHeight, filterWidth, filterDepth, numFilters);
 //    filter.print("filter", filterWidth);
 //    filter_error.print("delta filter", filterWidth);
@@ -98,5 +108,9 @@ void CUConvolutionalLayer::printInput() const {
 }
 
 void CUConvolutionalLayer::printOutput() const {
-    output.print("original output", outputWidth);
+    output.print("output", outputWidth);
+}
+
+int CUConvolutionalLayer::getTotalMemoryUsage() const {
+    return totalMemoryUsage;
 }

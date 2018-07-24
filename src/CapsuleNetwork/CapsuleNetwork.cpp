@@ -347,7 +347,7 @@ void CapsuleNetwork::fullBackwardPropagation(int imageIndex) {
 }
 
 void CapsuleNetwork::verificationTest() {
-    int imageIndex = 0;
+    int imageIndex = 1;
     FeatureMap image;
     image = MNISTReader::getInstance()->getTrainingImage(imageIndex).toFeatureMap();
 
@@ -368,12 +368,11 @@ void CapsuleNetwork::verificationTest() {
 //            cout << v[i] << "\t";
 //        }
 //        cout << endl;
-//        v.t().print();
 //    }
 //    cout << endl;
 
     // for each of the digitCaps, make them accept this as input
-//    cout << "u_hats" << endl;
+    cout << "u_hats" << endl;
     for (int i = 0; i < digitCaps.size(); i++) {
         digitCaps[i].forwardPropagate(vectorMapOutput);
     }
@@ -394,18 +393,20 @@ void CapsuleNetwork::verificationTest() {
     cout << "\\delta \\mathbf{v}" << endl;
     auto error = getErrorGradient(outputs, MNISTReader::getInstance()->getTrainingImage(imageIndex).getLabel());
     for (int i = 0; i < digitCaps.size(); i++) {
-        error[i].t().print();
+//        error[i].t().print();
+        for (int j = 0; j < error[i].size(); j++) {
+            cout << error[i][j] << "\t";
+        }
+        cout << endl;
     }
-
-
     cout << endl;
-    cout << "delta u" << endl;
+
     auto flattenedTensorSize = 6 * 6 * config.cnNumTensorChannels;
     vector<arma::vec> delta_u(flattenedTensorSize, arma::vec(config.cnInnerDim, arma::fill::zeros));
     // given the error, put this in the last layer and get the error, and give it to the Conv. net
     for (int i = 0; i < error.size(); i++) {
         vector<arma::vec> subset = digitCaps[i].backPropagate(error[i]);
-        for (int j = 0; j < flattenedTensorSize; j++) {
+        for (int j = 0; j < subset.size(); j++) {
             delta_u[i] += subset[i];
         }
 
@@ -417,7 +418,6 @@ void CapsuleNetwork::verificationTest() {
 //        }
     }
 
-    // TODO: add getter for capsule W's and delta W's
 //    cout << endl;
 //    cout << "w - delta" << endl;
 //    for (int i = 0; i < digitCaps.size(); i++) {
@@ -427,6 +427,46 @@ void CapsuleNetwork::verificationTest() {
 //                cout << digitCaps[i].weightDeltas[0].at(r, c) << "\t";
 //            }
 //            cout << endl;
+//        }
+//    }
+
+    for (auto &delta_u_vec : delta_u) {
+        auto derivativeLength = Utils::getSquashDerivativeLength(delta_u_vec);
+        delta_u_vec = derivativeLength * Utils::safeNormalise(delta_u_vec);
+    }
+
+    cout << "delta u vectors..." << endl;
+    for (auto &delta_u_vec : delta_u) {
+//        delta_u_vec.t().print();
+        for (int i = 0; i < delta_u_vec.size(); i++) {
+            cout << delta_u_vec[i] << "\t";
+        }
+        cout << endl;
+    }
+
+
+    // translate to feature maps
+    vector<FeatureMap> convError = VectorMap::toArrayOfFeatureMaps(6, 6,
+                                                                   config.cnNumTensorChannels * config.cnInnerDim,
+                                                                   delta_u);
+    cout << endl;
+    cout << "delta u transformed as feature maps (for conv. output)" << endl;
+    for (const auto &fm : convError) {
+        fm.print();
+    }
+
+    // give back to the conv net here.
+    primaryCaps.backPropagate(convError);
+
+    cout << "delta filters..." << endl;
+//    for (int f = 0; f < primaryCaps.filterAdjustments.size(); f++) {
+//        for (int ch = 0; ch < primaryCaps.filterAdjustments[f].size(); ch++) {
+//            for (int r = 0; r < primaryCaps.filterAdjustments[f][ch].size(); r++) {
+//                for (int c = 0; c < primaryCaps.filterAdjustments[f][ch][r].size(); c++) {
+//                    cout << primaryCaps.filterAdjustments[f][ch][r][c] << "\t";
+//                }
+//                cout << endl;
+//            }
 //        }
 //    }
 }

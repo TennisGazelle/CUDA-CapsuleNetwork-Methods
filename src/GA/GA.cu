@@ -20,13 +20,33 @@ void GA::collectStats() {
 }
 
 void GA::printStats() const {
-    cout << "AVERAGE:\tA100\tA300\tL100\t\300" << endl;
+    cout << "MIN:\tA100\tA300\tL100\tL300" << endl;
+    for (int i = 0; i < accuracy100Timeline.size(); i++) {
+        cout << "\t";
+        cout << accuracy100Timeline[i].min << "\t";
+        cout << accuracy300Timeline[i].min << "\t";
+        cout << loss100Timeline[i].min << "\t";
+        cout << loss300Timeline[i].min << "\t";
+        cout << endl;
+    }
+
+    cout << "AVERAGE:\tA100\tA300\tL100\tL300" << endl;
     for (int i = 0; i < accuracy100Timeline.size(); i++) {
         cout << "\t";
         cout << accuracy100Timeline[i].average << "\t";
         cout << accuracy300Timeline[i].average << "\t";
         cout << loss100Timeline[i].average << "\t";
         cout << loss300Timeline[i].average << "\t";
+        cout << endl;
+    }
+
+    cout << "MAX:\tA100\tA300\tL100\tL300" << endl;
+    for (int i = 0; i < accuracy100Timeline.size(); i++) {
+        cout << "\t";
+        cout << accuracy100Timeline[i].max << "\t";
+        cout << accuracy300Timeline[i].max << "\t";
+        cout << loss100Timeline[i].max << "\t";
+        cout << loss300Timeline[i].max << "\t";
         cout << endl;
     }
 }
@@ -38,6 +58,7 @@ void GA::NSGARun() {
         parentPop.getStatsFromIndividuals();
         collectStats();
 //        parentPop.print();
+        parentPop.fullPrint();
 
         makeNextGen(i != 0);
         NSGAStep();

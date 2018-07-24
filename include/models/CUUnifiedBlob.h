@@ -27,6 +27,7 @@ public:
     int hasNan() const;
     int hasInf() const;
     bool isAllZeros() const;
+    bool CUDA_hasNan() const;
 
     double getValueAt_1D(int location) const;
     double getValueAt_2D(int x, int y , int xDim) const;
@@ -99,6 +100,7 @@ private:
     int size;
     double *data;
     bool isGPUAllocated;
+    int *flagHelper;
 };
 
 // https://stackoverflow.com/questions/37566987/cuda-atomicadd-for-doubles-definition-error/37569519
@@ -109,10 +111,13 @@ private:
 //#endif
 
 __device__
-double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex);
+double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex, int sharedMemSize);
 
 __global__
 void cu_clearOut_kernel(double *data);
+
+__global__
+void cu_hasNan_kernel(double *data, int *flag);
 
 __global__
 void cu_singleElementSetting_kernel(double *data, int location, double incomingValue);

@@ -29,12 +29,13 @@ public:
     PopulationStats loss100;
     PopulationStats loss300;
 
-    unsigned int bestIndividualIndex;
+    unsigned int getNumUniqueIndividuals() const;
 };
 
 class ParedoFront : public vector<Individual*> {
 public:
     static ParedoFront referToAsFront(Population &p);
+    static pair<ParedoFront, ParedoFront> referToUniqueIndividuals(Population &p);
 
     void assignCrowdingDistance();
     void sortByCrowdingOperator();

@@ -19,20 +19,23 @@ public:
     void forwardPropagate();
     void squashAndRemapToU(CUUnifiedBlob &u);
     void remapErrorToOutput(CUUnifiedBlob &delta_u);
-    void backpropagate();
+    void backPropagate();
     void updateError();
 
     void printFilter() const;
     void printInput() const;
     void printOutput() const;
 
-//private:
+    int getTotalMemoryUsage() const;
+
+private:
     int inputHeight = 0, inputWidth = 0;
     int outputHeight = 0, outputWidth = 0;
     int filterDepth, filterHeight, filterWidth, numFilters;
 
     CUUnifiedBlob input, delta_input, filter, filter_error, filter_velocities, output;
     CapsNetConfig config;
+    int totalMemoryUsage = 0;
 };
 
 

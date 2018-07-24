@@ -9,6 +9,7 @@
 #include <Utils.h>
 #include <assert.h>
 #include <thread>
+#include <book.h>
 
 void Population::generate(int n, int bitstringSize) {
 	clear();
@@ -46,19 +47,49 @@ void Population::fullPrint() {
 	}
 }
 
+void* evalIndividual(void* data) {
+    Individual* indiv = (Individual*) data;
+    indiv->evaluate();
+}
+
 void Population::evaluate() {
-    vector<thread> indiv_threads;
+//    static ctpl::thread_pool p(4);
+//    vector< future<void> > tasks(size());
+//
+//    for (int i = 0; i < size(); i++) {
+//        tasks[i] = p.push(evalIndividual, std::ref(at(i)));
+//    }
+//    for (int i = 0; i < size(); i++) {
+//        tasks[i].get();
+//    }
+
+//    auto evaluees = ParedoFront::referToUniqueIndividuals(*this);
+//    CUTThread threads[evaluees.first.size()];
+//
+//    for (int i = 0; i < evaluees.first.size(); i++) {
+//        threads[i] = start_thread(evalIndividual, evaluees.first[i]);
+//    }
+//    for (int i = 0; i < evaluees.first.size(); i++) {
+//        end_thread(threads[i]);
+//        for (int j = 0; j < evaluees.second.size(); j++) {
+//            if (evaluees.first[i]->to_string() == evaluees.second[j]->to_string()) {
+//                (*evaluees.second[j]) = (*evaluees.first[i]);
+//            }
+//        }
+//    }
+
     for (auto &indiv : (*this)) {
-//        indiv_threads.emplace_back(thread(&Individual::evaluate, indiv));
         indiv.evaluate();
-    }
-    for (auto& t : indiv_threads) {
-        t.join();
     }
 	getStatsFromIndividuals();
 }
 
 void Population::getStatsFromIndividuals() {
+    accuracy100.reset();
+    accuracy300.reset();
+    loss100.reset();
+    loss300.reset();
+
 	for (unsigned int i = 0; i < size(); i++) {
 		accuracy100.min = min(accuracy100.min, at(i).accuracy_100);
 		accuracy100.max = max(accuracy100.max, at(i).accuracy_100);
@@ -146,7 +177,7 @@ void ParedoFront::assignCrowdingDistance() {
     (*this)[size()-1]->crowdingDistance = DBL_MAX;
     for (unsigned int i = 1; i < size()-1; i++) {
         double numerator = at(i+1)->accuracy_300 - at(i-1)->accuracy_300;
-        double denominator = 100*1.5;
+        double denominator = 100;
         (*this)[i]->crowdingDistance += numerator/denominator;
     }
 
@@ -157,13 +188,13 @@ void ParedoFront::assignCrowdingDistance() {
     for (unsigned int i = 1; i < size()-1; i++) {
         // we have to flip these instead (because we're minimizing this number)
         double numerator = at(i-1)->loss_300 - at(i+1)->loss_300;
-        double denominator = 8000.0*1.5;
+        double denominator = 8000.0;
         (*this)[i]->crowdingDistance += numerator/denominator;
     }
 }
 
 void ParedoFront::sortByCrowdingOperator() {
-    sort(begin(), end(), [](Individual* i, Individual* j) -> bool {
+    std::sort(begin(), end(), [](Individual* i, Individual* j) -> bool {
         return i->crowdingOperator(*j);
     });
 }
@@ -273,4 +304,25 @@ ParedoFront ParedoFront::referToAsFront(Population &p) {
         result.push_back(&i);
     }
     return result;
+}
+
+pair<ParedoFront, ParedoFront> ParedoFront::referToUniqueIndividuals(Population &p) {
+    ParedoFront unique, duplicates;
+    unique.reserve(p.size());
+    for (int i = 0; i < p.size(); i++) {
+        bool isUnique = true;
+        for (int j = 0; j < unique.size(); j++) {
+            if (p[i].to_string() == unique[j]->to_string()) {
+                isUnique = false;
+                break;
+            }
+        }
+
+        if (isUnique) {
+            unique.push_back(&p[i]);
+        } else {
+            duplicates.push_back(&p[i]);
+        }
+    }
+    return {unique, duplicates};
 }

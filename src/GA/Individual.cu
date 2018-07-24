@@ -50,10 +50,10 @@ void Individual::fullPrint() const {
     auto chromosome = to_string();
     chromosome.insert(5, 1, ' ');
     chromosome.insert(5+5+1, 1, ' ');
-    chromosome.insert(5+5+6+1+1, 1, ' ');
-    chromosome.insert(5+5+6+5+1+1+1, 1, ' ');
-    chromosome.insert(5+5+6+5+5+1+1+1+1, 1, ' ');
-    chromosome.insert(5+5+6+5+5+5+1+1+1+1+1, 1, ' ');
+    chromosome.insert(5+5+5+1+1, 1, ' ');
+    chromosome.insert(5+5+5+5+1+1+1, 1, ' ');
+    chromosome.insert(5+5+5+5+5+1+1+1+1, 1, ' ');
+    chromosome.insert(5+5+5+5+5+5+1+1+1+1+1, 1, ' ');
 	cout << chromosome << ": " << endl;
 	cout << "         cnInnerDim: " << capsNetConfig.cnInnerDim << endl;
 	cout << "         cnOuterDim: " << capsNetConfig.cnOuterDim << endl;
@@ -114,12 +114,12 @@ Individual& Individual::operator=(const Individual &other) {
 
 void Individual::decodeChromosome() {
     auto iter = begin();
-    capsNetConfig.cnInnerDim = Utils::getBinaryAsInt(vector<bool>(iter, iter+5)) + 1;
+    capsNetConfig.cnInnerDim = Utils::getBinaryAsInt(vector<bool>(iter, iter+5)) + 2;
     iter += 5;
-    capsNetConfig.cnOuterDim = Utils::getBinaryAsInt(vector<bool>(iter, iter+5)) + 1;
+    capsNetConfig.cnOuterDim = Utils::getBinaryAsInt(vector<bool>(iter, iter+5)) + 2;
     iter += 5;
-    capsNetConfig.cnNumTensorChannels = Utils::getBinaryAsInt(vector<bool>(iter, iter+6)) + 1;
-    iter += 6;
+    capsNetConfig.cnNumTensorChannels = Utils::getBinaryAsInt(vector<bool>(iter, iter+5)) + 1;
+    iter += 5;
     capsNetConfig.batchSize = (Utils::getBinaryAsInt(vector<bool>(iter, iter+5)) + 1) * 20;
     iter += 5;
     capsNetConfig.m_plus = double(Utils::getBinaryAsInt(vector<bool>(iter, iter+5)))/(160.0) + 0.8; 
@@ -138,39 +138,41 @@ void Individual::evaluate() {
     if (CapsNetDAO::getInstance()->isInDatabase(*this)) {
         CapsNetDAO::getInstance()->getFromDatabase(*this);
     } else {
-        constuctNetworkAndEvaluate();
+        constructNetworkAndEvaluate();
         CapsNetDAO::getInstance()->addToDatabase(*this);
     }
 }
 
-void Individual::constuctNetworkAndEvaluate() {
+void Individual::constructNetworkAndEvaluate() {
+    static mutex mtx;
+    mtx.lock();
     cout << "running this..." << to_string() << endl;
     fullPrint();
-    CapsuleNetwork network(capsNetConfig);
-    network.train();
-    auto fitness = network.tally(false);
+    CUCapsuleNetwork network(capsNetConfig);
+
+    auto fitness = network.train();
     accuracy_100 = fitness.first;
     loss_100 = fitness.second;
 
-    network.train();
-    network.train();
-    fitness = network.tally(false);
+//    network.train();
+    fitness = network.train();
     accuracy_300 = fitness.first;
     loss_300 = fitness.second;
+    mtx.unlock();
 
 //    loss_100 = capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels;
 //    loss_100 += capsNetConfig.lambda * capsNetConfig.m_minus * capsNetConfig.m_plus;
-//    loss_300 = loss_100*1.5*capsNetConfig.lambda;
+////    loss_300 = loss_100*capsNetConfig.lambda;
 //
-//    accuracy_100 = capsNetConfig.lambda * capsNetConfig.m_minus * capsNetConfig.m_plus / (capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels);
-//    accuracy_300 = accuracy_100*1.5*capsNetConfig.cnNumTensorChannels;
+//    accuracy_100 = capsNetConfig.lambda * capsNetConfig.m_plus / (capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels);
+////    accuracy_300 = accuracy_100*capsNetConfig.cnNumTensorChannels;
 }
 
 bool Individual::paredoDominates(const Individual &opponent) const {
     return (accuracy_100 >= opponent.accuracy_100) &&
         (accuracy_300 >= opponent.accuracy_300) &&
-        (loss_100 >= opponent.loss_100) &&
-        (loss_300 >= opponent.loss_300);
+        (loss_100 <= opponent.loss_100) &&
+        (loss_300 <= opponent.loss_300);
 }
 
 bool Individual::crowdingOperator(const Individual &opponent) const {

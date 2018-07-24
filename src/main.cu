@@ -19,6 +19,7 @@
 #include <GA/GA.h>
 #include <GA/CapsNetDAO.h>
 #include <argh/argh.h>
+#include <cfloat>
 
 CapsNetConfig testingConfig;
 
@@ -484,7 +485,7 @@ void test_CUUnifiedBlob_weightedTransMatrixVecMult() {
     c.print("c", numClasses);
 
     CUUnifiedBlob::weightedTransMatrixVecMult(delta_u, c, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
-    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u_cuda_output, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+//    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u_cuda_output, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
 
 //    sleep(2);
 //    delta_u.print("delta_u", innerDim);
@@ -512,7 +513,7 @@ void test_CUUnifiedBlob_matrixInverse() {
     v.clear();
     v.print("clear v", inputDim);
 
-    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(v, w, vv, numClasses, tensorSize, inputDim, outputDim);
+//    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(v, w, vv, numClasses, tensorSize, inputDim, outputDim);
     v.print("delta v", inputDim * numClasses);
 
 
@@ -646,7 +647,7 @@ void test_CUDA_backPropagationAndUpdateAndConvolutionalBP() {
     truth.setValueAt_1D(1, 1);
 
     CUUnifiedBlob::CUDA_vectorLossFunction(v_error, truth, numClasses, outerDim, testingConfig.m_plus, testingConfig.m_minus, testingConfig.lambda);
-    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
+//    CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(delta_u, w, v_error, numClasses, flattenedTensorSize, innerDim, outerDim);
 	CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_error, v_error, u, numClasses, flattenedTensorSize, innerDim, outerDim);
 
     v_error.print("v_error", outerDim*numClasses);
@@ -751,22 +752,69 @@ void test_weightUpdateSpeedupTiming() {
 
 struct StatisticalTimings {
     StatisticalTimings(int size = 30) {
-    	fp_seq.resize(size);
-    	bp_seq.resize(size);
+        fp_seq.resize(size);
+        bp_seq.resize(size);
         image_seq.resize(size);
-    	epoch_seq.resize(size);
+        epoch_seq.resize(size);
 
-    	fp_par.resize(size);
-    	bp_par.resize(size);
+        fp_par.resize(size);
+        bp_par.resize(size);
         image_par.resize(size);
-    	epoch_par.resize(size);
+        epoch_par.resize(size);
     }
+
+    void print() const {
+        for (int i = 0; i < fp_seq.size(); i++) {
+            cout << fp_seq[i] << "\t";
+            cout << bp_seq[i] << "\t";
+            cout << image_seq[i] << "\t";
+            cout << epoch_seq[i] << "\t";
+
+            cout << fp_par[i] << "\t";
+            cout << bp_par[i] << "\t";
+            cout << image_par[i] << "\t";
+            cout << epoch_par[i] << "\t";
+            cout << endl;
+        }
+        cout << endl;
+
+        cout << "Final Averages: " << "\t";
+        cout << getAdjAvg(fp_seq) << "\t";
+        cout << getAdjAvg(bp_seq) << "\t";
+        cout << getAdjAvg(image_seq) << "\t";
+        cout << getAdjAvg(epoch_seq) << "\t";
+
+        cout << getAdjAvg(fp_par) << "\t";
+        cout << getAdjAvg(bp_par) << "\t";
+        cout << getAdjAvg(image_par) << "\t";
+        cout << getAdjAvg(epoch_par) << "\t";
+        cout << endl;
+
+        cout << "Speed ups: " << "\t";
+        cout << getAdjAvg(fp_seq)/getAdjAvg(fp_par) << "\t";
+        cout << getAdjAvg(bp_seq)/getAdjAvg(bp_par) << "\t";
+        cout << getAdjAvg(image_seq)/getAdjAvg(image_par) << "\t";
+        cout << getAdjAvg(epoch_seq)/getAdjAvg(epoch_par) << "\t";
+    }
+
+    long double getAdjAvg(const vector<long double>v) const {
+        assert (v.size() >= 3);
+        long double avg = 0.0, minVal = DBL_MAX, maxVal = 0;
+        for (auto val : v) {
+            minVal = min(minVal, val);
+            maxVal = max(maxVal, val);
+            avg += val;
+        }
+        avg -= minVal + maxVal;
+        return avg / (v.size() - 2);
+    }
+
 	vector<long double> fp_seq, bp_seq, image_seq, epoch_seq;
 	vector<long double> fp_par, bp_par, image_par, epoch_par;
 };
 
 void test_speedupTimings_seq_par() {
-    testingConfig.cnNumTensorChannels = 32;
+    testingConfig.cnNumTensorChannels = 5;
     CapsuleNetwork seqCapsuleNetwork(testingConfig);
     CUCapsuleNetwork CUDANetwork(testingConfig);
     int numTimings = 30;
@@ -818,19 +866,70 @@ void test_speedupTimings_seq_par() {
 //        deviceTimer.stop();
 //        st.epoch_par[i] = deviceTimer.getElapsedTime();
 
-        for (int i = 0; i < numTimings; i++) {
-            cout << st.fp_seq[i] << "\t";
-            cout << st.bp_seq[i] << "\t";
-            cout << st.image_seq[i] << "\t";
-            cout << st.epoch_seq[i] << "\t";
-
-            cout << st.fp_par[i] << "\t";
-            cout << st.bp_par[i] << "\t";
-            cout << st.image_par[i] << "\t";
-            cout << st.epoch_par[i] << "\t";
-            cout << endl;
-        }
     }
+    st.print();
+}
+
+void iterateThroughTimings() {
+    int numTimings = 30;
+    StatisticalTimings st(numTimings);
+    HostTimer hostTimer;
+    DeviceTimer deviceTimer;
+    CapsNetConfig config;
+
+    for (int size = 0; size < 64; size++) {
+        config.cnNumTensorChannels = size + 1;
+        CapsuleNetwork seqCapsuleNetwork(config);
+        CUCapsuleNetwork CUDANetwork(config);
+        cout << "Size: " << size+1 << endl;
+
+        for (int i = 0; i < numTimings; i++) {
+            hostTimer.start();
+            seqCapsuleNetwork.fullForwardPropagation(i);
+            hostTimer.stop();
+            st.fp_seq[i] = hostTimer.getElapsedTime();
+
+            deviceTimer.start();
+            CUDANetwork.forwardPropagation(i);
+            deviceTimer.stop();
+            st.fp_par[i] = deviceTimer.getElapsedTime();
+
+            hostTimer.start();
+            seqCapsuleNetwork.fullBackwardPropagation(i);
+            hostTimer.stop();
+            st.bp_seq[i] = hostTimer.getElapsedTime();
+
+            deviceTimer.start();
+            CUDANetwork.backPropagation(i);
+            deviceTimer.stop();
+            st.bp_par[i] = deviceTimer.getElapsedTime();
+
+            hostTimer.start();
+            seqCapsuleNetwork.fullForwardPropagation(i);
+            seqCapsuleNetwork.fullBackwardPropagation(i);
+            hostTimer.stop();
+            st.image_seq[i] = hostTimer.getElapsedTime();
+
+            deviceTimer.start();
+            CUDANetwork.forwardPropagation(i);
+            CUDANetwork.backPropagation(i);
+            deviceTimer.stop();
+            st.image_par[i] = deviceTimer.getElapsedTime();
+
+//            hostTimer.start();
+//            seqCapsuleNetwork.runEpoch();
+//            hostTimer.stop();
+//            st.epoch_seq[i] = hostTimer.getElapsedTime();
+//
+//            deviceTimer.start();
+//            CUDANetwork.runEpoch();
+//            deviceTimer.stop();
+//            st.epoch_par[i] = deviceTimer.getElapsedTime();
+
+        }
+        st.print();
+    }
+
 }
 
 void test_epochAccuracy_CUDA() {
@@ -969,11 +1068,11 @@ void test_mappingAndUnMapping() {
 }
 
 void test_bug_finding() {
-    srand(0);
+//    srand(0);
     CapsNetConfig extremeConfig;
 //    extremeConfig.cnInnerDim = 9;
-    extremeConfig.cnOuterDim = 16;
-    extremeConfig.cnNumTensorChannels = 2;
+//    extremeConfig.cnOuterDim = 27;
+    extremeConfig.cnNumTensorChannels = 2;//41
 
 //    CapsuleNetwork seq(testingConfig);
 //    seq.train();
@@ -995,7 +1094,7 @@ void test_bug_finding() {
 //    original.loadImageAndPrintOutput(0);
 //    cout << "parallel: " << endl;
 //    copy.forwardPropagation(0);
-//    original.runEpoch();
+//    original.train();
 }
 
 GAConfig gaconfig;
@@ -1023,6 +1122,8 @@ int main(int argc, const char * argv[]) {
     CapsNetConfig capsNetConfig;
     argh::parser cmdl(argc, argv);
     string usage = "Usage: ./NeuralNets {-g|-ga|-c|-caps} [MODE_SPECIFIC_PARAMETERS]...";
+
+    srand(0);
 
     if (cmdl[{"-h", "--help"}]) {
         cout << usage << endl;
@@ -1076,9 +1177,9 @@ int main(int argc, const char * argv[]) {
         cout << "  Probability of Crossover: " << gaconfig.prob_crossover << endl;
         cout << "   Probability of Mutation: " << gaconfig.prob_mutation << endl;
 
-//        GA ga(gaconfig);
-//        ga.NSGARun();
-//        ga.printStats();
+        GA ga(gaconfig);
+        ga.NSGARun();
+        ga.printStats();
     } else if (cmdl[{"-c", "--caps"}]) {
         cmdl({"-i", "--inner-dim"}, capsNetConfig.cnInnerDim) >> capsNetConfig.cnInnerDim;
         cmdl({"-d", "--outer-dim"}, capsNetConfig.cnOuterDim) >> capsNetConfig.cnOuterDim;
@@ -1139,7 +1240,8 @@ int main(int argc, const char * argv[]) {
 //    test_forwardPropagationSpeedUpTimings();
 //    test_backwardPropagationSpeedupTimings();
 //    test_weightUpdateSpeedupTiming();
-    test_speedupTimings_seq_par();
+//    test_speedupTimings_seq_par();
+//    iterateThroughTimings();
 
 //    test_epochAccuracy_CUDA();
 //    test_bug_finding();

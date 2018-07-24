@@ -79,10 +79,10 @@ void MNISTReader::grabFromFile(ifstream &fin, unsigned int &num) {
     num = Utils::reverseInt(num);
 }
 
-const Image& MNISTReader::getTrainingImage(int index) const {
+const Image MNISTReader::getTrainingImage(int index) const {
     return trainingData[index];
 }
 
-const Image& MNISTReader::getTestingImage(int index) const {
+const Image MNISTReader::getTestingImage(int index) const {
     return testingData[index];
 }

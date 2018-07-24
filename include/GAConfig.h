@@ -6,11 +6,11 @@
 #define NEURALNETS_GACONFIG_H
 
 struct GAConfig {
-    unsigned int bitstringSize = 5+5+6+5+5+5+5;
-    unsigned int populationSize = 100;
-    unsigned int numIterations = 200;
+    unsigned int bitstringSize = 5+5+5+5+5+5+5;
+    unsigned int populationSize = 10;
+    unsigned int numIterations = 50;
 
-    double prob_mutation = 0.001;
+    double prob_mutation = 0.01;
     double prob_crossover = 0.5;
 };
 

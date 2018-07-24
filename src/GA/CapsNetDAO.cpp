@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <thread>
 #include "GA/CapsNetDAO.h"
 
 CapsNetDAO* CapsNetDAO::instance = nullptr;
@@ -61,13 +62,14 @@ void CapsNetDAO::addToDatabase(Individual &individual) {
 }
 
 void CapsNetDAO::run_sql(const string &sql, result &output) {
-    static connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
-    static work txn(c);
+    connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
+    work txn(c);
     output = txn.exec(sql);
+    mtx.unlock();
 }
 
 void CapsNetDAO::commit_sql(const string &sql, result &output) {
-    static connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
+    connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
     work txn(c);
 
     output = txn.exec(sql);

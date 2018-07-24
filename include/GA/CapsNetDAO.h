@@ -8,6 +8,7 @@
 #include <pqxx/pqxx>
 #include <string>
 #include <CapsNetConfig.h>
+#include <mutex>
 #include "Individual.h"
 
 using namespace std;
@@ -20,6 +21,7 @@ public:
     void getFromDatabase(Individual& individual);
     void addToDatabase(Individual& individual);
 
+    mutex mtx;
 private:
     CapsNetDAO() = default;
     static CapsNetDAO* instance;

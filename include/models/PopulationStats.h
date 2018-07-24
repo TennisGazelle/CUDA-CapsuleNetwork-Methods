@@ -7,6 +7,7 @@
 
 struct PopulationStats {
     double min = 100000.0, max = 0.0, average = 0.0;
+    void reset();
 };
 
 #endif //NEURALNETS_POPULATIONSTATS_H

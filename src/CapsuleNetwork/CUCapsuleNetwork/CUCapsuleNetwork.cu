@@ -37,12 +37,21 @@ CUCapsuleNetwork::CUCapsuleNetwork(const CapsNetConfig& incomingConfig) :
     lengths.resize(config.numClasses);
 
     w.fillWithRandom();
+
+    totalMemoryUsage += config.cnInnerDim * config.numClasses * flattenedTensorSize;
+    totalMemoryUsage += 3*(config.cnInnerDim * config.cnOuterDim * config.numClasses * flattenedTensorSize);
+    totalMemoryUsage += config.cnOuterDim * config.numClasses * flattenedTensorSize;
+    totalMemoryUsage += config.numClasses * config.cnOuterDim;
+    totalMemoryUsage += 2*(config.numClasses * flattenedTensorSize);
+    totalMemoryUsage += 3*(config.numClasses);
+    totalMemoryUsage += CUPrimaryCaps.getTotalMemoryUsage();
+    totalMemoryUsage *= 8;
 }
 
 void CUCapsuleNetwork::initWithSeq(CapsuleNetwork &originalWeights) {
     //TODO: uncomment this, and include proper getters/setters for each W
-//    srand(0);
-//    // populate the w matrices
+    srand(0);
+    // populate the w matrices
 //    double value;
 //    int index = 0;
 //    for (int l = 0; l < flattenedTensorSize; l++) {
@@ -88,10 +97,11 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
 //    u.print("u", config.cnInnerDim * config.numClasses);
     CUUnifiedBlob::CUDA_matrixVectorMultiplication(w, u, u_hat, config.cnInnerDim, config.cnOuterDim, config.numClasses, flattenedTensorSize);
 //    u_hat.print("u_hat", config.cnOuterDim * config.numClasses);
-//    if (u.hasNan() != -1) {
-//        cerr << "YELLING, u HAS A NAN; location: " << u.hasNan() << endl;
-//        exit(1);
-//    }
+    if (u.CUDA_hasNan()) {
+        cerr << "YELLING, u HAS A NAN; location: " << u.hasNan() << endl;
+        u.print("u", config.numClasses * config.cnInnerDim);
+        exit(1);
+    }
 //    if (u.hasInf() != -1) {
 //        cerr << "u has an inf" << u.hasInf() << endl;
 //        exit(1);
@@ -130,24 +140,26 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
 //            v.print("squashed with inf", config.cnOuterDim);
 //            exit(1);
 //        }
-        CUUnifiedBlob::CUDA_vectorSquash(v, config.numClasses * flattenedTensorSize, config.cnOuterDim);
+        CUUnifiedBlob::CUDA_vectorSquash(v, config.numClasses, config.cnOuterDim);
 //        v.print("v - activated", config.cnOuterDim);
-//        if (v.hasNan() != -1) {
-//            cerr << "v_squashed HAS A NAN; location: " << v.hasNan() << ", iteration:" << iter << endl;
-//            v.print("squashed v with nan", config.cnOuterDim);
-//            cache.resize(v.getSize());
-//            CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, cache, config.numClasses, flattenedTensorSize, config.cnOuterDim);
-//            cache.print("v was originally...", config.cnOuterDim);
-//            u_hat.print("u_hat is...", config.cnOuterDim * config.numClasses);
-//            exit(1);
-//        }
+        if (v.CUDA_hasNan()) {
+            cerr << "v_squashed HAS A NAN; location: " << v.hasNan() << ", iteration:" << iter << endl;
+            v.print("squashed v with nan", config.cnOuterDim);
+            cache.resize(v.getSize());
+            CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, cache, config.numClasses, flattenedTensorSize, config.cnOuterDim);
+            cache.print("v was originally...", config.cnOuterDim);
+            u_hat.print("u_hat is...", config.cnOuterDim * config.numClasses);
+
+            c.print("c", config.numClasses);
+            exit(1);
+        }
 
         CUUnifiedBlob::CUDA_vectorVectorScalarProduct(u_hat, v, b, config.numClasses, flattenedTensorSize, config.cnOuterDim);
-//        if (v.hasNan() != -1) {
-//            cerr << "v_squashed HAS A NAN after vector scalar product with u_hat; location: " << v.hasNan() << ", iteration:" << iter << endl;
-//            cerr << "checking u_hat...: " << u_hat.hasNan() << endl;
-//            exit(1);
-//        }
+        if (v.CUDA_hasNan()) {
+            cerr << "v_squashed HAS A NAN after vector scalar product with u_hat; location: " << v.hasNan() << ", iteration:" << iter << endl;
+            cerr << "checking u_hat...: " << u_hat.hasNan() << endl;
+            exit(1);
+        }
     }
 //    b.print("b", config.numClasses);
 //    v.print("v - final", config.cnOuterDim);
@@ -180,37 +192,49 @@ double CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
 //    v.print("v - final", config.cnOuterDim);
     double loss = getLoss();
     CUUnifiedBlob::CUDA_vectorLossFunction(v, truth, config.numClasses, config.cnOuterDim, config.m_plus, config.m_minus, config.lambda);
-//    if (v.hasNan() != -1) {
-//        v.print("delta v", config.cnOuterDim);
-//        cerr << "delta_v HAS A NAN; location: " << v.hasNan() << endl;
-//        exit(1);
-//    }
-//    v.print("delta v", config.cnOuterDim);
+    if (v.CUDA_hasNan()) {
+        v.print("delta v", config.cnOuterDim);
+        cerr << "delta_v HAS A NAN; location: " << v.hasNan() << endl;
 
-    CUUnifiedBlob::CUDA_scaledDecompositionOfError(v, c, u_hat, config.numClasses, flattenedTensorSize, config.cnOuterDim);
-//    b.print("b", config.numClasses);
-//    c.print("c", config.numClasses);
-//    u_hat.print("delta_u_hat", config.cnOuterDim * config.numClasses);
+        cache.resize(v.getSize());
+        cache.copy(v);
+        CUUnifiedBlob::CUDA_weightReduceVectors(u_hat, c, cache, config.numClasses, flattenedTensorSize, config.cnOuterDim);
+        CUUnifiedBlob::CUDA_vectorSquash(v, config.numClasses, config.cnOuterDim);
+        cache.print("v", config.cnOuterDim);
+
+        u_hat.print("original u_hat", config.numClasses * config.cnOuterDim);
+        c.print("c", config.numClasses);
+        b.print("b", config.numClasses);
+
+        CUPrimaryCaps.printFilter();
+        exit(1);
+    }
+//    v.print("delta v", config.cnOuterDim);
 
     CUUnifiedBlob::CUDA_vectorVectorMatrixProductAndSum(w_delta, v, u, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
 //    w.print("w, one at a time", config.cnInnerDim*config.cnOuterDim*config.numClasses);
 //    w_delta.print("w delta, one at a time", config.cnInnerDim*config.cnOuterDim*config.numClasses);
 
+    CUUnifiedBlob::CUDA_scaledDecompositionOfError(v, c, u_hat, config.numClasses, flattenedTensorSize, config.cnOuterDim);
     CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(u, w, u_hat, config.numClasses, flattenedTensorSize, config.cnInnerDim, config.cnOuterDim);
+//    b.print("b", config.numClasses);
+//    c.print("c", config.numClasses);
+//    u_hat.print("delta_u_hat", config.cnOuterDim * config.numClasses);
+
 //    u.print("delta u", config.cnInnerDim * config.numClasses);
 
     CUUnifiedBlob::CUDA_multiVectorReduction(u, config.numClasses, flattenedTensorSize, config.cnInnerDim);
 //    u.print("delta u, left reduced", config.cnInnerDim * config.numClasses);
-//    if (u.hasNan() != -1) {
-//        cerr << "delta u has a nan: " << u.hasNan() << endl;
-//        cerr << "dumping..." << endl;
-//        u.print("left reduced delta_u", config.numClasses*config.cnInnerDim);
-//        exit(1);
-//    }
+    if (u.CUDA_hasNan()) {
+        cerr << "delta u has a nan: " << u.hasNan() << endl;
+        cerr << "dumping..." << endl;
+        u.print("left reduced delta_u", config.numClasses*config.cnInnerDim);
+        exit(1);
+    }
 
     CUUnifiedBlob::CUDA_vectorSquashDerivative(u, flattenedTensorSize, config.cnInnerDim, config.numClasses);
 //    u.print("un-squashed delta_u", config.numClasses*config.cnInnerDim);
-//    if (u.hasNan() != -1) {
+//    if (u.CUDA_hasNan()) {
 //        cerr << "delta u has a nan after derivative: " << u.hasNan() << endl;
 //        cerr << "dumping..." << endl;
 //        u.print("unsquashed delta_u", config.numClasses*config.cnInnerDim);
@@ -218,7 +242,7 @@ double CUCapsuleNetwork::backPropagation(int imageIndex, bool useTraining) {
 //    }
 
     CUPrimaryCaps.remapErrorToOutput(u);
-    CUPrimaryCaps.backpropagate();
+    CUPrimaryCaps.backPropagate();
     
 //    cout << "after bp in conv. layer" << endl;
     return loss;
@@ -271,13 +295,13 @@ long double CUCapsuleNetwork::forwardAndBackPropagation(int imageIndex, bool use
 }
 
 long double CUCapsuleNetwork::runEpoch() {
-    auto &data = MNISTReader::getInstance()->testingData;
+    auto &data = MNISTReader::getInstance()->trainingData;
 
     long double totalLoss = 0.0;
     ProgressBar pb(data.size());
     for (int i = 0; i < data.size(); i++) {
-        forwardPropagation(i, false);
-        totalLoss += backPropagation(i, false);
+        forwardPropagation(i);
+        totalLoss += backPropagation(i);
 
         if (i % config.batchSize == config.batchSize - 1) {
             updateWeights();
@@ -308,6 +332,10 @@ pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
             numCorrectlyClassified++;
         }
         backPropagation(i, useTraining);
+
+        if (i % config.batchSize == config.batchSize - 1) {
+            updateWeights();
+        }
         pb.updateProgress(i);
     }
     timer.stop();
@@ -324,23 +352,24 @@ pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
     };
 }
 
-void CUCapsuleNetwork::train() {
+pair<double, long double> CUCapsuleNetwork::train() {
     vector<pair<double, long double>> history;
     for (size_t i = 0; i < config.numEpochs; i++) {
         cout << "EPOCH ITERATION: " << i << endl;
-        runEpoch();
+//        runEpoch();
         history.push_back(tally(false));
 //        history.push_back({0, runEpoch()});
 
         // TODO file writing (and eventual reading)
 
-        cout << endl;
-        for (int j = 0; j < history.size(); j++) {
-            cout << j << "\t" << history[j].first << "\t" << history[j].second << endl;
-        }
+    }
+    cout << endl;
+    for (int j = 0; j < history.size(); j++) {
+        cout << j << "\t" << history[j].first << "\t" << history[j].second << endl;
     }
 
     cout << "DONE!" << endl;
+    return history[history.size()-1];
 }
 
 void CUCapsuleNetwork::updateWeights() {
@@ -351,25 +380,26 @@ void CUCapsuleNetwork::updateWeights() {
 }
 
 void CUCapsuleNetwork::test_detailedFP() {
-    vector<double> loss_history;
-    unsigned int numCorrect = 0, batchSize = 3;
+    vector< pair<double, bool> > loss_history;
+    unsigned int numCorrect = 0, batchSize = 10;
 
+    bool isTrue;
     for (int i = 0; i < 1000; i++) {
-        int imageIndex = i%1;
+        isTrue = false;
+        int imageIndex = i%20;
 
         forwardPropagation(imageIndex);
         CUUnifiedBlob::CUDA_getLength(v, lengths, config.numClasses, config.cnOuterDim);
 //        v.print("v - original FP", config.cnOuterDim);
 
         if (testResults(imageIndex)) {
+            isTrue = true;
             numCorrect++;
         }
 
-        loss_history.push_back(backPropagation(imageIndex));
-
-//        v.print("delta_v", config.cnOuterDim);
-
+        loss_history.push_back({backPropagation(imageIndex), isTrue});
         lengths.print("lengths", config.numClasses);
+//        v.print("delta_v", config.cnOuterDim);
 
         if (i%batchSize == batchSize-1) {
 //            w.print("w", config.cnInnerDim*config.cnOuterDim);
@@ -382,22 +412,25 @@ void CUCapsuleNetwork::test_detailedFP() {
 //    CUPrimaryCaps.printFilter();
 
     for (int i = 0; i < loss_history.size(); i++) {
-    	cout << i << "\t" << loss_history[i] << endl;
+    	cout << i << "\t" << (loss_history[i].second ? "*" : "") << "\t" << loss_history[i].first << endl;
     }
     cout << "num correct: " << numCorrect << endl;
 }
 
 void CUCapsuleNetwork::verificationTest() {
-    forwardPropagation(0);
+    forwardPropagation(1);
 //    CUPrimaryCaps.output.print("convolutional layer output", CUPrimaryCaps.outputWidth);
 //    u.print("u", config.numClasses * config.cnInnerDim);
 //    u_hat.print("u_hat", config.cnOuterDim);
-    v.print("output", config.cnOuterDim);
+//    v.print("output", config.cnOuterDim);
 
     // back propagation
-    backPropagation(0);
+    backPropagation(1);
     v.print("delta v", config.cnOuterDim);
-    w_delta.print("w_delta", config.cnInnerDim);
-    u_hat.print("delta u_hat", config.numClasses * config.cnOuterDim);
+//    w_delta.print("w_delta", config.cnInnerDim);
+//    u_hat.print("delta u_hat", config.numClasses * config.cnOuterDim);
     u.print("delta u", config.numClasses * config.cnInnerDim);
+
+    CUPrimaryCaps.printOutput();
+//    CUPrimaryCaps.filter_error.print("delta filters", CUPrimaryCaps.filterWidth);
 }

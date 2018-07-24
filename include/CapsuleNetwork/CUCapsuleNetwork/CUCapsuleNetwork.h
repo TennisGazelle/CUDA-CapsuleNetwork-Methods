@@ -24,7 +24,7 @@ public:
     long double forwardAndBackPropagation(int imageIndex, bool useTraining = true);
     long double runEpoch();
     pair<double, long double> tally(bool useTraining = true);
-    void train();
+    pair<double, long double> train();
     void updateWeights();
 
     void test_detailedFP();
@@ -43,6 +43,7 @@ private:
                   cache;
 
     CapsNetConfig config;
+    int totalMemoryUsage = 0;
 };
 
 

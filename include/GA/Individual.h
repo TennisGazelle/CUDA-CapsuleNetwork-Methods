@@ -14,7 +14,7 @@ using namespace std;
 
 class Individual : public vector<bool> {
 public:
-    Individual(int bitstringSize, const string& chromosome = "");
+    explicit Individual(int bitstringSize, const string& chromosome = "");
     Individual(const Individual& src);
     void print() const;
     void fullPrint() const;
@@ -42,7 +42,8 @@ public:
 
 private:
     void generateRandom();
-    void constuctNetworkAndEvaluate();
+    void constructNetworkAndEvaluate();
+    void fakeEvaluate();
 };
 
 #endif //NEURALNETS_INDIVIDUAL_H

@@ -31,6 +31,8 @@ void CUUnifiedBlob::allocateMemory() {
     assert(!isGPUAllocated);
     auto error = cudaMallocManaged((void **) &data, size * sizeof(double));
     CUDAUtils::handleError(error);
+    error = cudaMallocManaged((void **) &flagHelper, sizeof(int));
+    CUDAUtils::handleError(error);
     isGPUAllocated = true;
 }
 
@@ -134,6 +136,7 @@ void CUUnifiedBlob::fillWithRandom() {
     for (int i = 0; i < size; i++) {
         data[i] = Utils::getWeightRand(0);
     }
+    cudaDeviceSynchronize();
 }
 
 void CUUnifiedBlob::fillSequentially() {
@@ -150,6 +153,15 @@ int CUUnifiedBlob::hasNan() const {
         }
     }
     return -1;
+}
+
+bool CUUnifiedBlob::CUDA_hasNan() const {
+    flagHelper[0] = 0;
+    cu_hasNan_kernel<<<size, 1>>>(data, flagHelper);
+    cudaDeviceSynchronize();
+    bool toReturn = (flagHelper[0] != 0);
+    flagHelper[0] = 0;
+    return toReturn;
 }
 
 int CUUnifiedBlob::hasInf() const {
@@ -610,6 +622,7 @@ void CUUnifiedBlob::CUDA_vectorVectorSoftmax(CUUnifiedBlob &b,
     cu_vectorVectorSoftmax_kernel <<< numClasses, numThreads, numThreads * sizeof(double) >>>
                                                                (b.data, c.data, numClasses, tensorSize);
     cudaDeviceSynchronize();
+    CUDAUtils::checkForError("CUUnifiedBlob::CUDA_vectorVectorSoftmax()");
 }
 
 void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
@@ -619,15 +632,15 @@ void CUUnifiedBlob::CUDA_weightReduceVectors(CUUnifiedBlob &u_hat,
                                              int tensorSize,
                                              int dim) {
     dim3 blockDimensions(numClasses, dim);
-    int numThreads = std::min(1024, tensorSize);
     cu_weightReduceVector_kernel <<< blockDimensions, 1 >>> (u_hat.data, c.data, v.data, numClasses, tensorSize, dim);
-    CUDAUtils::checkForError("CUUnifiedBlob::CUDA_weightReduceVector()");
     cudaDeviceSynchronize();
+    CUDAUtils::checkForError("CUUnifiedBlob::CUDA_weightReduceVector()");
 }
 
 void CUUnifiedBlob::CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim) {
     cu_vectorSquash_kernel <<< numVecs, vecDim, vecDim * sizeof(double) >>> (v.data, numVecs, vecDim);
     cudaDeviceSynchronize();
+    CUDAUtils::checkForError("CUUnifiedBlob::CUDA_vectorSquash()");
 }
 
 void
@@ -636,15 +649,15 @@ CUUnifiedBlob::CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlo
     dim3 blockDims(tensorSize, numClasses);
     cu_vectorVectorScalarProduct_kernel <<< blockDims, dim, dim * sizeof(double) >>>
                                                              (u_hat.data, v.data, b.data, numClasses, tensorSize, dim);
-    CUDAUtils::checkForError("CUUnifiedBlob::vectorVectorScalarProduct()");
     cudaDeviceSynchronize();
+    CUDAUtils::checkForError("CUUnifiedBlob::CUDA_vectorVectorScalarProduct()");
 }
 
 void CUUnifiedBlob::CUDA_vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim,
                                            double m_plus, double m_minus, double lambda) {
     cu_vectorLossFunction_kernel <<< numClasses, dim, dim * sizeof(double) >>> (v.data, truthMap.data, m_plus, m_minus, lambda);
-    CUDAUtils::checkForError("CUUnifiedBlob::vectorLossFunction()");
     cudaDeviceSynchronize();
+    CUDAUtils::checkForError("CUUnifiedBlob::CUDA_vectorLossFunction()");
 }
 
 void CUUnifiedBlob::CUDA_weightedTransMatrixVecMult(CUUnifiedBlob &delta_u, CUUnifiedBlob &w,
@@ -772,7 +785,7 @@ void CUUnifiedBlob::CUDA_getVectorLoss(CUUnifiedBlob &v, CUUnifiedBlob &truthMap
 //#endif
 
 __device__
-double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex) {
+double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex, int sharedMemSize) {
     // load shared memory
     shared_mem[kernelIndex] = thread_val;
     __syncthreads();
@@ -780,14 +793,24 @@ double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex
     thread_val = isinf(thread_val) ? 0.0 : thread_val; // clear out if isinf
 
     // reduce
-    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-        int index = 2*s*kernelIndex;
+//    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
+//        int index = 2*s*kernelIndex;
+//
+//        if ((index+s) < blockDim.x && !isinf(shared_mem[index] + shared_mem[index+s])) {
+//            shared_mem[index] += shared_mem[index + s];
+//        }
+//        __syncthreads();
+//    }
 
-        if ((index+s) < blockDim.x && !isinf(shared_mem[index] + shared_mem[index+s])) {
-            shared_mem[index] += shared_mem[index + s];
+    // sequential reduction for good measure
+    if (kernelIndex == 0) {
+        for (unsigned int i = 1; i < sharedMemSize; i++) {
+            if (!isinf(shared_mem[0] + shared_mem[i])) {
+                shared_mem[0] += shared_mem[i];
+            }
         }
-        __syncthreads();
     }
+    __syncthreads();
 
     // return index [0]
     return shared_mem[0];
@@ -796,6 +819,13 @@ double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex
 __global__
 void cu_clearOut_kernel(double *data) {
     data[blockIdx.x] = 0;
+}
+
+__global__
+void cu_hasNan_kernel(double *data, int *flag) {
+    if (isnan(data[blockIdx.x])) {
+        flag[0] = 1;
+    }
 }
 
 __global__
@@ -827,38 +857,41 @@ void cu_matrixVectorMultiplication_kernel(double *matrix, double *inputVector, d
 
 __global__
 void cu_vectorVectorSoftmax_kernel(double *b, double *c, int numClasses, int tensorSize) {
+    int t_max = blockDim.x;
     int t = threadIdx.x;
     int k = blockIdx.x;
 
-    double my_exp_bs[8]; // make this dynamic and only as needed
+    double my_exp_bs[16]; // make this dynamic and only as needed
     extern __shared__
     double shared_b_exps[];
 
     double initial_value = 0.0;
-    for (int i = 0; (i * 1024) < tensorSize; i++) {
-        int tensorRowIndex = (i*1024) + t;
-        int b_index = (tensorRowIndex * numClasses) + k;
+    int sharedIndex = 0;
+    for (int i = t; i < tensorSize; i += t_max) {
+        int b_index = (i * numClasses) + k;
 
-        my_exp_bs[i] = exp(b[b_index]); // consider using hexp() for speed
-        if (isnan(my_exp_bs[i]) || isinf(my_exp_bs[i])) {
-            my_exp_bs[i] = 0;
+        my_exp_bs[sharedIndex] = exp(b[b_index]); // consider using hexp() for speed
+        if (isnan(my_exp_bs[sharedIndex]) || isinf(my_exp_bs[sharedIndex])) {
+            my_exp_bs[sharedIndex] = 0;
         }
-        initial_value += my_exp_bs[i];
+        initial_value += my_exp_bs[sharedIndex];
+        sharedIndex++;
     }
     if (isinf(initial_value)) {
         printf("there is a softmax inf!!!");
     }
 
-    double reduction = sharedMemoryReduce(shared_b_exps, initial_value, t);
+    double reduction = sharedMemoryReduce(shared_b_exps, initial_value, t, t_max);
 
-    for (int i = 0; (i * 1024) < tensorSize; i++) {
-        int tensorRowIndex = (i*1024) + t;
-        int c_index = (tensorRowIndex * numClasses) + k;
+    sharedIndex = 0;
+    for (int i = t; i < tensorSize; i += t_max) {
+        int c_index = (i * numClasses) + k;
 
-        c[c_index] = my_exp_bs[i] / reduction;
+        c[c_index] = my_exp_bs[sharedIndex] / reduction;
         if (isnan(c[c_index])) {
             c[c_index] = 0;
         }
+        sharedIndex++;
     }
 }
 
@@ -872,83 +905,50 @@ void cu_weightReduceVector_kernel(double *u_hat, double *c, double *v, int numCl
         int c_index = t * numClasses + k;
         int u_hat_index = c_index * dim;
         cache += u_hat[u_hat_index + specificDim] * c[c_index];
-//        if (!isinf(cache + (u_hat[u_hat_index + specificDim] * c[c_index]))) {
-//        }
     }
     int v_index = k * dim + specificDim;
     v[v_index] = cache;
-
-//    extern __shared__
-//    double shared_v_vec[];
-//
-//
-//
-//    // if tensorsize > 1024, add them to the shared mem as well
-//    for (int i = 0; i * 1024 < tensorSize; i++) {
-//        if (t + (i * 1024) < tensorSize) {
-//            int u_hat_offset = i * 1024 * numClasses * dim;
-//            int c_offset = i * 1024 * numClasses;
-//            initial_value += u_hat[u_hat_index + specificDim + u_hat_offset] * c[c_index + c_offset];
-//        }
-//    }
-//    sharedMemoryReduce(shared_v_vec, initial_value, t);
-//
-//
-//    if (t == 0) {
-//        v[k * dim + specificDim] = shared_v_vec[0];
-//    }
 }
 
 __global__
 void cu_vectorSquash_kernel(double *v, int numVecs, int vecDim) {
-//    int v_index = blockIdx.y * gridDim.x + blockIdx.x;
-    int v_index = blockIdx.x;
-    int v_val_index = threadIdx.x;
+    int vectorIndex = blockIdx.x;
+    int specificDim = threadIdx.x;
 
     extern __shared__
     double shared_v_values[];
     // reduce the square of the individual elements in shared mem
-    double initialValue = 0;
-//    if (v_index < numVecs) {
-        initialValue = v[v_index * vecDim + v_val_index]*v[v_index * vecDim + v_val_index];
-//        shared_v_values[v_val_index] = v[v_index * vecDim + v_val_index]*v[v_index * vecDim + v_val_index];
-//    }
-//    __syncthreads();
-//    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-//        if (v_val_index % (2 * s) == 0) {
-//            shared_v_values[v_val_index] += shared_v_values[v_val_index + s];
-//        }
-//        __syncthreads();
-//    }
+    double initialValue = v[vectorIndex * vecDim + specificDim]*v[vectorIndex * vecDim + specificDim];
 
-    sharedMemoryReduce(shared_v_values, initialValue, v_val_index);
+    sharedMemoryReduce(shared_v_values, initialValue, specificDim, vecDim);
 
     // calc squashing func
-    if (v_val_index == 0) {
+    if (specificDim == 0) {
         shared_v_values[0] += EPSILON;
         shared_v_values[1] = shared_v_values[0] / (1 + shared_v_values[0]);
         shared_v_values[0] = sqrt(shared_v_values[0]+EPSILON);
     }
     __syncthreads();
 
-    if (v_index < numVecs) {
-        v[v_index * vecDim + v_val_index] *= shared_v_values[1] / shared_v_values[0];
+    if (vectorIndex < numVecs) {
+        v[vectorIndex * vecDim + specificDim] *= shared_v_values[1] / shared_v_values[0];
     }
 }
 
 __global__
 void cu_vectorVectorScalarProduct_kernel(double *u_hat, double *v, double *b, int numClasses, int tensorSize, int dim) {
+    int t = blockIdx.x;
     int k = blockIdx.y;
     int d = threadIdx.x;
-    int t = blockIdx.x;
-    int u_hat_index = t * numClasses * dim + k * dim;
-    int v_index = k * dim;
+
     int b_index = t * numClasses + k;
+    int u_hat_index = b_index * dim;
+    int v_index = k * dim;
 
     extern __shared__
     double shared_scalar_products[];
 
-    double product = sharedMemoryReduce(shared_scalar_products, u_hat[u_hat_index + d] * v[v_index + d], d);
+    double product = sharedMemoryReduce(shared_scalar_products, u_hat[u_hat_index + d] * v[v_index + d], d, dim);
 
     if (d == 0) {
         if (!isnan(shared_scalar_products[0]) && !isinf(shared_scalar_products[0])) {
@@ -963,19 +963,17 @@ void cu_vectorLossFunction_kernel(double *v, double *truthMap, double m_plus, do
     int d = threadIdx.x;
     int dim = blockDim.x;
 
-    const int t_k = truthMap[k] > 0 ? 1 : 0;
+    const double t_k = truthMap[k] > 0 ? 1.0 : 0.0;
 
     extern __shared__
     double shared_vector_lengths[];
 
-    sharedMemoryReduce(shared_vector_lengths, v[k * dim + d] * v[k * dim + d], d);
+    sharedMemoryReduce(shared_vector_lengths, v[k * dim + d] * v[k * dim + d], d, dim);
     
     if (d == 0) {
-        shared_vector_lengths[0] += EPSILON;
-        double l = sqrt(shared_vector_lengths[0] + EPSILON); // length of vector
+        const double l = sqrt(shared_vector_lengths[0] + EPSILON + EPSILON); // length of vector
 
-        double activationFactor = l*l + 1;
-        activationFactor *= activationFactor;
+        double activationFactor = pow(l*l + 1, 2);
         activationFactor = 2*l/activationFactor;
 
         double errorGradient = 0.0;
@@ -990,16 +988,15 @@ void cu_vectorLossFunction_kernel(double *v, double *truthMap, double m_plus, do
         }
 
         double rawMarginLoss = 0.0;
-        if (truthMap[k]) {
+        if (t_k >= 1.0) {
             rawMarginLoss = max(0.0, m_plus - l);
             rawMarginLoss *= rawMarginLoss;
         } else {
-            rawMarginLoss = max(0.0, l - m_minus);
-            rawMarginLoss *= rawMarginLoss;
+            rawMarginLoss = pow(max(0.0, l - m_minus), 2);
             rawMarginLoss *= lambda;
         }
         // this is the new resizing factor
-        shared_vector_lengths[1] = 0.1 * activationFactor * errorGradient * rawMarginLoss / sqrt(shared_vector_lengths[0] - EPSILON);
+        shared_vector_lengths[1] = 0.1 * activationFactor * errorGradient * rawMarginLoss / sqrt(shared_vector_lengths[0]);
 //        printf("raw sum of squares: %f\n", shared_vector_lengths[0]);
 //        printf("for class %d, length: %f, t_k: %i, activation: %f, gradient: %f, loss: %f\n", k, l, t_k, activationFactor, errorGradient, rawMarginLoss);
     }
@@ -1055,9 +1052,9 @@ void cu_vectorVectorMatrixProductAndSum_kernel(double *w_error, double *delta_v,
     int element_index = t * numClasses + k;
     int w_index = element_index * innerDim * outerDim;
     int u_index = element_index * innerDim;
-    int u_hat_index = k * outerDim;
+    int v_index = k * outerDim;
 
-    w_error[w_index + (row * innerDim + col)] += delta_v[u_hat_index + row] * old_u[u_index + col];
+    w_error[w_index + (row * innerDim + col)] += delta_v[v_index + row] * old_u[u_index + col];
 }
 
 __global__
@@ -1070,29 +1067,35 @@ void cu_multiVectorReduction_kernel(double *u, int numClasses, int dim) {
 
     extern __shared__
     double shared_v_values[];
-    shared_v_values[k] = u[u_index] / 2; // TODO: investigate why I have to halve this value
-//    u[u_index] = 0;
-    __syncthreads();
 
-//    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-//        if (k % (2 * s) == 0) {
-//            shared_v_values[k] += shared_v_values[k + s];
-//        }
-//        __syncthreads();
+    if (t != k) {
+        u[u_index] = 0;
+    }
+
+    sharedMemoryReduce(shared_v_values, u[u_index], k, numClasses); // TODO: investigate why I have to halve this value
+    u[u_index] = 0;
+
+//    if (k == 0) {
+//        u[u_index] = shared_v_values[0];
 //    }
-
+    /**
+     * This is persuant to a weird bug found in the sequential version.
+     * The origin of this bug may be found in:
+     * `src/CapsuleNetwork/CapsuleNetwork.cpp` in the back propagation
+     * function.  This is not supposed to happen.
+     */
     if (k == 0) {
-        for (int i = 1; i < numClasses; i++) {
-            shared_v_values[0] += shared_v_values[i];
-        }
-        u[u_index] = shared_v_values[0];
+    	u[u_index] = shared_v_values[0] * gridDim.x;
     }
 }
 
 __global__
 void cu_elementWiseErrorUpdate_kernel(double *w, double *w_error, double *w_velocity) {
-    const double velocity_coefficient = 0.8;
+    const double velocity_coefficient = 0.9;
     int tid = blockIdx.x;
+    if (isnan(w_error[tid])) {
+        printf("there's a nan in the w somewhere, this is our worst nightmare\n");
+    }
     w_velocity[tid] = velocity_coefficient*w_velocity[tid] + (1.0-velocity_coefficient)*w_error[tid];
     w[tid] -= w_velocity[tid];
     w_error[tid] = 0;
@@ -1103,40 +1106,34 @@ void cu_vectorSquashDerivative_kernel(double *v, int numClasses) {
     int t = blockIdx.x;
     int dim = blockDim.x;
     int specificDim = threadIdx.x;
-    int row_dim = numClasses * dim;
+    int v_index = t * numClasses * dim + specificDim;
 
     extern __shared__
     double shared_v_values[];
     // reduce the square of the individual elements in shared mem
-    shared_v_values[specificDim] =  v[t * row_dim + specificDim] * v[t * row_dim + specificDim];
-    __syncthreads();
-
-//    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-//        if (specificDim % (2 * s) == 0) {
-//            shared_v_values[specificDim] += shared_v_values[specificDim + s];
-//        }
-//        __syncthreads();
-//    }
+    sharedMemoryReduce(shared_v_values, v[v_index] * v[v_index], specificDim, dim);
 
     // calc squashing func
     if (specificDim == 0) {
-        for (int i = 1; i < dim; i++) {
-            shared_v_values[0] += shared_v_values[i];
+        if (shared_v_values[0] == 0.0) {
+            shared_v_values[1] = 0.0;
+        } else {
+            shared_v_values[0] = sqrt(shared_v_values[0] + EPSILON + EPSILON); // normalization factor
+            shared_v_values[1] = shared_v_values[0] * shared_v_values[0] + 1;
+            shared_v_values[1] *= shared_v_values[1];
+            shared_v_values[1] = 2 * shared_v_values[0] / shared_v_values[1]; // derivative factor
+            shared_v_values[1] = shared_v_values[1] / shared_v_values[0];
         }
-
-        shared_v_values[1] = (shared_v_values[0] + 1) * (shared_v_values[0] + 1);
-        shared_v_values[0] = sqrt(shared_v_values[0] + EPSILON) + EPSILON; // normalization factor
-        shared_v_values[1] = 2 * shared_v_values[0] / shared_v_values[1]; // derivative factor
     }
     __syncthreads();
 
-    if (isnan(v[t*row_dim + specificDim] * shared_v_values[1] / shared_v_values[0])) {
-        printf("NAN is created for row %d in dim %d, which was originally %f\n", t, specificDim, v[t*row_dim + specificDim]);
-        if (specificDim == 0) {
-            printf("shared values[0]: %f, shared values [1]: %f\n", shared_v_values[0], shared_v_values[1]);
-        }
-    }
-    v[t*row_dim + specificDim] *= shared_v_values[1] / shared_v_values[0];
+//    if (isnan(v[v_index] * shared_v_values[1] / shared_v_values[0])) {
+//        if (specificDim == 0) {
+//            printf("NAN is created for row %d in dim %d, which was originally %f\n", t, specificDim, v[v_index]);
+//            printf("shared values[0]: %f, shared values [1]: %f\n", shared_v_values[0], shared_v_values[1]);
+//        }
+//    }
+    v[v_index] *= shared_v_values[1];
 }
 
 __global__
@@ -1204,15 +1201,7 @@ void cu_tensorFlatteningAndActivatedRemapping_kernel(double *flattenedTensor, do
     extern __shared__
     double shared_v_values[];
 
-    shared_v_values[dimIndex] = tensor[tensor_index] * tensor[tensor_index];
-    __syncthreads();
-
-    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-        if (dimIndex % (2 * s) == 0) {
-            shared_v_values[dimIndex] += shared_v_values[dimIndex + s];
-        }
-        __syncthreads();
-    }
+    sharedMemoryReduce(shared_v_values, tensor[tensor_index] * tensor[tensor_index], dimIndex, dim);
 
     if (dimIndex == 0) {
         shared_v_values[0] += EPSILON;
@@ -1248,7 +1237,6 @@ void cu_reconstructingTensorFromError_kernel(double *tensor, double *flattenedTe
     int tensor_index = real_depth * height * width + r * width + c;
 
     tensor[tensor_index] = flattenedTensor[error_index];
-    //flattenedTensor[flattenedTensor_index];
 }
 
 __global__
@@ -1263,23 +1251,27 @@ void cu_convolutionalBackPropFromError_kernel(double *error, double *filters, do
     int fr = threadIdx.y;
     int fc = threadIdx.z;
 
+    int depth = blockDim.x;
+    int filterHeight = blockDim.y;
+    int filterWidth = blockDim.z;
+
     int dh_index = ch * gridDim.y * gridDim.z + r * gridDim.z + c;
     double dh = error[dh_index];
 
     int inputIndex = (inputCh * iHeight * iWidth) + ((fr + r) * iWidth) + (fc + c);
-    int filterIndex = (ch * blockDim.x * blockDim.y * blockDim.z) + (inputCh * blockDim.y * blockDim.z) + (fr * blockDim.z) + fc;
+    int filterIndex = (ch * depth * filterHeight * filterWidth) + (inputCh * filterHeight * filterWidth) + (fr * filterWidth) + fc;
 
     //removed since newErrorGradient isn't really passed on to a higher conv. layer... yet.
     //atomicAdd(&newErrorGradient[inputIndex], filters[filterIndex] * dh);
 
     //atomicAdd(&delta_filters[filterIndex], originalInput[inputIndex] * dh);
-    double val = originalInput[inputIndex] * dh;
-    __syncthreads();
+    double val = originalInput[inputIndex] * dh;// / (depth * filterHeight * filterWidth);
+//    __syncthreads();
 //    if (originalInput[inputIndex] <= 0) {
 //        val = 0.0;
 //    }
 
-    /***
+    /**
      * This is supposed to be in the defined function (seen above) as `atomicADD`.
      * Cubix doesn't like the precompiler guards put against it, hpcvis3 likes it.
      * No reversion, inclusion of file or anything else likes to make this work.
@@ -1305,15 +1297,7 @@ void cu_getLength_kernel(double *v, double *lengths) {
     extern __shared__
     double shared_v_values[];
 
-    shared_v_values[specificDim] = v[v_index*dim+specificDim] * v[v_index*dim+specificDim];
-    __syncthreads();
-
-    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-        if (specificDim % (2 * s) == 0) {
-            shared_v_values[specificDim] += shared_v_values[specificDim + s];
-        }
-        __syncthreads();
-    }
+    sharedMemoryReduce(shared_v_values, v[v_index*dim+specificDim]*v[v_index*dim+specificDim], specificDim, dim);
 
     // find out who's the biggest, and save his value in the first number
     if (specificDim == 0) {
@@ -1329,19 +1313,10 @@ void cu_getVectorLoss_kernel(double *v, double *truthMap, double *losses, double
 
     extern __shared__
     double shared_vector_lengths[];
-    shared_vector_lengths[d] = v[k * dim + d] * v[k * dim + d];
-    __syncthreads();
 
-//    for (unsigned int s = 1; s < blockDim.x; s *= 2) {
-//        if (d % (2 * s) == 0) {
-//            shared_vector_lengths[d] += shared_vector_lengths[d + s];
-//        }
-//        __syncthreads();
-//    }
+    sharedMemoryReduce(shared_vector_lengths, v[k * dim + d] * v[k * dim + d], d, dim);
+
     if (d == 0) {
-        for (int i = 1; i < dim; i++) {
-            shared_vector_lengths[0] += shared_vector_lengths[i];
-        }
         shared_vector_lengths[0] = sqrt(shared_vector_lengths[0] + EPSILON + EPSILON); // length of vector
     }
     __syncthreads();

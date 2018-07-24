@@ -12,7 +12,7 @@ struct CapsNetConfig {
 
     const int inputHeight = 28, inputWidth = 28;
     const int numClasses = 10;
-    const int numEpochs = 100;
+    const int numEpochs = 50;
     const int numIterations = 3;
     const ActivationType at = SIGMOID;
 
