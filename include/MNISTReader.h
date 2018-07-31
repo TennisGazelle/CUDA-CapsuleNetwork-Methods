@@ -15,8 +15,10 @@ class MNISTReader {
 public:
     ~MNISTReader();
     static MNISTReader* getInstance();
-    const Image getTrainingImage(int index) const;
-    const Image getTestingImage(int index) const;
+    Image getTrainingImage(int index) const;
+    Image getTestingImage(int index) const;
+    Image* getTrainingImageRef(int index);
+    Image* getTestingImageRef(int index);
 
     vector<Image> trainingData, testingData;
 private:

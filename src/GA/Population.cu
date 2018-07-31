@@ -64,7 +64,8 @@ void Population::evaluate() {
 //    }
 
 //    auto evaluees = ParedoFront::referToUniqueIndividuals(*this);
-//    CUTThread threads[evaluees.first.size()];
+//    vector<CUTThread> threads(evaluees.first.size());
+//    cout << "Unique Individuals: " << threads.size() << endl;
 //
 //    for (int i = 0; i < evaluees.first.size(); i++) {
 //        threads[i] = start_thread(evalIndividual, evaluees.first[i]);

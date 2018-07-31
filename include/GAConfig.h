@@ -7,7 +7,7 @@
 
 struct GAConfig {
     unsigned int bitstringSize = 5+5+5+5+5+5+5;
-    unsigned int populationSize = 10;
+    unsigned int populationSize = 30;
     unsigned int numIterations = 50;
 
     double prob_mutation = 0.01;

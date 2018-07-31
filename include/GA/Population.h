@@ -20,6 +20,8 @@ public:
     void getStatsFromIndividuals();
     void insertParedoFront(ParedoFront front);
     void evaluate();
+    void singleThreaded_evaluate();
+    void multiThreaded_evaluate();
 
     Individual tournamentSelect(bool useCrowdingOperator);
     Individual getBestIndividual() const;

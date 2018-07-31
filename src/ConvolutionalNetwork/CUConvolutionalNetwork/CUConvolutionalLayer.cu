@@ -39,8 +39,15 @@ CUConvolutionalLayer::CUConvolutionalLayer(const CapsNetConfig& incomingConfig, 
 
 void CUConvolutionalLayer::setInput(const std::vector<double>& inputImage) {
     assert(inputImage.size() == input.getSize());
-    for(int i = 0; i < input.getSize(); i++) {
+    for (int i = 0; i < input.getSize(); i++) {
         input.setValueAt_1D(i, inputImage[i]/256.0);
+    }
+}
+
+void CUConvolutionalLayer::setInput(const Image &inputImage) {
+    assert(inputImage.size() == input.getSize());
+    for (int i = 0; i < input.getSize(); i++) {
+        input.setValueAt_1D(i, double(inputImage[i])/256.0);
     }
 }
 

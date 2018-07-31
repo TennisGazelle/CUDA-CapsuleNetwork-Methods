@@ -29,6 +29,7 @@ public:
 
     void decodeChromosome();
     void evaluate();
+    void fakeEvaluate(); // for GA testing purposes
 
     CapsNetConfig capsNetConfig;
     double loss_100, loss_300;
@@ -43,7 +44,6 @@ public:
 private:
     void generateRandom();
     void constructNetworkAndEvaluate();
-    void fakeEvaluate();
 };
 
 #endif //NEURALNETS_INDIVIDUAL_H

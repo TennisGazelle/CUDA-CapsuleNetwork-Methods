@@ -65,7 +65,6 @@ void CapsNetDAO::run_sql(const string &sql, result &output) {
     connection c("dbname=cs_776 user=system password=SYSTEM host=hpcvis3.cse.unr.edu");
     work txn(c);
     output = txn.exec(sql);
-    mtx.unlock();
 }
 
 void CapsNetDAO::commit_sql(const string &sql, result &output) {

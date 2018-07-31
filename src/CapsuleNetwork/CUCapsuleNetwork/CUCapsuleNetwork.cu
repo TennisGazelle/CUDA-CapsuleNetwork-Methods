@@ -90,7 +90,7 @@ void CUCapsuleNetwork::forwardPropagation(int imageIndex, bool useTraining) {
         image = MNISTReader::getInstance()->getTestingImage(imageIndex);
     }
 
-    CUPrimaryCaps.setInput(image.toVectorOfDoubles());
+    CUPrimaryCaps.setInput(image);
     CUPrimaryCaps.forwardPropagate();
     CUPrimaryCaps.squashAndRemapToU(u);
 
@@ -314,18 +314,18 @@ long double CUCapsuleNetwork::runEpoch() {
 
 pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
     cout << "tallying..." << endl;
-    auto& tallyData = MNISTReader::getInstance()->trainingData;
+    auto dataSize = MNISTReader::getInstance()->trainingData.size();
     if (!useTraining) {
-        tallyData = MNISTReader::getInstance()->testingData;
+        dataSize = MNISTReader::getInstance()->testingData.size();
     }
 
     int numCorrectlyClassified = 0;
     long double totalLoss = 0.0;
     // go through all data points
     HostTimer timer;
-    ProgressBar pb(tallyData.size());
+    ProgressBar pb(dataSize);
     timer.start();
-    for (int i = 0; i < tallyData.size(); i++) {
+    for (int i = 0; i < dataSize; i++) {
         forwardPropagation(i, useTraining);
         totalLoss += getLoss();
         if (testResults(i, useTraining)) {
@@ -342,33 +342,31 @@ pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
 
 
     cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
-    cout << "       Accuracy (out of " << tallyData.size() << "): "
-         << double(numCorrectlyClassified) / double(tallyData.size()) * 100 << endl;
+    cout << "       Accuracy (out of " << dataSize << "): "
+         << double(numCorrectlyClassified) / double(dataSize) * 100 << endl;
     cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
     cout << "                    Total Loss: " << totalLoss << endl;
     return {
-            double(numCorrectlyClassified) / double(tallyData.size()) * 100,
+            double(numCorrectlyClassified) / double(dataSize) * 100,
             totalLoss
     };
 }
 
-pair<double, long double> CUCapsuleNetwork::train() {
+pair<double, long double> CUCapsuleNetwork::train(const string& logHeader) {
     vector<pair<double, long double>> history;
     for (size_t i = 0; i < config.numEpochs; i++) {
-        cout << "EPOCH ITERATION: " << i << endl;
-//        runEpoch();
+        cout << "[" << logHeader << "] - " << "EPOCH ITERATION: " << i << endl;
+//        runEpoch(); // running epochs and then incrementally getting tally's helps too...
         history.push_back(tally(false));
-//        history.push_back({0, runEpoch()});
-
         // TODO file writing (and eventual reading)
-
     }
     cout << endl;
     for (int j = 0; j < history.size(); j++) {
-        cout << j << "\t" << history[j].first << "\t" << history[j].second << endl;
+        cout << "[" << logHeader << "] - " << j << "\t" << history[j].first << "\t" << history[j].second << endl;
     }
 
     cout << "DONE!" << endl;
+    // return the last element
     return history[history.size()-1];
 }
 

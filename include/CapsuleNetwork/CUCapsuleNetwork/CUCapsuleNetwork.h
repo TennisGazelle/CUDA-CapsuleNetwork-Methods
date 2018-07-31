@@ -24,7 +24,7 @@ public:
     long double forwardAndBackPropagation(int imageIndex, bool useTraining = true);
     long double runEpoch();
     pair<double, long double> tally(bool useTraining = true);
-    pair<double, long double> train();
+    pair<double, long double> train(const string& logHeader = "");
     void updateWeights();
 
     void test_detailedFP();

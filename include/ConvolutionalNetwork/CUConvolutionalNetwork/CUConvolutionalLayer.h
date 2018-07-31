@@ -9,6 +9,7 @@
 #include <models/CUUnifiedBlob.h>
 #include <vector>
 #include <CapsNetConfig.h>
+#include <models/Image.h>
 
 using namespace std;
 
@@ -16,6 +17,7 @@ class CUConvolutionalLayer {
 public:
     CUConvolutionalLayer(const CapsNetConfig& incomingConfig, int iHeight, int iWidth, int numFilters, int fHeight, int fWidth);
     void setInput(const std::vector<double>& inputImage);
+    void setInput(const Image& inputImage);
     void forwardPropagate();
     void squashAndRemapToU(CUUnifiedBlob &u);
     void remapErrorToOutput(CUUnifiedBlob &delta_u);

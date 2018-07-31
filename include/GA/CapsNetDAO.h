@@ -21,7 +21,6 @@ public:
     void getFromDatabase(Individual& individual);
     void addToDatabase(Individual& individual);
 
-    mutex mtx;
 private:
     CapsNetDAO() = default;
     static CapsNetDAO* instance;

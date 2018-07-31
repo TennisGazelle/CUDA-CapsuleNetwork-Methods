@@ -10,10 +10,13 @@
 MNISTReader* MNISTReader::instance = nullptr;
 
 MNISTReader* MNISTReader::getInstance() {
+    static mutex mtx;
+    mtx.lock();
     if (instance == nullptr) {
         instance = new MNISTReader;
         instance->readMNISTData();
     }
+    mtx.unlock();
     return instance;
 }
 
@@ -79,10 +82,18 @@ void MNISTReader::grabFromFile(ifstream &fin, unsigned int &num) {
     num = Utils::reverseInt(num);
 }
 
-const Image MNISTReader::getTrainingImage(int index) const {
+Image MNISTReader::getTrainingImage(int index) const {
     return trainingData[index];
 }
 
-const Image MNISTReader::getTestingImage(int index) const {
+Image MNISTReader::getTestingImage(int index) const {
     return testingData[index];
+}
+
+Image* MNISTReader::getTrainingImageRef(int index) {
+    return &trainingData[index];
+}
+
+Image* MNISTReader::getTestingImageRef(int index) {
+    return &testingData[index];
 }

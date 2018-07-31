@@ -134,6 +134,7 @@ void Individual::decodeChromosome() {
 
 void Individual::evaluate() {
     decodeChromosome();
+//    fakeEvaluate();
 
     if (CapsNetDAO::getInstance()->isInDatabase(*this)) {
         CapsNetDAO::getInstance()->getFromDatabase(*this);
@@ -144,28 +145,36 @@ void Individual::evaluate() {
 }
 
 void Individual::constructNetworkAndEvaluate() {
-    static mutex mtx;
-    mtx.lock();
     cout << "running this..." << to_string() << endl;
     fullPrint();
     CUCapsuleNetwork network(capsNetConfig);
 
-    auto fitness = network.train();
+    auto fitness = network.train(to_string());
     accuracy_100 = fitness.first;
     loss_100 = fitness.second;
 
 //    network.train();
-    fitness = network.train();
+    fitness = network.train(to_string());
     accuracy_300 = fitness.first;
     loss_300 = fitness.second;
-    mtx.unlock();
+}
+
+void Individual::fakeEvaluate() {
+    cout << "running this..." << to_string() << endl;
+    fullPrint();
+
+    CUCapsuleNetwork network(capsNetConfig);
+    auto results = network.tally();
+
+    accuracy_100 = results.first;
+    loss_100 = results.second;
 
 //    loss_100 = capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels;
 //    loss_100 += capsNetConfig.lambda * capsNetConfig.m_minus * capsNetConfig.m_plus;
-////    loss_300 = loss_100*capsNetConfig.lambda;
-//
+    loss_300 = loss_100*capsNetConfig.lambda;
+
 //    accuracy_100 = capsNetConfig.lambda * capsNetConfig.m_plus / (capsNetConfig.cnInnerDim * capsNetConfig.cnOuterDim * capsNetConfig.cnNumTensorChannels);
-////    accuracy_300 = accuracy_100*capsNetConfig.cnNumTensorChannels;
+    accuracy_300 = accuracy_100*capsNetConfig.cnNumTensorChannels;
 }
 
 bool Individual::paredoDominates(const Individual &opponent) const {
