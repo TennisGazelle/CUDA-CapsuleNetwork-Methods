@@ -63,25 +63,35 @@ void Population::evaluate() {
 //        tasks[i].get();
 //    }
 
-//    auto evaluees = ParedoFront::referToUniqueIndividuals(*this);
-//    vector<CUTThread> threads(evaluees.first.size());
-//    cout << "Unique Individuals: " << threads.size() << endl;
-//
-//    for (int i = 0; i < evaluees.first.size(); i++) {
-//        threads[i] = start_thread(evalIndividual, evaluees.first[i]);
-//    }
-//    for (int i = 0; i < evaluees.first.size(); i++) {
-//        end_thread(threads[i]);
-//        for (int j = 0; j < evaluees.second.size(); j++) {
-//            if (evaluees.first[i]->to_string() == evaluees.second[j]->to_string()) {
-//                (*evaluees.second[j]) = (*evaluees.first[i]);
-//            }
-//        }
-//    }
+    auto evaluees = ParedoFront::referToUniqueIndividuals(*this);
+    auto numOfThreads = min(1, (int)evaluees.first.size());
 
-    for (auto &indiv : (*this)) {
-        indiv.evaluate();
+    vector<CUTThread> threads(numOfThreads);
+    cout << "Unique Individuals: " << numOfThreads << endl;
+
+    // simple thread pooling
+    for (int i = 0; i < evaluees.first.size(); i++) {
+        if (i >= numOfThreads) {
+            end_thread(threads[i%numOfThreads]);
+        }
+        threads[i%numOfThreads] = start_thread(evalIndividual, evaluees.first[i]);
     }
+    for (auto& t : threads) {
+        end_thread(t);
+    }
+
+    // copy these results over to the others...
+    for (int i = 0; i < evaluees.first.size(); i++) {
+        for (int j = 0; j < evaluees.second.size(); j++) {
+            if (evaluees.first[i]->to_string() == evaluees.second[j]->to_string()) {
+                (*evaluees.second[j]) = (*evaluees.first[i]);
+            }
+        }
+    }
+
+//    for (auto &indiv : (*this)) {
+//        indiv.evaluate();
+//    }
 	getStatsFromIndividuals();
 }
 

@@ -9,9 +9,12 @@
 CapsNetDAO* CapsNetDAO::instance = nullptr;
 
 CapsNetDAO* CapsNetDAO::getInstance() {
+    static mutex mtx;
+    mtx.lock();
     if (instance == nullptr) {
         instance = new CapsNetDAO;
     }
+    mtx.unlock();
     return instance;
 }
 

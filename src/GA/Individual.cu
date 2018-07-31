@@ -134,7 +134,7 @@ void Individual::decodeChromosome() {
 
 void Individual::evaluate() {
     decodeChromosome();
-//    fakeEvaluate();
+    fakeEvaluate();
 
     if (CapsNetDAO::getInstance()->isInDatabase(*this)) {
         CapsNetDAO::getInstance()->getFromDatabase(*this);
@@ -164,7 +164,7 @@ void Individual::fakeEvaluate() {
     fullPrint();
 
     CUCapsuleNetwork network(capsNetConfig);
-    auto results = network.tally();
+    auto results = network.tally(false);
 
     accuracy_100 = results.first;
     loss_100 = results.second;
