@@ -18,7 +18,7 @@ MNISTReader* MNISTReader::getInstance() {
 }
 
 MNISTReader::~MNISTReader() {
-    if (instance == nullptr) {
+    if (instance != nullptr) {
         delete instance;
     }
 }

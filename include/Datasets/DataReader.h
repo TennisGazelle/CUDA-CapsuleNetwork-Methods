@@ -17,7 +17,6 @@ public:
 private:
     virtual void readData() = 0;
     virtual void readDataWithLabels(const string &datafile, const string &labelfile, vector<Image> &dst) = 0;
-    static void grabFromFileAndReverse(ifstream &fin, unsigned int &num);
 };
 
 

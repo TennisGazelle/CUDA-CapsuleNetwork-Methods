@@ -23,7 +23,7 @@ private:
     void readData();
     void readDataWithLabels(const string& datafile, const string& labelfile, vector<Image>& dst);
 
-    static void grabFromFileAndReverse(ifstream &fin, unsigned int &num);
+    void grabFromFileAndReverse(ifstream &fin, unsigned int &num);
 };
 
 #endif //NEURALNETS_MNISTREADER_H

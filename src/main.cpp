@@ -243,7 +243,8 @@ void test_CapsuleNetwork_multipleReconstruction() {
 
 void test_readingNORBDatasets() {
     auto readerPtr = SmallNORBReader::getInstance();
-
+    CapsuleNetwork capsuleNetwork;
+    capsuleNetwork.loadImageAndPrintOutput(0);
 }
 
 int main() {
@@ -259,8 +260,7 @@ int main() {
 //    test_CapsuleNetwork_multipleReconstruction();
 
 //    test_CapsuleNetwork_Epoch();
-//    test_NetworkTallyingTiming();
-
+    test_NetworkTallyingTiming();
 
     test_readingNORBDatasets();
 

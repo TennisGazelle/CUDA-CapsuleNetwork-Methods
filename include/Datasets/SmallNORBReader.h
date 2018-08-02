@@ -21,8 +21,8 @@ private:
     void readData();
     void readDataWithLabels(const string &datafile, const string &label, vector<Image> &dst);
 
-    static inline void grabFromFile(ifstream &fin, unsigned int &num);
-    static void readHeaderFromFile(ifstream &fin, unsigned int &magicNumber, vector<unsigned int>& dimSizes);
+    void grabFromFile(ifstream &fin, unsigned int &num);
+    void readHeaderFromFile(ifstream &fin, unsigned int &magicNumber, vector<unsigned int>& dimSizes);
 };
 
 

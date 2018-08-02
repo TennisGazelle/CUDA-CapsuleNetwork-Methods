@@ -7,8 +7,6 @@
 #include <Utils.h>
 #include "Datasets/SmallNORBReader.h"
 
-using namespace std;
-
 SmallNORBReader* SmallNORBReader::instance = nullptr;
 
 SmallNORBReader* SmallNORBReader::getInstance() {
@@ -20,7 +18,9 @@ SmallNORBReader* SmallNORBReader::getInstance() {
 }
 
 SmallNORBReader::~SmallNORBReader() {
-
+    if (instance != nullptr) {
+        delete instance;
+    }
 }
 
 void SmallNORBReader::readData() {
