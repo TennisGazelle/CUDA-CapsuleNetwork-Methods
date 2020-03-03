@@ -50,24 +50,15 @@ void Population::fullPrint() {
 void* evalIndividual(void* data) {
     Individual* indiv = (Individual*) data;
     indiv->evaluate();
+    cudaStreamSynchronize(0);
 }
 
 void Population::evaluate() {
-//    static ctpl::thread_pool p(4);
-//    vector< future<void> > tasks(size());
-//
-//    for (int i = 0; i < size(); i++) {
-//        tasks[i] = p.push(evalIndividual, std::ref(at(i)));
-//    }
-//    for (int i = 0; i < size(); i++) {
-//        tasks[i].get();
-//    }
-
     auto evaluees = ParedoFront::referToUniqueIndividuals(*this);
-    auto numOfThreads = min(1, (int)evaluees.first.size());
+    auto numOfThreads = min(2, (int)evaluees.first.size());
 
     vector<CUTThread> threads(numOfThreads);
-    cout << "Unique Individuals: " << numOfThreads << endl;
+    cout << "Unique Individuals: " << evaluees.first.size() << endl;
 
     // simple thread pooling
     for (int i = 0; i < evaluees.first.size(); i++) {
@@ -92,6 +83,7 @@ void Population::evaluate() {
 //    for (auto &indiv : (*this)) {
 //        indiv.evaluate();
 //    }
+    cudaDeviceReset();
 	getStatsFromIndividuals();
 }
 

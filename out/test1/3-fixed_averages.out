@@ -1,0 +1,1787 @@
+           Population Size: 10
+            Num Iterations: 50
+  Probability of Crossover: 0.5
+   Probability of Mutation: 0.01
+NSGA RUN
+Iteration (NSGA-II): 0
+Iteration (NSGA-II): 1
+Iteration (NSGA-II): 2
+Iteration (NSGA-II): 3
+running this...01000110101000100110001101101101010
+01000 11010 10001 00110 00110 11011 01010: 
+         cnInnerDim: 10
+         cnOuterDim: 28
+cnNumTensorChannels: 18
+          batchSize: 140
+             m_plus: 0.8375
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 91.13
+         Loss (100): 5683.8
+     Accuracy (300): 93.51
+          Loss(300): 6220.66
+EPOCH ITERATION: 0
+tallying...
+Correctly Classified Instances: 1231
+       Accuracy (out of 10000): 12.31
+                    Time Taken: 31362.7 ms.
+                    Total Loss: 6710.34
+EPOCH ITERATION: 1
+tallying...
+Correctly Classified Instances: 4681
+       Accuracy (out of 10000): 46.81
+                    Time Taken: 31910.4 ms.
+                    Total Loss: 5956.19
+EPOCH ITERATION: 2
+tallying...
+Correctly Classified Instances: 7702
+       Accuracy (out of 10000): 77.02
+                    Time Taken: 32322.3 ms.
+                    Total Loss: 6836.82
+EPOCH ITERATION: 3
+tallying...
+Correctly Classified Instances: 8319
+       Accuracy (out of 10000): 83.19
+                    Time Taken: 31125 ms.
+                    Total Loss: 6966.41
+EPOCH ITERATION: 4
+tallying...
+Correctly Classified Instances: 8636
+       Accuracy (out of 10000): 86.36
+                    Time Taken: 31271.6 ms.
+                    Total Loss: 6885.76
+EPOCH ITERATION: 5
+tallying...
+Correctly Classified Instances: 8786
+       Accuracy (out of 10000): 87.86
+                    Time Taken: 31611.3 ms.
+                    Total Loss: 6762.42
+EPOCH ITERATION: 6
+tallying...
+Correctly Classified Instances: 8927
+       Accuracy (out of 10000): 89.27
+                    Time Taken: 31352.1 ms.
+                    Total Loss: 6623.08
+EPOCH ITERATION: 7
+tallying...
+Correctly Classified Instances: 9017
+       Accuracy (out of 10000): 90.17
+                    Time Taken: 31638.1 ms.
+                    Total Loss: 6498.73
+EPOCH ITERATION: 8
+tallying...
+Correctly Classified Instances: 9070
+       Accuracy (out of 10000): 90.7
+                    Time Taken: 31389 ms.
+                    Total Loss: 6435.22
+EPOCH ITERATION: 9
+tallying...
+Correctly Classified Instances: 9136
+       Accuracy (out of 10000): 91.36
+                    Time Taken: 32056.5 ms.
+                    Total Loss: 6391.89
+EPOCH ITERATION: 10
+tallying...
+Correctly Classified Instances: 9163
+       Accuracy (out of 10000): 91.63
+                    Time Taken: 32185.2 ms.
+                    Total Loss: 6347.57
+EPOCH ITERATION: 11
+tallying...
+Correctly Classified Instances: 9217
+       Accuracy (out of 10000): 92.17
+                    Time Taken: 31398.5 ms.
+                    Total Loss: 6305.02
+EPOCH ITERATION: 12
+tallying...
+Correctly Classified Instances: 9246
+       Accuracy (out of 10000): 92.46
+                    Time Taken: 31501.8 ms.
+                    Total Loss: 6265.62
+EPOCH ITERATION: 13
+tallying...
+Correctly Classified Instances: 9271
+       Accuracy (out of 10000): 92.71
+                    Time Taken: 31416.7 ms.
+                    Total Loss: 6229.84
+EPOCH ITERATION: 14
+tallying...
+Correctly Classified Instances: 9294
+       Accuracy (out of 10000): 92.94
+                    Time Taken: 31423.4 ms.
+                    Total Loss: 6198.83
+EPOCH ITERATION: 15
+tallying...
+Correctly Classified Instances: 9309
+       Accuracy (out of 10000): 93.09
+                    Time Taken: 31033 ms.
+                    Total Loss: 6171.96
+EPOCH ITERATION: 16
+tallying...
+Correctly Classified Instances: 9334
+       Accuracy (out of 10000): 93.34
+                    Time Taken: 31108.5 ms.
+                    Total Loss: 6149.14
+EPOCH ITERATION: 17
+tallying...
+Correctly Classified Instances: 9339
+       Accuracy (out of 10000): 93.39
+                    Time Taken: 31581.5 ms.
+                    Total Loss: 6128.85
+EPOCH ITERATION: 18
+tallying...
+Correctly Classified Instances: 9354
+       Accuracy (out of 10000): 93.54
+                    Time Taken: 31550.1 ms.
+                    Total Loss: 6110.67
+EPOCH ITERATION: 19
+tallying...
+Correctly Classified Instances: 9376
+       Accuracy (out of 10000): 93.76
+                    Time Taken: 31766.9 ms.
+                    Total Loss: 6094.05
+EPOCH ITERATION: 20
+tallying...
+Correctly Classified Instances: 9397
+       Accuracy (out of 10000): 93.97
+                    Time Taken: 31822.5 ms.
+                    Total Loss: 6078.37
+EPOCH ITERATION: 21
+tallying...
+Correctly Classified Instances: 9416
+       Accuracy (out of 10000): 94.16
+                    Time Taken: 31530.9 ms.
+                    Total Loss: 6063.24
+EPOCH ITERATION: 22
+tallying...
+Correctly Classified Instances: 9425
+       Accuracy (out of 10000): 94.25
+                    Time Taken: 31241.5 ms.
+                    Total Loss: 6048.41
+EPOCH ITERATION: 23
+tallying...
+Correctly Classified Instances: 9438
+       Accuracy (out of 10000): 94.38
+                    Time Taken: 31444.2 ms.
+                    Total Loss: 6033.75
+EPOCH ITERATION: 24
+tallying...
+Correctly Classified Instances: 9466
+       Accuracy (out of 10000): 94.66
+                    Time Taken: 32270.6 ms.
+                    Total Loss: 6019.17
+EPOCH ITERATION: 25
+tallying...
+Correctly Classified Instances: 9476
+       Accuracy (out of 10000): 94.76
+                    Time Taken: 31343.8 ms.
+                    Total Loss: 6004.66
+EPOCH ITERATION: 26
+tallying...
+Correctly Classified Instances: 9487
+       Accuracy (out of 10000): 94.87
+                    Time Taken: 31477.6 ms.
+                    Total Loss: 5990.2
+EPOCH ITERATION: 27
+tallying...
+Correctly Classified Instances: 9479
+       Accuracy (out of 10000): 94.79
+                    Time Taken: 30936.2 ms.
+                    Total Loss: 5975.67
+EPOCH ITERATION: 28
+tallying...
+Correctly Classified Instances: 9485
+       Accuracy (out of 10000): 94.85
+                    Time Taken: 31065.9 ms.
+                    Total Loss: 5960.93
+EPOCH ITERATION: 29
+tallying...
+Correctly Classified Instances: 9498
+       Accuracy (out of 10000): 94.98
+                    Time Taken: 31391.2 ms.
+                    Total Loss: 5945.83
+EPOCH ITERATION: 30
+tallying...
+Correctly Classified Instances: 9501
+       Accuracy (out of 10000): 95.01
+                    Time Taken: 31411.8 ms.
+                    Total Loss: 5930.37
+EPOCH ITERATION: 31
+tallying...
+Correctly Classified Instances: 9499
+       Accuracy (out of 10000): 94.99
+                    Time Taken: 31849.4 ms.
+                    Total Loss: 5914.75
+EPOCH ITERATION: 32
+tallying...
+Correctly Classified Instances: 9508
+       Accuracy (out of 10000): 95.08
+                    Time Taken: 31720.4 ms.
+                    Total Loss: 5899.35
+EPOCH ITERATION: 33
+tallying...
+Correctly Classified Instances: 9509
+       Accuracy (out of 10000): 95.09
+                    Time Taken: 31716.3 ms.
+                    Total Loss: 5884.48
+EPOCH ITERATION: 34
+tallying...
+Correctly Classified Instances: 9507
+       Accuracy (out of 10000): 95.07
+                    Time Taken: 31644.2 ms.
+                    Total Loss: 5870.2
+EPOCH ITERATION: 35
+tallying...
+Correctly Classified Instances: 9505
+       Accuracy (out of 10000): 95.05
+                    Time Taken: 31497.7 ms.
+                    Total Loss: 5856.3
+EPOCH ITERATION: 36
+tallying...
+Correctly Classified Instances: 9504
+       Accuracy (out of 10000): 95.04
+                    Time Taken: 31585.1 ms.
+                    Total Loss: 5842.37
+EPOCH ITERATION: 37
+tallying...
+Correctly Classified Instances: 9502
+       Accuracy (out of 10000): 95.02
+                    Time Taken: 31465.8 ms.
+                    Total Loss: 5827.89
+EPOCH ITERATION: 38
+tallying...
+Correctly Classified Instances: 9507
+       Accuracy (out of 10000): 95.07
+                    Time Taken: 31372.1 ms.
+                    Total Loss: 5812.3
+EPOCH ITERATION: 39
+tallying...
+Correctly Classified Instances: 9490
+       Accuracy (out of 10000): 94.9
+                    Time Taken: 31497.3 ms.
+                    Total Loss: 5795.02
+EPOCH ITERATION: 40
+tallying...
+Correctly Classified Instances: 9496
+       Accuracy (out of 10000): 94.96
+                    Time Taken: 32145.5 ms.
+                    Total Loss: 5775.58
+EPOCH ITERATION: 41
+tallying...
+Correctly Classified Instances: 9495
+       Accuracy (out of 10000): 94.95
+                    Time Taken: 32665.1 ms.
+                    Total Loss: 5753.62
+EPOCH ITERATION: 42
+tallying...
+Correctly Classified Instances: 9493
+       Accuracy (out of 10000): 94.93
+                    Time Taken: 32489.6 ms.
+                    Total Loss: 5729.2
+EPOCH ITERATION: 43
+tallying...
+Correctly Classified Instances: 9494
+       Accuracy (out of 10000): 94.94
+                    Time Taken: 31876.1 ms.
+                    Total Loss: 5702.9
+EPOCH ITERATION: 44
+tallying...
+Correctly Classified Instances: 9482
+       Accuracy (out of 10000): 94.82
+                    Time Taken: 31797.4 ms.
+                    Total Loss: 5675.83
+EPOCH ITERATION: 45
+tallying...
+Correctly Classified Instances: 9491
+       Accuracy (out of 10000): 94.91
+                    Time Taken: 31587.3 ms.
+                    Total Loss: 5649.36
+EPOCH ITERATION: 46
+tallying...
+Correctly Classified Instances: 9487
+       Accuracy (out of 10000): 94.87
+                    Time Taken: 31703.1 ms.
+                    Total Loss: 5624.51
+EPOCH ITERATION: 47
+tallying...
+Correctly Classified Instances: 9481
+       Accuracy (out of 10000): 94.81
+                    Time Taken: 31869.5 ms.
+                    Total Loss: 5601.64
+EPOCH ITERATION: 48
+tallying...
+Correctly Classified Instances: 9479
+       Accuracy (out of 10000): 94.79
+                    Time Taken: 32125 ms.
+                    Total Loss: 5580.52
+EPOCH ITERATION: 49
+tallying...
+Correctly Classified Instances: 9473
+       Accuracy (out of 10000): 94.73
+                    Time Taken: 31930.8 ms.
+                    Total Loss: 5560.73
+
+0	12.31	6710.34
+1	46.81	5956.19
+2	77.02	6836.82
+3	83.19	6966.41
+4	86.36	6885.76
+5	87.86	6762.42
+6	89.27	6623.08
+7	90.17	6498.73
+8	90.7	6435.22
+9	91.36	6391.89
+10	91.63	6347.57
+11	92.17	6305.02
+12	92.46	6265.62
+13	92.71	6229.84
+14	92.94	6198.83
+15	93.09	6171.96
+16	93.34	6149.14
+17	93.39	6128.85
+18	93.54	6110.67
+19	93.76	6094.05
+20	93.97	6078.37
+21	94.16	6063.24
+22	94.25	6048.41
+23	94.38	6033.75
+24	94.66	6019.17
+25	94.76	6004.66
+26	94.87	5990.2
+27	94.79	5975.67
+28	94.85	5960.93
+29	94.98	5945.83
+30	95.01	5930.37
+31	94.99	5914.75
+32	95.08	5899.35
+33	95.09	5884.48
+34	95.07	5870.2
+35	95.05	5856.3
+36	95.04	5842.37
+37	95.02	5827.89
+38	95.07	5812.3
+39	94.9	5795.02
+40	94.96	5775.58
+41	94.95	5753.62
+42	94.93	5729.2
+43	94.94	5702.9
+44	94.82	5675.83
+45	94.91	5649.36
+46	94.87	5624.51
+47	94.81	5601.64
+48	94.79	5580.52
+49	94.73	5560.73
+DONE!
+EPOCH ITERATION: 0
+tallying...
+Correctly Classified Instances: 9470
+       Accuracy (out of 10000): 94.7
+                    Time Taken: 31926.8 ms.
+                    Total Loss: 5541.99
+EPOCH ITERATION: 1
+tallying...
+Correctly Classified Instances: 9469
+       Accuracy (out of 10000): 94.69
+                    Time Taken: 31725.8 ms.
+                    Total Loss: 5524.23
+EPOCH ITERATION: 2
+tallying...
+Correctly Classified Instances: 9469
+       Accuracy (out of 10000): 94.69
+                    Time Taken: 31888.4 ms.
+                    Total Loss: 5507.61
+EPOCH ITERATION: 3
+tallying...
+Correctly Classified Instances: 9460
+       Accuracy (out of 10000): 94.6
+                    Time Taken: 31672.8 ms.
+                    Total Loss: 5492.26
+EPOCH ITERATION: 4
+tallying...
+Correctly Classified Instances: 9452
+       Accuracy (out of 10000): 94.52
+                    Time Taken: 31574.9 ms.
+                    Total Loss: 5478.21
+EPOCH ITERATION: 5
+tallying...
+Correctly Classified Instances: 9439
+       Accuracy (out of 10000): 94.39
+                    Time Taken: 31524.9 ms.
+                    Total Loss: 5465.5
+EPOCH ITERATION: 6
+tallying...
+Correctly Classified Instances: 9434
+       Accuracy (out of 10000): 94.34
+                    Time Taken: 31912 ms.
+                    Total Loss: 5453.99
+EPOCH ITERATION: 7
+tallying...
+Correctly Classified Instances: 9419
+       Accuracy (out of 10000): 94.19
+                    Time Taken: 31800.2 ms.
+                    Total Loss: 5443.28
+EPOCH ITERATION: 8
+tallying...
+Correctly Classified Instances: 9415
+       Accuracy (out of 10000): 94.15
+                    Time Taken: 31954.6 ms.
+                    Total Loss: 5432.54
+EPOCH ITERATION: 9
+tallying...
+Correctly Classified Instances: 9401
+       Accuracy (out of 10000): 94.01
+                    Time Taken: 32176.9 ms.
+                    Total Loss: 5420.54
+EPOCH ITERATION: 10
+tallying...
+Correctly Classified Instances: 9395
+       Accuracy (out of 10000): 93.95
+                    Time Taken: 32025.2 ms.
+                    Total Loss: 5406.19
+EPOCH ITERATION: 11
+tallying...
+Correctly Classified Instances: 9388
+       Accuracy (out of 10000): 93.88
+                    Time Taken: 32015.5 ms.
+                    Total Loss: 5388.98
+EPOCH ITERATION: 12
+tallying...
+Correctly Classified Instances: 9358
+       Accuracy (out of 10000): 93.58
+                    Time Taken: 31783.9 ms.
+                    Total Loss: 5368.23
+EPOCH ITERATION: 13
+tallying...
+Correctly Classified Instances: 9338
+       Accuracy (out of 10000): 93.38
+                    Time Taken: 31751.4 ms.
+                    Total Loss: 5342.15
+EPOCH ITERATION: 14
+tallying...
+Correctly Classified Instances: 9311
+       Accuracy (out of 10000): 93.11
+                    Time Taken: 32317.2 ms.
+                    Total Loss: 5309.43
+EPOCH ITERATION: 15
+tallying...
+Correctly Classified Instances: 9284
+       Accuracy (out of 10000): 92.84
+                    Time Taken: 31687.8 ms.
+                    Total Loss: 5270.39
+EPOCH ITERATION: 16
+tallying...
+Correctly Classified Instances: 9267
+       Accuracy (out of 10000): 92.67
+                    Time Taken: 31479.3 ms.
+                    Total Loss: 5225.61
+EPOCH ITERATION: 17
+tallying...
+Correctly Classified Instances: 9222
+       Accuracy (out of 10000): 92.22
+                    Time Taken: 31440.7 ms.
+                    Total Loss: 5178.72
+EPOCH ITERATION: 18
+tallying...
+Correctly Classified Instances: 9175
+       Accuracy (out of 10000): 91.75
+                    Time Taken: 31612.6 ms.
+                    Total Loss: 5134.9
+EPOCH ITERATION: 19
+tallying...
+Correctly Classified Instances: 9131
+       Accuracy (out of 10000): 91.31
+                    Time Taken: 31591.8 ms.
+                    Total Loss: 5098.06
+EPOCH ITERATION: 20
+tallying...
+Correctly Classified Instances: 9103
+       Accuracy (out of 10000): 91.03
+                    Time Taken: 31557.4 ms.
+                    Total Loss: 5069.94
+EPOCH ITERATION: 21
+tallying...
+Correctly Classified Instances: 9059
+       Accuracy (out of 10000): 90.59
+                    Time Taken: 31360.3 ms.
+                    Total Loss: 5049.95
+EPOCH ITERATION: 22
+tallying...
+Correctly Classified Instances: 9044
+       Accuracy (out of 10000): 90.44
+                    Time Taken: 31459.4 ms.
+                    Total Loss: 5036.73
+EPOCH ITERATION: 23
+tallying...
+Correctly Classified Instances: 9024
+       Accuracy (out of 10000): 90.24
+                    Time Taken: 31609.1 ms.
+                    Total Loss: 5029.06
+EPOCH ITERATION: 24
+tallying...
+Correctly Classified Instances: 9016
+       Accuracy (out of 10000): 90.16
+                    Time Taken: 31928 ms.
+                    Total Loss: 5025.63
+EPOCH ITERATION: 25
+tallying...
+Correctly Classified Instances: 9017
+       Accuracy (out of 10000): 90.17
+                    Time Taken: 31667.8 ms.
+                    Total Loss: 5025.13
+EPOCH ITERATION: 26
+tallying...
+Correctly Classified Instances: 9023
+       Accuracy (out of 10000): 90.23
+                    Time Taken: 31352.8 ms.
+                    Total Loss: 5026.6
+EPOCH ITERATION: 27
+tallying...
+Correctly Classified Instances: 9028
+       Accuracy (out of 10000): 90.28
+                    Time Taken: 31462.5 ms.
+                    Total Loss: 5029.31
+EPOCH ITERATION: 28
+tallying...
+Correctly Classified Instances: 9013
+       Accuracy (out of 10000): 90.13
+                    Time Taken: 31549 ms.
+                    Total Loss: 5032.8
+EPOCH ITERATION: 29
+tallying...
+Correctly Classified Instances: 9014
+       Accuracy (out of 10000): 90.14
+                    Time Taken: 31107.3 ms.
+                    Total Loss: 5036.69
+EPOCH ITERATION: 30
+tallying...
+Correctly Classified Instances: 9021
+       Accuracy (out of 10000): 90.21
+                    Time Taken: 31213.3 ms.
+                    Total Loss: 5040.73
+EPOCH ITERATION: 31
+tallying...
+Correctly Classified Instances: 9029
+       Accuracy (out of 10000): 90.29
+                    Time Taken: 31323.1 ms.
+                    Total Loss: 5044.77
+EPOCH ITERATION: 32
+tallying...
+Correctly Classified Instances: 9039
+       Accuracy (out of 10000): 90.39
+                    Time Taken: 31508.6 ms.
+                    Total Loss: 5048.79
+EPOCH ITERATION: 33
+tallying...
+Correctly Classified Instances: 9042
+       Accuracy (out of 10000): 90.42
+                    Time Taken: 31463 ms.
+                    Total Loss: 5052.8
+EPOCH ITERATION: 34
+tallying...
+Correctly Classified Instances: 9046
+       Accuracy (out of 10000): 90.46
+                    Time Taken: 31546.7 ms.
+                    Total Loss: 5056.84
+EPOCH ITERATION: 35
+tallying...
+Correctly Classified Instances: 9048
+       Accuracy (out of 10000): 90.48
+                    Time Taken: 31307.2 ms.
+                    Total Loss: 5060.94
+EPOCH ITERATION: 36
+tallying...
+Correctly Classified Instances: 9055
+       Accuracy (out of 10000): 90.55
+                    Time Taken: 31072.4 ms.
+                    Total Loss: 5065.14
+EPOCH ITERATION: 37
+tallying...
+Correctly Classified Instances: 9061
+       Accuracy (out of 10000): 90.61
+                    Time Taken: 31282.3 ms.
+                    Total Loss: 5069.45
+EPOCH ITERATION: 38
+tallying...
+Correctly Classified Instances: 9060
+       Accuracy (out of 10000): 90.6
+                    Time Taken: 31631.2 ms.
+                    Total Loss: 5073.85
+EPOCH ITERATION: 39
+tallying...
+Correctly Classified Instances: 9064
+       Accuracy (out of 10000): 90.64
+                    Time Taken: 32491.8 ms.
+                    Total Loss: 5078.37
+EPOCH ITERATION: 40
+tallying...
+Correctly Classified Instances: 9072
+       Accuracy (out of 10000): 90.72
+                    Time Taken: 31986.2 ms.
+                    Total Loss: 5083.02
+EPOCH ITERATION: 41
+tallying...
+Correctly Classified Instances: 9071
+       Accuracy (out of 10000): 90.71
+                    Time Taken: 31876 ms.
+                    Total Loss: 5087.79
+EPOCH ITERATION: 42
+tallying...
+Correctly Classified Instances: 9074
+       Accuracy (out of 10000): 90.74
+                    Time Taken: 31633.8 ms.
+                    Total Loss: 5092.69
+EPOCH ITERATION: 43
+tallying...
+Correctly Classified Instances: 9078
+       Accuracy (out of 10000): 90.78
+                    Time Taken: 31726.9 ms.
+                    Total Loss: 5097.7
+EPOCH ITERATION: 44
+tallying...
+Correctly Classified Instances: 9090
+       Accuracy (out of 10000): 90.9
+                    Time Taken: 31683 ms.
+                    Total Loss: 5102.81
+EPOCH ITERATION: 45
+tallying...
+Correctly Classified Instances: 9095
+       Accuracy (out of 10000): 90.95
+                    Time Taken: 31657.2 ms.
+                    Total Loss: 5108
+EPOCH ITERATION: 46
+tallying...
+Correctly Classified Instances: 9097
+       Accuracy (out of 10000): 90.97
+                    Time Taken: 31770.6 ms.
+                    Total Loss: 5113.27
+EPOCH ITERATION: 47
+tallying...
+Correctly Classified Instances: 9098
+       Accuracy (out of 10000): 90.98
+                    Time Taken: 31512.8 ms.
+                    Total Loss: 5118.6
+EPOCH ITERATION: 48
+tallying...
+Correctly Classified Instances: 9105
+       Accuracy (out of 10000): 91.05
+                    Time Taken: 31565.3 ms.
+                    Total Loss: 5123.95
+EPOCH ITERATION: 49
+tallying...
+Correctly Classified Instances: 9112
+       Accuracy (out of 10000): 91.12
+                    Time Taken: 31663 ms.
+                    Total Loss: 5129.31
+
+0	94.7	5541.99
+1	94.69	5524.23
+2	94.69	5507.61
+3	94.6	5492.26
+4	94.52	5478.21
+5	94.39	5465.5
+6	94.34	5453.99
+7	94.19	5443.28
+8	94.15	5432.54
+9	94.01	5420.54
+10	93.95	5406.19
+11	93.88	5388.98
+12	93.58	5368.23
+13	93.38	5342.15
+14	93.11	5309.43
+15	92.84	5270.39
+16	92.67	5225.61
+17	92.22	5178.72
+18	91.75	5134.9
+19	91.31	5098.06
+20	91.03	5069.94
+21	90.59	5049.95
+22	90.44	5036.73
+23	90.24	5029.06
+24	90.16	5025.63
+25	90.17	5025.13
+26	90.23	5026.6
+27	90.28	5029.31
+28	90.13	5032.8
+29	90.14	5036.69
+30	90.21	5040.73
+31	90.29	5044.77
+32	90.39	5048.79
+33	90.42	5052.8
+34	90.46	5056.84
+35	90.48	5060.94
+36	90.55	5065.14
+37	90.61	5069.45
+38	90.6	5073.85
+39	90.64	5078.37
+40	90.72	5083.02
+41	90.71	5087.79
+42	90.74	5092.69
+43	90.78	5097.7
+44	90.9	5102.81
+45	90.95	5108
+46	90.97	5113.27
+47	90.98	5118.6
+48	91.05	5123.95
+49	91.12	5129.31
+DONE!
+running this...00101011111011011110011011101101010
+00101 01111 10110 11110 01101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 17
+cnNumTensorChannels: 23
+          batchSize: 620
+             m_plus: 0.88125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.2
+         Loss (100): 5895.51
+     Accuracy (300): 94.55
+          Loss(300): 5594.53
+EPOCH ITERATION: 0
+tallying...
+Correctly Classified Instances: 1198
+       Accuracy (out of 10000): 11.98
+                    Time Taken: 29023.3 ms.
+                    Total Loss: 7517.99
+EPOCH ITERATION: 1
+tallying...
+Correctly Classified Instances: 1284
+       Accuracy (out of 10000): 12.84
+                    Time Taken: 29514.4 ms.
+                    Total Loss: 7154.87
+EPOCH ITERATION: 2
+tallying...
+Correctly Classified Instances: 1164
+       Accuracy (out of 10000): 11.64
+                    Time Taken: 29222.9 ms.
+                    Total Loss: 7530.93
+EPOCH ITERATION: 3
+tallying...
+Correctly Classified Instances: 1575
+       Accuracy (out of 10000): 15.75
+                    Time Taken: 28783.3 ms.
+                    Total Loss: 7969.3
+EPOCH ITERATION: 4
+tallying...
+Correctly Classified Instances: 2515
+       Accuracy (out of 10000): 25.15
+                    Time Taken: 28706.2 ms.
+                    Total Loss: 7900.93
+EPOCH ITERATION: 5
+tallying...
+Correctly Classified Instances: 4926
+       Accuracy (out of 10000): 49.26
+                    Time Taken: 29173.9 ms.
+                    Total Loss: 8018.97
+EPOCH ITERATION: 6
+tallying...
+Correctly Classified Instances: 5136
+       Accuracy (out of 10000): 51.36
+                    Time Taken: 28971.9 ms.
+                    Total Loss: 7189.29
+EPOCH ITERATION: 7
+tallying...
+Correctly Classified Instances: 7086
+       Accuracy (out of 10000): 70.86
+                    Time Taken: 28810.8 ms.
+                    Total Loss: 6793.12
+EPOCH ITERATION: 8
+tallying...
+Correctly Classified Instances: 5980
+       Accuracy (out of 10000): 59.8
+                    Time Taken: 28914.7 ms.
+                    Total Loss: 7104.54
+EPOCH ITERATION: 9
+tallying...
+Correctly Classified Instances: 6217
+       Accuracy (out of 10000): 62.17
+                    Time Taken: 28757.1 ms.
+                    Total Loss: 6670.56
+EPOCH ITERATION: 10
+tallying...
+Correctly Classified Instances: 6744
+       Accuracy (out of 10000): 67.44
+                    Time Taken: 28357.3 ms.
+                    Total Loss: 6889.23
+EPOCH ITERATION: 11
+tallying...
+Correctly Classified Instances: 7237
+       Accuracy (out of 10000): 72.37
+                    Time Taken: 28311.4 ms.
+                    Total Loss: 6796.67
+EPOCH ITERATION: 12
+tallying...
+Correctly Classified Instances: 7648
+       Accuracy (out of 10000): 76.48
+                    Time Taken: 28755.7 ms.
+                    Total Loss: 7081.45
+EPOCH ITERATION: 13
+tallying...
+Correctly Classified Instances: 7506
+       Accuracy (out of 10000): 75.06
+                    Time Taken: 28691.9 ms.
+                    Total Loss: 6963.52
+EPOCH ITERATION: 14
+tallying...
+Correctly Classified Instances: 7952
+       Accuracy (out of 10000): 79.52
+                    Time Taken: 28538.9 ms.
+                    Total Loss: 6704.52
+EPOCH ITERATION: 15
+tallying...
+Correctly Classified Instances: 8245
+       Accuracy (out of 10000): 82.45
+                    Time Taken: 28572.1 ms.
+                    Total Loss: 6617.59
+EPOCH ITERATION: 16
+tallying...
+Correctly Classified Instances: 8448
+       Accuracy (out of 10000): 84.48
+                    Time Taken: 28718.4 ms.
+                    Total Loss: 6734.47
+EPOCH ITERATION: 17
+tallying...
+Correctly Classified Instances: 8779
+       Accuracy (out of 10000): 87.79
+                    Time Taken: 28804 ms.
+                    Total Loss: 6720.2
+EPOCH ITERATION: 18
+tallying...
+Correctly Classified Instances: 8974
+       Accuracy (out of 10000): 89.74
+                    Time Taken: 28777.9 ms.
+                    Total Loss: 6772.07
+EPOCH ITERATION: 19
+tallying...
+Correctly Classified Instances: 9034
+       Accuracy (out of 10000): 90.34
+                    Time Taken: 28752.9 ms.
+                    Total Loss: 6788.35
+EPOCH ITERATION: 20
+tallying...
+Correctly Classified Instances: 9087
+       Accuracy (out of 10000): 90.87
+                    Time Taken: 28432.4 ms.
+                    Total Loss: 6851.66
+EPOCH ITERATION: 21
+tallying...
+Correctly Classified Instances: 9115
+       Accuracy (out of 10000): 91.15
+                    Time Taken: 28065.9 ms.
+                    Total Loss: 6808.79
+EPOCH ITERATION: 22
+tallying...
+Correctly Classified Instances: 9166
+       Accuracy (out of 10000): 91.66
+                    Time Taken: 27990.6 ms.
+                    Total Loss: 6822.25
+EPOCH ITERATION: 23
+tallying...
+Correctly Classified Instances: 9211
+       Accuracy (out of 10000): 92.11
+                    Time Taken: 27994.1 ms.
+                    Total Loss: 6766.33
+EPOCH ITERATION: 24
+tallying...
+Correctly Classified Instances: 9229
+       Accuracy (out of 10000): 92.29
+                    Time Taken: 28197 ms.
+                    Total Loss: 6720.44
+EPOCH ITERATION: 25
+tallying...
+Correctly Classified Instances: 9275
+       Accuracy (out of 10000): 92.75
+                    Time Taken: 28023.5 ms.
+                    Total Loss: 6717.68
+EPOCH ITERATION: 26
+tallying...
+Correctly Classified Instances: 9297
+       Accuracy (out of 10000): 92.97
+                    Time Taken: 28344.3 ms.
+                    Total Loss: 6668.69
+EPOCH ITERATION: 27
+tallying...
+Correctly Classified Instances: 9284
+       Accuracy (out of 10000): 92.84
+                    Time Taken: 28493.1 ms.
+                    Total Loss: 6648.48
+EPOCH ITERATION: 28
+tallying...
+Correctly Classified Instances: 9308
+       Accuracy (out of 10000): 93.08
+                    Time Taken: 28670.8 ms.
+                    Total Loss: 6659.37
+EPOCH ITERATION: 29
+tallying...
+Correctly Classified Instances: 9307
+       Accuracy (out of 10000): 93.07
+                    Time Taken: 28432.4 ms.
+                    Total Loss: 6654.4
+EPOCH ITERATION: 30
+tallying...
+Correctly Classified Instances: 9313
+       Accuracy (out of 10000): 93.13
+                    Time Taken: 28449.8 ms.
+                    Total Loss: 6640.27
+EPOCH ITERATION: 31
+tallying...
+Correctly Classified Instances: 9321
+       Accuracy (out of 10000): 93.21
+                    Time Taken: 28296.6 ms.
+                    Total Loss: 6639.89
+EPOCH ITERATION: 32
+tallying...
+Correctly Classified Instances: 9330
+       Accuracy (out of 10000): 93.3
+                    Time Taken: 28896.9 ms.
+                    Total Loss: 6634.7
+EPOCH ITERATION: 33
+tallying...
+Correctly Classified Instances: 9340
+       Accuracy (out of 10000): 93.4
+                    Time Taken: 28377.5 ms.
+                    Total Loss: 6620.21
+EPOCH ITERATION: 34
+tallying...
+Correctly Classified Instances: 9358
+       Accuracy (out of 10000): 93.58
+                    Time Taken: 28446.5 ms.
+                    Total Loss: 6611.22
+EPOCH ITERATION: 35
+tallying...
+Correctly Classified Instances: 9376
+       Accuracy (out of 10000): 93.76
+                    Time Taken: 28430.8 ms.
+                    Total Loss: 6604.3
+EPOCH ITERATION: 36
+tallying...
+Correctly Classified Instances: 9384
+       Accuracy (out of 10000): 93.84
+                    Time Taken: 28895.7 ms.
+                    Total Loss: 6595.36
+EPOCH ITERATION: 37
+tallying...
+Correctly Classified Instances: 9394
+       Accuracy (out of 10000): 93.94
+                    Time Taken: 28397.1 ms.
+                    Total Loss: 6589.11
+EPOCH ITERATION: 38
+tallying...
+Correctly Classified Instances: 9407
+       Accuracy (out of 10000): 94.07
+                    Time Taken: 28149.2 ms.
+                    Total Loss: 6585.86
+EPOCH ITERATION: 39
+tallying...
+Correctly Classified Instances: 9417
+       Accuracy (out of 10000): 94.17
+                    Time Taken: 28354.9 ms.
+                    Total Loss: 6581.18
+EPOCH ITERATION: 40
+tallying...
+Correctly Classified Instances: 9421
+       Accuracy (out of 10000): 94.21
+                    Time Taken: 28632.8 ms.
+                    Total Loss: 6575.66
+EPOCH ITERATION: 41
+tallying...
+Correctly Classified Instances: 9415
+       Accuracy (out of 10000): 94.15
+                    Time Taken: 28424.4 ms.
+                    Total Loss: 6569.98
+EPOCH ITERATION: 42
+tallying...
+Correctly Classified Instances: 9407
+       Accuracy (out of 10000): 94.07
+                    Time Taken: 28277.8 ms.
+                    Total Loss: 6562.36
+EPOCH ITERATION: 43
+tallying...
+Correctly Classified Instances: 9399
+       Accuracy (out of 10000): 93.99
+                    Time Taken: 28576.6 ms.
+                    Total Loss: 6553.99
+EPOCH ITERATION: 44
+tallying...
+Correctly Classified Instances: 9397
+       Accuracy (out of 10000): 93.97
+                    Time Taken: 28548.9 ms.
+                    Total Loss: 6546.08
+EPOCH ITERATION: 45
+tallying...
+Correctly Classified Instances: 9404
+       Accuracy (out of 10000): 94.04
+                    Time Taken: 28907.7 ms.
+                    Total Loss: 6538.75
+EPOCH ITERATION: 46
+tallying...
+Correctly Classified Instances: 9404
+       Accuracy (out of 10000): 94.04
+                    Time Taken: 28627.3 ms.
+                    Total Loss: 6532.38
+EPOCH ITERATION: 47
+tallying...
+Correctly Classified Instances: 9404
+       Accuracy (out of 10000): 94.04
+                    Time Taken: 28594.7 ms.
+                    Total Loss: 6527.25
+EPOCH ITERATION: 48
+tallying...
+Correctly Classified Instances: 9409
+       Accuracy (out of 10000): 94.09
+                    Time Taken: 28765 ms.
+                    Total Loss: 6523.49
+EPOCH ITERATION: 49
+tallying...
+Correctly Classified Instances: 9426
+       Accuracy (out of 10000): 94.26
+                    Time Taken: 28733 ms.
+                    Total Loss: 6520.91
+
+0	11.98	7517.99
+1	12.84	7154.87
+2	11.64	7530.93
+3	15.75	7969.3
+4	25.15	7900.93
+5	49.26	8018.97
+6	51.36	7189.29
+7	70.86	6793.12
+8	59.8	7104.54
+9	62.17	6670.56
+10	67.44	6889.23
+11	72.37	6796.67
+12	76.48	7081.45
+13	75.06	6963.52
+14	79.52	6704.52
+15	82.45	6617.59
+16	84.48	6734.47
+17	87.79	6720.2
+18	89.74	6772.07
+19	90.34	6788.35
+20	90.87	6851.66
+21	91.15	6808.79
+22	91.66	6822.25
+23	92.11	6766.33
+24	92.29	6720.44
+25	92.75	6717.68
+26	92.97	6668.69
+27	92.84	6648.48
+28	93.08	6659.37
+29	93.07	6654.4
+30	93.13	6640.27
+31	93.21	6639.89
+32	93.3	6634.7
+33	93.4	6620.21
+34	93.58	6611.22
+35	93.76	6604.3
+36	93.84	6595.36
+37	93.94	6589.11
+38	94.07	6585.86
+39	94.17	6581.18
+40	94.21	6575.66
+41	94.15	6569.98
+42	94.07	6562.36
+43	93.99	6553.99
+44	93.97	6546.08
+45	94.04	6538.75
+46	94.04	6532.38
+47	94.04	6527.25
+48	94.09	6523.49
+49	94.26	6520.91
+DONE!
+EPOCH ITERATION: 0
+tallying...
+Correctly Classified Instances: 9436
+       Accuracy (out of 10000): 94.36
+                    Time Taken: 28666.3 ms.
+                    Total Loss: 6519.25
+EPOCH ITERATION: 1
+tallying...
+Correctly Classified Instances: 9437
+       Accuracy (out of 10000): 94.37
+                    Time Taken: 28355.7 ms.
+                    Total Loss: 6518.14
+EPOCH ITERATION: 2
+tallying...
+Correctly Classified Instances: 9443
+       Accuracy (out of 10000): 94.43
+                    Time Taken: 28712.2 ms.
+                    Total Loss: 6517.23
+EPOCH ITERATION: 3
+tallying...
+Correctly Classified Instances: 9448
+       Accuracy (out of 10000): 94.48
+                    Time Taken: 28493.2 ms.
+                    Total Loss: 6516.16
+EPOCH ITERATION: 4
+tallying...
+Correctly Classified Instances: 9456
+       Accuracy (out of 10000): 94.56
+                    Time Taken: 28537.7 ms.
+                    Total Loss: 6514.69
+EPOCH ITERATION: 5
+tallying...
+Correctly Classified Instances: 9470
+       Accuracy (out of 10000): 94.7
+                    Time Taken: 28533.5 ms.
+                    Total Loss: 6512.68
+EPOCH ITERATION: 6
+tallying...
+Correctly Classified Instances: 9477
+       Accuracy (out of 10000): 94.77
+                    Time Taken: 28505 ms.
+                    Total Loss: 6510.04
+EPOCH ITERATION: 7
+tallying...
+Correctly Classified Instances: 9481
+       Accuracy (out of 10000): 94.81
+                    Time Taken: 28623.6 ms.
+                    Total Loss: 6506.72
+EPOCH ITERATION: 8
+tallying...
+Correctly Classified Instances: 9486
+       Accuracy (out of 10000): 94.86
+                    Time Taken: 28468.9 ms.
+                    Total Loss: 6502.7
+EPOCH ITERATION: 9
+tallying...
+Correctly Classified Instances: 9481
+       Accuracy (out of 10000): 94.81
+                    Time Taken: 28507.2 ms.
+                    Total Loss: 6497.94
+EPOCH ITERATION: 10
+tallying...
+Correctly Classified Instances: 9478
+       Accuracy (out of 10000): 94.78
+                    Time Taken: 29064.1 ms.
+                    Total Loss: 6492.37
+EPOCH ITERATION: 11
+tallying...
+Correctly Classified Instances: 9473
+       Accuracy (out of 10000): 94.73
+                    Time Taken: 28847.9 ms.
+                    Total Loss: 6485.89
+EPOCH ITERATION: 12
+tallying...
+Correctly Classified Instances: 9481
+       Accuracy (out of 10000): 94.81
+                    Time Taken: 29044.2 ms.
+                    Total Loss: 6478.36
+EPOCH ITERATION: 13
+tallying...
+Correctly Classified Instances: 9475
+       Accuracy (out of 10000): 94.75
+                    Time Taken: 28950.3 ms.
+                    Total Loss: 6469.64
+EPOCH ITERATION: 14
+tallying...
+Correctly Classified Instances: 9473
+       Accuracy (out of 10000): 94.73
+                    Time Taken: 28422.7 ms.
+                    Total Loss: 6459.53
+EPOCH ITERATION: 15
+tallying...
+Correctly Classified Instances: 9469
+       Accuracy (out of 10000): 94.69
+                    Time Taken: 28338.8 ms.
+                    Total Loss: 6447.92
+EPOCH ITERATION: 16
+tallying...
+Correctly Classified Instances: 9459
+       Accuracy (out of 10000): 94.59
+                    Time Taken: 28629.3 ms.
+                    Total Loss: 6434.76
+EPOCH ITERATION: 17
+tallying...
+Correctly Classified Instances: 9452
+       Accuracy (out of 10000): 94.52
+                    Time Taken: 28458.7 ms.
+                    Total Loss: 6420.19
+EPOCH ITERATION: 18
+tallying...
+Correctly Classified Instances: 9441
+       Accuracy (out of 10000): 94.41
+                    Time Taken: 28492.9 ms.
+                    Total Loss: 6404.43
+EPOCH ITERATION: 19
+tallying...
+Correctly Classified Instances: 9427
+       Accuracy (out of 10000): 94.27
+                    Time Taken: 28420.4 ms.
+                    Total Loss: 6387.75
+EPOCH ITERATION: 20
+tallying...
+Correctly Classified Instances: 9415
+       Accuracy (out of 10000): 94.15
+                    Time Taken: 28523.4 ms.
+                    Total Loss: 6370.44
+EPOCH ITERATION: 21
+tallying...
+Correctly Classified Instances: 9403
+       Accuracy (out of 10000): 94.03
+                    Time Taken: 28733.2 ms.
+                    Total Loss: 6352.7
+EPOCH ITERATION: 22
+tallying...
+Correctly Classified Instances: 9399
+       Accuracy (out of 10000): 93.99
+                    Time Taken: 28844.7 ms.
+                    Total Loss: 6334.66
+EPOCH ITERATION: 23
+tallying...
+Correctly Classified Instances: 9395
+       Accuracy (out of 10000): 93.95
+                    Time Taken: 28585.2 ms.
+                    Total Loss: 6316.4
+EPOCH ITERATION: 24
+tallying...
+Correctly Classified Instances: 9389
+       Accuracy (out of 10000): 93.89
+                    Time Taken: 28846.5 ms.
+                    Total Loss: 6298
+EPOCH ITERATION: 25
+tallying...
+Correctly Classified Instances: 9376
+       Accuracy (out of 10000): 93.76
+                    Time Taken: 28253.6 ms.
+                    Total Loss: 6279.58
+EPOCH ITERATION: 26
+tallying...
+Correctly Classified Instances: 9371
+       Accuracy (out of 10000): 93.71
+                    Time Taken: 28569.3 ms.
+                    Total Loss: 6261.31
+EPOCH ITERATION: 27
+tallying...
+Correctly Classified Instances: 9367
+       Accuracy (out of 10000): 93.67
+                    Time Taken: 28509.6 ms.
+                    Total Loss: 6243.4
+EPOCH ITERATION: 28
+tallying...
+Correctly Classified Instances: 9357
+       Accuracy (out of 10000): 93.57
+                    Time Taken: 28451.3 ms.
+                    Total Loss: 6226.14
+EPOCH ITERATION: 29
+tallying...
+Correctly Classified Instances: 9355
+       Accuracy (out of 10000): 93.55
+                    Time Taken: 28517.1 ms.
+                    Total Loss: 6209.88
+EPOCH ITERATION: 30
+tallying...
+Correctly Classified Instances: 9346
+       Accuracy (out of 10000): 93.46
+                    Time Taken: 28964.6 ms.
+                    Total Loss: 6194.86
+EPOCH ITERATION: 31
+tallying...
+Correctly Classified Instances: 9339
+       Accuracy (out of 10000): 93.39
+                    Time Taken: 28410.6 ms.
+                    Total Loss: 6181.18
+EPOCH ITERATION: 32
+tallying...
+Correctly Classified Instances: 9327
+       Accuracy (out of 10000): 93.27
+                    Time Taken: 28348.4 ms.
+                    Total Loss: 6168.82
+EPOCH ITERATION: 33
+tallying...
+Correctly Classified Instances: 9326
+       Accuracy (out of 10000): 93.26
+                    Time Taken: 28488.9 ms.
+                    Total Loss: 6157.8
+EPOCH ITERATION: 34
+tallying...
+Correctly Classified Instances: 9323
+       Accuracy (out of 10000): 93.23
+                    Time Taken: 28413.7 ms.
+                    Total Loss: 6148.05
+EPOCH ITERATION: 35
+tallying...
+Correctly Classified Instances: 9324
+       Accuracy (out of 10000): 93.24
+                    Time Taken: 28428.6 ms.
+                    Total Loss: 6139.41
+EPOCH ITERATION: 36
+tallying...
+Correctly Classified Instances: 9325
+       Accuracy (out of 10000): 93.25
+                    Time Taken: 28469.1 ms.
+                    Total Loss: 6131.74
+EPOCH ITERATION: 37
+tallying...
+Correctly Classified Instances: 9327
+       Accuracy (out of 10000): 93.27
+                    Time Taken: 28565.1 ms.
+                    Total Loss: 6124.95
+EPOCH ITERATION: 38
+tallying...
+Correctly Classified Instances: 9328
+       Accuracy (out of 10000): 93.28
+                    Time Taken: 28470.3 ms.
+                    Total Loss: 6118.91
+EPOCH ITERATION: 39
+tallying...
+Correctly Classified Instances: 9334
+       Accuracy (out of 10000): 93.34
+                    Time Taken: 29093.4 ms.
+                    Total Loss: 6113.45
+EPOCH ITERATION: 40
+tallying...
+Correctly Classified Instances: 9335
+       Accuracy (out of 10000): 93.35
+                    Time Taken: 28057.2 ms.
+                    Total Loss: 6108.38
+EPOCH ITERATION: 41
+tallying...
+Correctly Classified Instances: 9333
+       Accuracy (out of 10000): 93.33
+                    Time Taken: 28887.5 ms.
+                    Total Loss: 6103.54
+EPOCH ITERATION: 42
+tallying...
+Correctly Classified Instances: 9334
+       Accuracy (out of 10000): 93.34
+                    Time Taken: 28564.2 ms.
+                    Total Loss: 6098.87
+EPOCH ITERATION: 43
+tallying...
+Correctly Classified Instances: 9330
+       Accuracy (out of 10000): 93.3
+                    Time Taken: 28607.6 ms.
+                    Total Loss: 6094.38
+EPOCH ITERATION: 44
+tallying...
+Correctly Classified Instances: 9334
+       Accuracy (out of 10000): 93.34
+                    Time Taken: 28510.5 ms.
+                    Total Loss: 6090.12
+EPOCH ITERATION: 45
+tallying...
+Correctly Classified Instances: 9332
+       Accuracy (out of 10000): 93.32
+                    Time Taken: 28253.4 ms.
+                    Total Loss: 6086.16
+EPOCH ITERATION: 46
+tallying...
+Correctly Classified Instances: 9332
+       Accuracy (out of 10000): 93.32
+                    Time Taken: 28580.5 ms.
+                    Total Loss: 6082.58
+EPOCH ITERATION: 47
+tallying...
+Correctly Classified Instances: 9335
+       Accuracy (out of 10000): 93.35
+                    Time Taken: 28481.6 ms.
+                    Total Loss: 6079.42
+EPOCH ITERATION: 48
+tallying...
+Correctly Classified Instances: 9334
+       Accuracy (out of 10000): 93.34
+                    Time Taken: 28516.7 ms.
+                    Total Loss: 6076.7
+EPOCH ITERATION: 49
+tallying...
+Correctly Classified Instances: 9338
+       Accuracy (out of 10000): 93.38
+                    Time Taken: 28507.3 ms.
+                    Total Loss: 6074.4
+
+0	94.36	6519.25
+1	94.37	6518.14
+2	94.43	6517.23
+3	94.48	6516.16
+4	94.56	6514.69
+5	94.7	6512.68
+6	94.77	6510.04
+7	94.81	6506.72
+8	94.86	6502.7
+9	94.81	6497.94
+10	94.78	6492.37
+11	94.73	6485.89
+12	94.81	6478.36
+13	94.75	6469.64
+14	94.73	6459.53
+15	94.69	6447.92
+16	94.59	6434.76
+17	94.52	6420.19
+18	94.41	6404.43
+19	94.27	6387.75
+20	94.15	6370.44
+21	94.03	6352.7
+22	93.99	6334.66
+23	93.95	6316.4
+24	93.89	6298
+25	93.76	6279.58
+26	93.71	6261.31
+27	93.67	6243.4
+28	93.57	6226.14
+29	93.55	6209.88
+30	93.46	6194.86
+31	93.39	6181.18
+32	93.27	6168.82
+33	93.26	6157.8
+34	93.23	6148.05
+35	93.24	6139.41
+36	93.25	6131.74
+37	93.27	6124.95
+38	93.28	6118.91
+39	93.34	6113.45
+40	93.35	6108.38
+41	93.33	6103.54
+42	93.34	6098.87
+43	93.3	6094.38
+44	93.34	6090.12
+45	93.32	6086.16
+46	93.32	6082.58
+47	93.35	6079.42
+48	93.34	6076.7
+49	93.38	6074.4
+DONE!
+Iteration (NSGA-II): 4
+Iteration (NSGA-II): 5
+Iteration (NSGA-II): 6
+Iteration (NSGA-II): 7
+Iteration (NSGA-II): 8
+Iteration (NSGA-II): 9
+Iteration (NSGA-II): 10
+Iteration (NSGA-II): 11
+Iteration (NSGA-II): 12
+Iteration (NSGA-II): 13
+Iteration (NSGA-II): 14
+Iteration (NSGA-II): 15
+Iteration (NSGA-II): 16
+Iteration (NSGA-II): 17
+Iteration (NSGA-II): 18
+Iteration (NSGA-II): 19
+Iteration (NSGA-II): 20
+Iteration (NSGA-II): 21
+Iteration (NSGA-II): 22
+Iteration (NSGA-II): 23
+Iteration (NSGA-II): 24
+Iteration (NSGA-II): 25
+Iteration (NSGA-II): 26
+Iteration (NSGA-II): 27
+Iteration (NSGA-II): 28
+Iteration (NSGA-II): 29
+Iteration (NSGA-II): 30
+Iteration (NSGA-II): 31
+Iteration (NSGA-II): 32
+Iteration (NSGA-II): 33
+Iteration (NSGA-II): 34
+Iteration (NSGA-II): 35
+Iteration (NSGA-II): 36
+Iteration (NSGA-II): 37
+Iteration (NSGA-II): 38
+Iteration (NSGA-II): 39
+Iteration (NSGA-II): 40
+Iteration (NSGA-II): 41
+Iteration (NSGA-II): 42
+Iteration (NSGA-II): 43
+Iteration (NSGA-II): 44
+Iteration (NSGA-II): 45
+Iteration (NSGA-II): 46
+Iteration (NSGA-II): 47
+Iteration (NSGA-II): 48
+Iteration (NSGA-II): 49
+[00] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[01] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[02] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[03] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[04] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[05] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[06] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[07] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[08] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+[09] - 00101 00111 11110 00000 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 94.81
+         Loss (100): 6446.59
+     Accuracy (300): 96.11
+          Loss(300): 6127
+
+MIN:	A100	A300	L100	L300
+	88.02	90.38	5528.22	5667.87	
+	88.02	90.38	5528.22	5667.87	
+	90	91.13	5117.88	5164.31	
+	90	91.13	5117.88	5164.31	
+	90.38	92.03	5573.3	5594.53	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+AVERAGE:	A100	A300	L100	L300
+	91.478	93.297	7236.9	7434.89	
+	91.478	93.297	7236.9	7434.89	
+	92.801	93.68	6870.05	6910.03	
+	93.319	94.64	6042.82	5900.08	
+	93.899	95.061	6191.02	5989.02	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+MAX:	A100	A300	L100	L300
+	93.98	95.32	8960.97	9373.84	
+	93.98	95.32	8960.97	9373.84	
+	93.98	95.32	8272.64	8153.14	
+	95.03	96.11	6629.09	6220.66	
+	95.03	96.11	6629.09	6220.66	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	
+	94.81	96.11	6446.59	6127	

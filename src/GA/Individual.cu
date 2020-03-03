@@ -134,7 +134,7 @@ void Individual::decodeChromosome() {
 
 void Individual::evaluate() {
     decodeChromosome();
-    fakeEvaluate();
+//    fakeEvaluate();
 
     if (CapsNetDAO::getInstance()->isInDatabase(*this)) {
         CapsNetDAO::getInstance()->getFromDatabase(*this);

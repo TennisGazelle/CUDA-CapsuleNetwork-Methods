@@ -1,0 +1,1611 @@
+           Population Size: 30
+            Num Iterations: 50
+  Probability of Crossover: 0.5
+   Probability of Mutation: 0.01
+NSGA RUN
+Iteration (NSGA-II): 0
+[00] - 01000 11010 10100 00010 11101 11101 00010: 
+         cnInnerDim: 10
+         cnOuterDim: 28
+cnNumTensorChannels: 21
+          batchSize: 60
+             m_plus: 0.98125
+            m_minus: 0.1875
+             lambda: 0.4125
+
+     Accuracy (100): 93.71
+         Loss (100): 7414.05
+     Accuracy (300): 93.82
+          Loss(300): 7607.86
+
+[01] - 01010 00101 10010 01100 11111 10001 01000: 
+         cnInnerDim: 12
+         cnOuterDim: 7
+cnNumTensorChannels: 19
+          batchSize: 260
+             m_plus: 0.99375
+            m_minus: 0.1125
+             lambda: 0.45
+
+     Accuracy (100): 91.08
+         Loss (100): 8960.97
+     Accuracy (300): 93.52
+          Loss(300): 9373.84
+
+[02] - 01100 01001 01100 11010 00001 01000 11001: 
+         cnInnerDim: 14
+         cnOuterDim: 11
+cnNumTensorChannels: 13
+          batchSize: 540
+             m_plus: 0.80625
+            m_minus: 0.05625
+             lambda: 0.55625
+
+     Accuracy (100): 88.02
+         Loss (100): 6672.96
+     Accuracy (300): 91.42
+          Loss(300): 6945.57
+
+[03] - 00101 01111 10110 11100 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 17
+cnNumTensorChannels: 23
+          batchSize: 580
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 93.21
+         Loss (100): 5742.25
+     Accuracy (300): 95.32
+          Loss(300): 5667.87
+
+[04] - 10101 10000 00110 11110 00110 10101 01100: 
+         cnInnerDim: 23
+         cnOuterDim: 18
+cnNumTensorChannels: 7
+          batchSize: 620
+             m_plus: 0.8375
+            m_minus: 0.1375
+             lambda: 0.475
+
+     Accuracy (100): 89.05
+         Loss (100): 5528.22
+     Accuracy (300): 90.38
+          Loss(300): 5748.32
+
+[05] - 11100 10010 10010 00001 00000 00000 11001: 
+         cnInnerDim: 30
+         cnOuterDim: 20
+cnNumTensorChannels: 19
+          batchSize: 40
+             m_plus: 0.8
+            m_minus: 0.00625
+             lambda: 0.55625
+
+     Accuracy (100): 90.35
+         Loss (100): 7534.44
+     Accuracy (300): 92.8
+          Loss(300): 7706.71
+
+[06] - 01010 11110 10001 00110 01101 11001 01110: 
+         cnInnerDim: 12
+         cnOuterDim: 32
+cnNumTensorChannels: 18
+          batchSize: 140
+             m_plus: 0.88125
+            m_minus: 0.1625
+             lambda: 0.4875
+
+     Accuracy (100): 92.97
+         Loss (100): 6163.91
+     Accuracy (300): 95.28
+          Loss(300): 6533.97
+
+[07] - 10110 00110 00101 00010 11001 11000 10111: 
+         cnInnerDim: 24
+         cnOuterDim: 8
+cnNumTensorChannels: 6
+          batchSize: 60
+             m_plus: 0.95625
+            m_minus: 0.15625
+             lambda: 0.54375
+
+     Accuracy (100): 90.22
+         Loss (100): 7879.88
+     Accuracy (300): 92.09
+          Loss(300): 8277.3
+
+[08] - 01011 10000 10100 00100 10001 01101 10111: 
+         cnInnerDim: 13
+         cnOuterDim: 18
+cnNumTensorChannels: 21
+          batchSize: 100
+             m_plus: 0.90625
+            m_minus: 0.0875
+             lambda: 0.54375
+
+     Accuracy (100): 92.19
+         Loss (100): 8199.68
+     Accuracy (300): 93.72
+          Loss(300): 8334.31
+
+[09] - 00101 00111 11110 00001 11001 11101 11110: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 40
+             m_plus: 0.95625
+            m_minus: 0.1875
+             lambda: 0.5875
+
+     Accuracy (100): 93.98
+         Loss (100): 8272.64
+     Accuracy (300): 94.62
+          Loss(300): 8153.14
+
+[10] - 01001 10001 01011 10001 01110 01100 11001: 
+         cnInnerDim: 11
+         cnOuterDim: 19
+cnNumTensorChannels: 12
+          batchSize: 360
+             m_plus: 0.8875
+            m_minus: 0.08125
+             lambda: 0.55625
+
+     Accuracy (100): 93.07
+         Loss (100): 7921.13
+     Accuracy (300): 94.31
+          Loss(300): 8161.3
+
+[11] - 10111 10011 11001 10000 11011 00001 01101: 
+         cnInnerDim: 25
+         cnOuterDim: 21
+cnNumTensorChannels: 26
+          batchSize: 340
+             m_plus: 0.96875
+            m_minus: 0.0125
+             lambda: 0.48125
+
+     Accuracy (100): 94.22
+         Loss (100): 10429.2
+     Accuracy (300): 94.82
+          Loss(300): 10576
+
+[12] - 11011 01001 10001 11010 00111 11101 01111: 
+         cnInnerDim: 29
+         cnOuterDim: 11
+cnNumTensorChannels: 18
+          batchSize: 540
+             m_plus: 0.84375
+            m_minus: 0.1875
+             lambda: 0.49375
+
+     Accuracy (100): 90.13
+         Loss (100): 5232.04
+     Accuracy (300): 91.43
+          Loss(300): 5463.53
+
+[13] - 01000 00010 10000 01100 01110 10001 11100: 
+         cnInnerDim: 10
+         cnOuterDim: 4
+cnNumTensorChannels: 17
+          batchSize: 260
+             m_plus: 0.8875
+            m_minus: 0.1125
+             lambda: 0.575
+
+     Accuracy (100): 91.33
+         Loss (100): 7596.1
+     Accuracy (300): 94.32
+          Loss(300): 7965.02
+
+[14] - 11000 10110 00011 00000 10001 00000 00010: 
+         cnInnerDim: 26
+         cnOuterDim: 24
+cnNumTensorChannels: 4
+          batchSize: 20
+             m_plus: 0.90625
+            m_minus: 0.00625
+             lambda: 0.4125
+
+     Accuracy (100): 91.83
+         Loss (100): 8544.15
+     Accuracy (300): 92.94
+          Loss(300): 8664.89
+
+[15] - 00000 10110 00010 00010 10000 11010 10111: 
+         cnInnerDim: 2
+         cnOuterDim: 24
+cnNumTensorChannels: 3
+          batchSize: 60
+             m_plus: 0.9
+            m_minus: 0.16875
+             lambda: 0.54375
+
+     Accuracy (100): 86.39
+         Loss (100): 6196.67
+     Accuracy (300): 88.43
+          Loss(300): 6438.87
+
+[16] - 11100 00110 11001 10001 10000 01011 01001: 
+         cnInnerDim: 30
+         cnOuterDim: 8
+cnNumTensorChannels: 26
+          batchSize: 360
+             m_plus: 0.9
+            m_minus: 0.075
+             lambda: 0.45625
+
+     Accuracy (100): 91.82
+         Loss (100): 7735.58
+     Accuracy (300): 93.11
+          Loss(300): 7867.05
+
+[17] - 10001 00110 00111 00100 11100 00100 11110: 
+         cnInnerDim: 19
+         cnOuterDim: 8
+cnNumTensorChannels: 8
+          batchSize: 100
+             m_plus: 0.975
+            m_minus: 0.03125
+             lambda: 0.5875
+
+     Accuracy (100): 91.97
+         Loss (100): 10711
+     Accuracy (300): 95
+          Loss(300): 11103.3
+
+[18] - 00001 11000 11010 01101 00001 11101 11011: 
+         cnInnerDim: 3
+         cnOuterDim: 26
+cnNumTensorChannels: 27
+          batchSize: 280
+             m_plus: 0.80625
+            m_minus: 0.1875
+             lambda: 0.56875
+
+     Accuracy (100): 92.95
+         Loss (100): 5689.08
+     Accuracy (300): 94.75
+          Loss(300): 5578.68
+
+[19] - 11001 01111 11001 11001 01010 01001 10000: 
+         cnInnerDim: 27
+         cnOuterDim: 17
+cnNumTensorChannels: 26
+          batchSize: 520
+             m_plus: 0.8625
+            m_minus: 0.0625
+             lambda: 0.5
+
+     Accuracy (100): 92.78
+         Loss (100): 7684.73
+     Accuracy (300): 94.91
+          Loss(300): 7785.88
+
+[20] - 01010 10111 11010 01011 01010 00001 10010: 
+         cnInnerDim: 12
+         cnOuterDim: 25
+cnNumTensorChannels: 27
+          batchSize: 240
+             m_plus: 0.8625
+            m_minus: 0.0125
+             lambda: 0.5125
+
+     Accuracy (100): 91.1
+         Loss (100): 8351.3
+     Accuracy (300): 93.34
+          Loss(300): 8537.16
+
+[21] - 11011 00110 11010 10001 00011 10000 00011: 
+         cnInnerDim: 29
+         cnOuterDim: 8
+cnNumTensorChannels: 27
+          batchSize: 360
+             m_plus: 0.81875
+            m_minus: 0.10625
+             lambda: 0.41875
+
+     Accuracy (100): 92.07
+         Loss (100): 5848.9
+     Accuracy (300): 93.98
+          Loss(300): 6006.91
+
+[22] - 11111 00011 11011 10010 01100 10000 10011: 
+         cnInnerDim: 33
+         cnOuterDim: 5
+cnNumTensorChannels: 28
+          batchSize: 380
+             m_plus: 0.875
+            m_minus: 0.10625
+             lambda: 0.51875
+
+     Accuracy (100): 92.05
+         Loss (100): 7091.73
+     Accuracy (300): 93.66
+          Loss(300): 7287.15
+
+[23] - 10101 10010 01011 01011 11010 01001 00110: 
+         cnInnerDim: 23
+         cnOuterDim: 20
+cnNumTensorChannels: 12
+          batchSize: 240
+             m_plus: 0.9625
+            m_minus: 0.0625
+             lambda: 0.4375
+
+     Accuracy (100): 92.14
+         Loss (100): 9023.43
+     Accuracy (300): 93.42
+          Loss(300): 9217.75
+
+[24] - 11111 11011 10000 01101 01100 00100 01011: 
+         cnInnerDim: 33
+         cnOuterDim: 29
+cnNumTensorChannels: 17
+          batchSize: 280
+             m_plus: 0.875
+            m_minus: 0.03125
+             lambda: 0.46875
+
+     Accuracy (100): 93.58
+         Loss (100): 8071.95
+     Accuracy (300): 93.03
+          Loss(300): 8062.84
+
+[25] - 10100 00000 00001 00111 00010 11011 11100: 
+         cnInnerDim: 22
+         cnOuterDim: 2
+cnNumTensorChannels: 2
+          batchSize: 160
+             m_plus: 0.8125
+            m_minus: 0.175
+             lambda: 0.575
+
+     Accuracy (100): 93.78
+         Loss (100): 5808.3
+     Accuracy (300): 92.23
+          Loss(300): 5157.14
+
+[26] - 10001 10001 00000 10000 11011 11101 10010: 
+         cnInnerDim: 19
+         cnOuterDim: 19
+cnNumTensorChannels: 1
+          batchSize: 340
+             m_plus: 0.96875
+            m_minus: 0.1875
+             lambda: 0.5125
+
+     Accuracy (100): 89.12
+         Loss (100): 7152.97
+     Accuracy (300): 90.39
+          Loss(300): 7170.23
+
+[27] - 01111 01010 01111 10110 11101 11101 00011: 
+         cnInnerDim: 17
+         cnOuterDim: 12
+cnNumTensorChannels: 16
+          batchSize: 460
+             m_plus: 0.98125
+            m_minus: 0.1875
+             lambda: 0.41875
+
+     Accuracy (100): 91.18
+         Loss (100): 7296
+     Accuracy (300): 91.82
+          Loss(300): 7502.15
+
+[28] - 00101 00010 00110 10110 10010 11101 10110: 
+         cnInnerDim: 7
+         cnOuterDim: 4
+cnNumTensorChannels: 7
+          batchSize: 460
+             m_plus: 0.9125
+            m_minus: 0.1875
+             lambda: 0.5375
+
+     Accuracy (100): 91.49
+         Loss (100): 6742.59
+     Accuracy (300): 92.65
+          Loss(300): 6813.34
+
+[29] - 11110 00011 11000 11110 01010 11100 00111: 
+         cnInnerDim: 32
+         cnOuterDim: 5
+cnNumTensorChannels: 25
+          batchSize: 620
+             m_plus: 0.8625
+            m_minus: 0.18125
+             lambda: 0.44375
+
+     Accuracy (100): 91.68
+         Loss (100): 5634.81
+     Accuracy (300): 92.74
+          Loss(300): 5820.22
+
+Iteration (NSGA-II): 1
+[00] - 00101 00111 11110 00000 10001 00000 00010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.90625
+            m_minus: 0.00625
+             lambda: 0.4125
+
+     Accuracy (100): 94.86
+         Loss (100): 8944.8
+     Accuracy (300): 95.78
+          Loss(300): 9010.98
+
+[01] - 11100 10010 10100 00010 11101 11101 00010: 
+         cnInnerDim: 30
+         cnOuterDim: 20
+cnNumTensorChannels: 21
+          batchSize: 60
+             m_plus: 0.98125
+            m_minus: 0.1875
+             lambda: 0.4125
+
+     Accuracy (100): 94.07
+         Loss (100): 7561.67
+     Accuracy (300): 94.41
+          Loss(300): 7704.68
+
+[02] - 11100 10010 10100 00010 11101 11101 00010: 
+         cnInnerDim: 30
+         cnOuterDim: 20
+cnNumTensorChannels: 21
+          batchSize: 60
+             m_plus: 0.98125
+            m_minus: 0.1875
+             lambda: 0.4125
+
+     Accuracy (100): 94.07
+         Loss (100): 7561.67
+     Accuracy (300): 94.41
+          Loss(300): 7704.68
+
+[03] - 11011 01001 10001 11010 00111 11101 01111: 
+         cnInnerDim: 29
+         cnOuterDim: 11
+cnNumTensorChannels: 18
+          batchSize: 540
+             m_plus: 0.84375
+            m_minus: 0.1875
+             lambda: 0.49375
+
+     Accuracy (100): 90.13
+         Loss (100): 5232.04
+     Accuracy (300): 91.43
+          Loss(300): 5463.53
+
+[04] - 01000 11010 10100 00010 11101 11101 00010: 
+         cnInnerDim: 10
+         cnOuterDim: 28
+cnNumTensorChannels: 21
+          batchSize: 60
+             m_plus: 0.98125
+            m_minus: 0.1875
+             lambda: 0.4125
+
+     Accuracy (100): 93.71
+         Loss (100): 7414.05
+     Accuracy (300): 93.82
+          Loss(300): 7607.86
+
+[05] - 00101 01111 10110 11100 00101 11011 01010: 
+         cnInnerDim: 7
+         cnOuterDim: 17
+cnNumTensorChannels: 23
+          batchSize: 580
+             m_plus: 0.83125
+            m_minus: 0.175
+             lambda: 0.4625
+
+     Accuracy (100): 93.21
+         Loss (100): 5742.25
+     Accuracy (300): 95.32
+          Loss(300): 5667.87
+
+[06] - 00101 00111 11110 00000 10001 00000 00010: 
+         cnInnerDim: 7
+         cnOuterDim: 9
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.90625
+            m_minus: 0.00625
+             lambda: 0.4125
+
+     Accuracy (100): 93.98
+         Loss (100): 8272.64
+     Accuracy (300): 94.62
+          Loss(300): 8153.14
+
+[07] - 11011 01001 10001 11010 00111 11101 01111: 
+         cnInnerDim: 29
+         cnOuterDim: 11
+cnNumTensorChannels: 18
+          batchSize: 540
+             m_plus: 0.84375
+            m_minus: 0.1875
+             lambda: 0.49375
+
+     Accuracy (100): 90.13
+         Loss (100): 5232.04
+     Accuracy (300): 91.43
+          Loss(300): 5463.53
+
+[08] - 00001 11000 11010 01101 00001 11101 11011: 
+         cnInnerDim: 3
+         cnOuterDim: 26
+cnNumTensorChannels: 27
+          batchSize: 280
+             m_plus: 0.80625
+            m_minus: 0.1875
+             lambda: 0.56875
+
+     Accuracy (100): 92.95
+         Loss (100): 5689.08
+     Accuracy (300): 94.75
+          Loss(300): 5578.68
+
+[09] - 10100 00000 00001 00111 00010 11011 11100: 
+         cnInnerDim: 22
+         cnOuterDim: 2
+cnNumTensorChannels: 2
+          batchSize: 160
+             m_plus: 0.8125
+            m_minus: 0.175
+             lambda: 0.575
+
+     Accuracy (100): 93.78
+         Loss (100): 5808.3
+     Accuracy (300): 92.23
+          Loss(300): 5157.14
+
+[10] - 11110 00011 11000 11110 01010 11100 00111: 
+         cnInnerDim: 32
+         cnOuterDim: 5
+cnNumTensorChannels: 25
+          batchSize: 620
+             m_plus: 0.8625
+            m_minus: 0.18125
+             lambda: 0.44375
+
+     Accuracy (100): 91.68
+         Loss (100): 5634.81
+     Accuracy (300): 92.74
+          Loss(300): 5820.22
+
+[11] - 10111 10011 11001 10000 11011 00001 01101: 
+         cnInnerDim: 25
+         cnOuterDim: 21
+cnNumTensorChannels: 26
+          batchSize: 340
+             m_plus: 0.96875
+            m_minus: 0.0125
+             lambda: 0.48125
+
+     Accuracy (100): 94.22
+         Loss (100): 10429.2
+     Accuracy (300): 94.82
+          Loss(300): 10576
+
+[12] - 11111 10001 00000 10000 11011 11101 10010: 
+         cnInnerDim: 33
+         cnOuterDim: 19
+cnNumTensorChannels: 1
+          batchSize: 340
+             m_plus: 0.96875
+            m_minus: 0.1875
+             lambda: 0.5125
+
+     Accuracy (100): 93.58
+         Loss (100): 8071.95
+     Accuracy (300): 93.03
+          Loss(300): 8062.84
+
+[13] - 01011 10011 11000 11110 01010 11100 00111: 
+         cnInnerDim: 13
+         cnOuterDim: 21
+cnNumTensorChannels: 25
+          batchSize: 620
+             m_plus: 0.8625
+            m_minus: 0.18125
+             lambda: 0.44375
+
+     Accuracy (100): 93.06
+         Loss (100): 5867.45
+     Accuracy (300): 94
+          Loss(300): 5727.86
+
+[14] - 01010 11110 10001 00110 01101 11001 01110: 
+         cnInnerDim: 12
+         cnOuterDim: 32
+cnNumTensorChannels: 18
+          batchSize: 140
+             m_plus: 0.88125
+            m_minus: 0.1625
+             lambda: 0.4875
+
+     Accuracy (100): 92.97
+         Loss (100): 6163.91
+     Accuracy (300): 95.28
+          Loss(300): 6533.97
+
+[15] - 01001 10001 01011 10001 01110 01100 11001: 
+         cnInnerDim: 11
+         cnOuterDim: 19
+cnNumTensorChannels: 12
+          batchSize: 360
+             m_plus: 0.8875
+            m_minus: 0.08125
+             lambda: 0.55625
+
+     Accuracy (100): 93.07
+         Loss (100): 7921.13
+     Accuracy (300): 94.31
+          Loss(300): 8161.3
+
+[16] - 10101 10000 00110 11110 00110 10101 01100: 
+         cnInnerDim: 23
+         cnOuterDim: 18
+cnNumTensorChannels: 7
+          batchSize: 620
+             m_plus: 0.8375
+            m_minus: 0.1375
+             lambda: 0.475
+
+     Accuracy (100): 89.05
+         Loss (100): 5528.22
+     Accuracy (300): 90.38
+          Loss(300): 5748.32
+
+[17] - 11011 00110 11010 10001 00011 10100 11110: 
+         cnInnerDim: 29
+         cnOuterDim: 8
+cnNumTensorChannels: 27
+          batchSize: 360
+             m_plus: 0.81875
+            m_minus: 0.13125
+             lambda: 0.5875
+
+     Accuracy (100): 92.07
+         Loss (100): 5848.9
+     Accuracy (300): 93.98
+          Loss(300): 6006.91
+
+[18] - 11011 00110 11010 10001 00011 10100 11110: 
+         cnInnerDim: 29
+         cnOuterDim: 8
+cnNumTensorChannels: 27
+          batchSize: 360
+             m_plus: 0.81875
+            m_minus: 0.13125
+             lambda: 0.5875
+
+     Accuracy (100): 92.4
+         Loss (100): 6132.63
+     Accuracy (300): 93.74
+          Loss(300): 6273.48
+
+[19] - 11000 10110 00011 00000 11101 11101 00010: 
+         cnInnerDim: 26
+         cnOuterDim: 24
+cnNumTensorChannels: 4
+          batchSize: 20
+             m_plus: 0.98125
+            m_minus: 0.1875
+             lambda: 0.4125
+
+     Accuracy (100): 92.7
+         Loss (100): 7097.77
+     Accuracy (300): 92.87
+          Loss(300): 7264.44
+
+[20] - 11000 10110 00011 00000 11101 11101 00010: 
+         cnInnerDim: 26
+         cnOuterDim: 24
+cnNumTensorChannels: 4
+          batchSize: 20
+             m_plus: 0.98125
+            m_minus: 0.1875
+             lambda: 0.4125
+
+     Accuracy (100): 92.7
+         Loss (100): 7097.77
+     Accuracy (300): 92.87
+          Loss(300): 7264.44
+
+[21] - 10001 00110 00111 00100 11100 00100 11110: 
+         cnInnerDim: 19
+         cnOuterDim: 8
+cnNumTensorChannels: 8
+          batchSize: 100
+             m_plus: 0.975
+            m_minus: 0.03125
+             lambda: 0.5875
+
+     Accuracy (100): 91.97
+         Loss (100): 10711
+     Accuracy (300): 95
+          Loss(300): 11103.3
+
+[22] - 01000 00010 10000 01100 01110 11011 11100: 
+         cnInnerDim: 10
+         cnOuterDim: 4
+cnNumTensorChannels: 17
+          batchSize: 260
+             m_plus: 0.8875
+            m_minus: 0.175
+             lambda: 0.575
+
+     Accuracy (100): 91.33
+         Loss (100): 7596.1
+     Accuracy (300): 94.32
+          Loss(300): 7965.02
+
+[23] - 10001 00110 00111 00100 11100 00100 11110: 
+         cnInnerDim: 19
+         cnOuterDim: 8
+cnNumTensorChannels: 8
+          batchSize: 100
+             m_plus: 0.975
+            m_minus: 0.03125
+             lambda: 0.5875
+
+     Accuracy (100): 91.97
+         Loss (100): 10711
+     Accuracy (300): 95
+          Loss(300): 11103.3
+
+[24] - 11001 01111 11001 11001 01010 01001 10000: 
+         cnInnerDim: 27
+         cnOuterDim: 17
+cnNumTensorChannels: 26
+          batchSize: 520
+             m_plus: 0.8625
+            m_minus: 0.0625
+             lambda: 0.5
+
+     Accuracy (100): 92.78
+         Loss (100): 7684.73
+     Accuracy (300): 94.91
+          Loss(300): 7785.88
+
+[25] - 01000 11010 10100 00010 10001 00000 00010: 
+         cnInnerDim: 10
+         cnOuterDim: 28
+cnNumTensorChannels: 21
+          batchSize: 60
+             m_plus: 0.90625
+            m_minus: 0.00625
+             lambda: 0.4125
+
+     Accuracy (100): 92.99
+         Loss (100): 8687.05
+     Accuracy (300): 93.98
+          Loss(300): 8856.89
+
+[26] - 10100 00000 00001 00111 00010 10001 11100: 
+         cnInnerDim: 22
+         cnOuterDim: 2
+cnNumTensorChannels: 2
+          batchSize: 160
+             m_plus: 0.8125
+            m_minus: 0.1125
+             lambda: 0.575
+
+     Accuracy (100): 91.88
+         Loss (100): 5985.44
+     Accuracy (300): 90.88
+          Loss(300): 6078.8
+
+[27] - 01000 00010 10000 01100 01110 11011 11100: 
+         cnInnerDim: 10
+         cnOuterDim: 4
+cnNumTensorChannels: 17
+          batchSize: 260
+             m_plus: 0.8875
+            m_minus: 0.175
+             lambda: 0.575
+
+     Accuracy (100): 92.33
+         Loss (100): 6662.74
+     Accuracy (300): 93.48
+          Loss(300): 6910.44
+
+[28] - 01000 00010 10000 01100 01110 11011 11100: 
+         cnInnerDim: 10
+         cnOuterDim: 4
+cnNumTensorChannels: 17
+          batchSize: 260
+             m_plus: 0.8875
+            m_minus: 0.175
+             lambda: 0.575
+
+     Accuracy (100): 92.33
+         Loss (100): 6662.74
+     Accuracy (300): 93.48
+          Loss(300): 6910.44
+
+[29] - 01000 00010 10000 01100 01110 11011 11100: 
+         cnInnerDim: 10
+         cnOuterDim: 4
+cnNumTensorChannels: 17
+          batchSize: 260
+             m_plus: 0.8875
+            m_minus: 0.175
+             lambda: 0.575
+
+     Accuracy (100): 92.33
+         Loss (100): 6662.74
+     Accuracy (300): 93.48
+          Loss(300): 6910.44
+
+running this...01010111111111000000100010000000010
+01010 11111 11110 00000 10001 00000 00010: 
+         cnInnerDim: 12
+         cnOuterDim: 33
+cnNumTensorChannels: 31
+          batchSize: 20
+             m_plus: 0.90625
+            m_minus: 0.00625
+             lambda: 0.4125
+
+     Accuracy (100): 92.97
+         Loss (100): 6163.91
+     Accuracy (300): 95.28
+          Loss(300): 6533.97
+EPOCH ITERATION: 0
+tallying...
+Correctly Classified Instances: 1543
+       Accuracy (out of 10000): 15.43
+                    Time Taken: 58096.1 ms.
+                    Total Loss: 7902.75
+EPOCH ITERATION: 1
+tallying...
+Correctly Classified Instances: 7767
+       Accuracy (out of 10000): 77.67
+                    Time Taken: 60898.3 ms.
+                    Total Loss: 8889.03
+EPOCH ITERATION: 2
+tallying...
+Correctly Classified Instances: 8471
+       Accuracy (out of 10000): 84.71
+                    Time Taken: 59685.4 ms.
+                    Total Loss: 9355.7
+EPOCH ITERATION: 3
+tallying...
+Correctly Classified Instances: 8717
+       Accuracy (out of 10000): 87.17
+                    Time Taken: 60584.3 ms.
+                    Total Loss: 9420.13
+EPOCH ITERATION: 4
+tallying...
+Correctly Classified Instances: 8868
+       Accuracy (out of 10000): 88.68
+                    Time Taken: 59654.2 ms.
+                    Total Loss: 9394.38
+EPOCH ITERATION: 5
+tallying...
+Correctly Classified Instances: 8956
+       Accuracy (out of 10000): 89.56
+                    Time Taken: 57938.9 ms.
+                    Total Loss: 9350.95
+EPOCH ITERATION: 6
+tallying...
+Correctly Classified Instances: 9029
+       Accuracy (out of 10000): 90.29
+                    Time Taken: 57792.2 ms.
+                    Total Loss: 9302.72
+EPOCH ITERATION: 7
+tallying...
+Correctly Classified Instances: 9100
+       Accuracy (out of 10000): 91
+                    Time Taken: 58079.2 ms.
+                    Total Loss: 9249.29
+EPOCH ITERATION: 8
+tallying...
+Correctly Classified Instances: 9148
+       Accuracy (out of 10000): 91.48
+                    Time Taken: 57609.5 ms.
+                    Total Loss: 9194.76
+EPOCH ITERATION: 9
+tallying...
+Correctly Classified Instances: 9189
+       Accuracy (out of 10000): 91.89
+                    Time Taken: 58851.4 ms.
+                    Total Loss: 9141.56
+EPOCH ITERATION: 10
+tallying...
+Correctly Classified Instances: 9229
+       Accuracy (out of 10000): 92.29
+                    Time Taken: 59067.9 ms.
+                    Total Loss: 9095.93
+EPOCH ITERATION: 11
+tallying...
+Correctly Classified Instances: 9247
+       Accuracy (out of 10000): 92.47
+                    Time Taken: 59031.1 ms.
+                    Total Loss: 9052.35
+EPOCH ITERATION: 12
+tallying...
+Correctly Classified Instances: 9260
+       Accuracy (out of 10000): 92.6
+                    Time Taken: 60781.2 ms.
+                    Total Loss: 9010.36
+EPOCH ITERATION: 13
+tallying...
+Correctly Classified Instances: 9281
+       Accuracy (out of 10000): 92.81
+                    Time Taken: 59029.4 ms.
+                    Total Loss: 8973.92
+EPOCH ITERATION: 14
+tallying...
+Correctly Classified Instances: 9298
+       Accuracy (out of 10000): 92.98
+                    Time Taken: 60096.1 ms.
+                    Total Loss: 8942.02
+EPOCH ITERATION: 15
+tallying...
+Correctly Classified Instances: 9298
+       Accuracy (out of 10000): 92.98
+                    Time Taken: 57854.7 ms.
+                    Total Loss: 8911.13
+EPOCH ITERATION: 16
+tallying...
+Correctly Classified Instances: 9308
+       Accuracy (out of 10000): 93.08
+                    Time Taken: 58330.8 ms.
+                    Total Loss: 8880.72
+EPOCH ITERATION: 17
+tallying...
+Correctly Classified Instances: 9313
+       Accuracy (out of 10000): 93.13
+                    Time Taken: 58057.3 ms.
+                    Total Loss: 8854.25
+EPOCH ITERATION: 18
+tallying...
+Correctly Classified Instances: 9327
+       Accuracy (out of 10000): 93.27
+                    Time Taken: 59250.2 ms.
+                    Total Loss: 8831.76
+EPOCH ITERATION: 19
+tallying...
+Correctly Classified Instances: 9331
+       Accuracy (out of 10000): 93.31
+                    Time Taken: 59031.7 ms.
+                    Total Loss: 8813.15
+EPOCH ITERATION: 20
+tallying...
+Correctly Classified Instances: 9333
+       Accuracy (out of 10000): 93.33
+                    Time Taken: 59933.8 ms.
+                    Total Loss: 8798.95
+EPOCH ITERATION: 21
+tallying...
+Correctly Classified Instances: 9350
+       Accuracy (out of 10000): 93.5
+                    Time Taken: 59310.4 ms.
+                    Total Loss: 8787.49
+EPOCH ITERATION: 22
+tallying...
+Correctly Classified Instances: 9359
+       Accuracy (out of 10000): 93.59
+                    Time Taken: 58181.5 ms.
+                    Total Loss: 8777.34
+EPOCH ITERATION: 23
+tallying...
+Correctly Classified Instances: 9354
+       Accuracy (out of 10000): 93.54
+                    Time Taken: 59268.5 ms.
+                    Total Loss: 8767.7
+EPOCH ITERATION: 24
+tallying...
+Correctly Classified Instances: 9356
+       Accuracy (out of 10000): 93.56
+                    Time Taken: 58701.8 ms.
+                    Total Loss: 8757.99
+EPOCH ITERATION: 25
+tallying...
+Correctly Classified Instances: 9366
+       Accuracy (out of 10000): 93.66
+                    Time Taken: 58272.4 ms.
+                    Total Loss: 8748
+EPOCH ITERATION: 26
+tallying...
+Correctly Classified Instances: 9360
+       Accuracy (out of 10000): 93.6
+                    Time Taken: 59348.9 ms.
+                    Total Loss: 8738.01
+EPOCH ITERATION: 27
+tallying...
+Correctly Classified Instances: 9361
+       Accuracy (out of 10000): 93.61
+                    Time Taken: 58573.1 ms.
+                    Total Loss: 8728.46
+EPOCH ITERATION: 28
+tallying...
+Correctly Classified Instances: 9357
+       Accuracy (out of 10000): 93.57
+                    Time Taken: 58935.4 ms.
+                    Total Loss: 8719.32
+EPOCH ITERATION: 29
+tallying...
+Correctly Classified Instances: 9355
+       Accuracy (out of 10000): 93.55
+                    Time Taken: 59515.2 ms.
+                    Total Loss: 8710.65
+EPOCH ITERATION: 30
+tallying...
+Correctly Classified Instances: 9358
+       Accuracy (out of 10000): 93.58
+                    Time Taken: 60527.7 ms.
+                    Total Loss: 8702.83
+EPOCH ITERATION: 31
+tallying...
+Correctly Classified Instances: 9356
+       Accuracy (out of 10000): 93.56
+                    Time Taken: 59989.6 ms.
+                    Total Loss: 8696.36
+EPOCH ITERATION: 32
+tallying...
+Correctly Classified Instances: 9356
+       Accuracy (out of 10000): 93.56
+                    Time Taken: 57472.1 ms.
+                    Total Loss: 8691.63
+EPOCH ITERATION: 33
+tallying...
+Correctly Classified Instances: 9366
+       Accuracy (out of 10000): 93.66
+                    Time Taken: 58224.2 ms.
+                    Total Loss: 8688.9
+EPOCH ITERATION: 34
+tallying...
+Correctly Classified Instances: 9359
+       Accuracy (out of 10000): 93.59
+                    Time Taken: 58284 ms.
+                    Total Loss: 8688.29
+EPOCH ITERATION: 35
+tallying...
+Correctly Classified Instances: 9366
+       Accuracy (out of 10000): 93.66
+                    Time Taken: 57602.4 ms.
+                    Total Loss: 8689.35
+EPOCH ITERATION: 36
+tallying...
+Correctly Classified Instances: 9370
+       Accuracy (out of 10000): 93.7
+                    Time Taken: 57118.6 ms.
+                    Total Loss: 8691.53
+EPOCH ITERATION: 37
+tallying...
+Correctly Classified Instances: 9364
+       Accuracy (out of 10000): 93.64
+                    Time Taken: 58053.1 ms.
+                    Total Loss: 8694.7
+EPOCH ITERATION: 38
+tallying...
+Correctly Classified Instances: 9365
+       Accuracy (out of 10000): 93.65
+                    Time Taken: 59482.4 ms.
+                    Total Loss: 8698.83
+EPOCH ITERATION: 39
+tallying...
+Correctly Classified Instances: 9360
+       Accuracy (out of 10000): 93.6
+                    Time Taken: 58670.9 ms.
+                    Total Loss: 8703.44
+EPOCH ITERATION: 40
+tallying...
+Correctly Classified Instances: 9360
+       Accuracy (out of 10000): 93.6
+                    Time Taken: 59502.9 ms.
+                    Total Loss: 8707.81
+EPOCH ITERATION: 41
+tallying...
+Correctly Classified Instances: 9358
+       Accuracy (out of 10000): 93.58
+                    Time Taken: 60691.9 ms.
+                    Total Loss: 8711.55
+EPOCH ITERATION: 42
+tallying...
+Correctly Classified Instances: 9357
+       Accuracy (out of 10000): 93.57
+                    Time Taken: 59154.3 ms.
+                    Total Loss: 8714.73
+EPOCH ITERATION: 43
+tallying...
+Correctly Classified Instances: 9363
+       Accuracy (out of 10000): 93.63
+                    Time Taken: 59331.4 ms.
+                    Total Loss: 8717.57
+EPOCH ITERATION: 44
+tallying...
+Correctly Classified Instances: 9370
+       Accuracy (out of 10000): 93.7
+                    Time Taken: 59670.8 ms.
+                    Total Loss: 8720.15
+EPOCH ITERATION: 45
+tallying...
+Correctly Classified Instances: 9374
+       Accuracy (out of 10000): 93.74
+                    Time Taken: 59061.9 ms.
+                    Total Loss: 8722.47
+EPOCH ITERATION: 46
+tallying...
+Correctly Classified Instances: 9379
+       Accuracy (out of 10000): 93.79
+                    Time Taken: 58051.5 ms.
+                    Total Loss: 8724.51
+EPOCH ITERATION: 47
+tallying...
+Correctly Classified Instances: 9389
+       Accuracy (out of 10000): 93.89
+                    Time Taken: 58161.5 ms.
+                    Total Loss: 8726.31
+EPOCH ITERATION: 48
+tallying...
+Correctly Classified Instances: 9384
+       Accuracy (out of 10000): 93.84
+                    Time Taken: 57832.8 ms.
+                    Total Loss: 8727.97
+EPOCH ITERATION: 49
+tallying...
+Correctly Classified Instances: 9392
+       Accuracy (out of 10000): 93.92
+                    Time Taken: 58207.9 ms.
+                    Total Loss: 8729.55
+
+0	15.43	7902.75
+1	77.67	8889.03
+2	84.71	9355.7
+3	87.17	9420.13
+4	88.68	9394.38
+5	89.56	9350.95
+6	90.29	9302.72
+7	91	9249.29
+8	91.48	9194.76
+9	91.89	9141.56
+10	92.29	9095.93
+11	92.47	9052.35
+12	92.6	9010.36
+13	92.81	8973.92
+14	92.98	8942.02
+15	92.98	8911.13
+16	93.08	8880.72
+17	93.13	8854.25
+18	93.27	8831.76
+19	93.31	8813.15
+20	93.33	8798.95
+21	93.5	8787.49
+22	93.59	8777.34
+23	93.54	8767.7
+24	93.56	8757.99
+25	93.66	8748
+26	93.6	8738.01
+27	93.61	8728.46
+28	93.57	8719.32
+29	93.55	8710.65
+30	93.58	8702.83
+31	93.56	8696.36
+32	93.56	8691.63
+33	93.66	8688.9
+34	93.59	8688.29
+35	93.66	8689.35
+36	93.7	8691.53
+37	93.64	8694.7
+38	93.65	8698.83
+39	93.6	8703.44
+40	93.6	8707.81
+41	93.58	8711.55
+42	93.57	8714.73
+43	93.63	8717.57
+44	93.7	8720.15
+45	93.74	8722.47
+46	93.79	8724.51
+47	93.89	8726.31
+48	93.84	8727.97
+49	93.92	8729.55
+DONE!
+EPOCH ITERATION: 0
+tallying...
+Correctly Classified Instances: 9395
+       Accuracy (out of 10000): 93.95
+                    Time Taken: 58394 ms.
+                    Total Loss: 8731.12
+EPOCH ITERATION: 1
+tallying...
+Correctly Classified Instances: 9397
+       Accuracy (out of 10000): 93.97
+                    Time Taken: 70643.1 ms.
+                    Total Loss: 8732.74
+EPOCH ITERATION: 2
+tallying...
+Correctly Classified Instances: 9401
+       Accuracy (out of 10000): 94.01
+                    Time Taken: 57969 ms.
+                    Total Loss: 8734.47
+EPOCH ITERATION: 3
+tallying...
+Correctly Classified Instances: 9405
+       Accuracy (out of 10000): 94.05
+                    Time Taken: 57991.5 ms.
+                    Total Loss: 8736.35
+EPOCH ITERATION: 4
+tallying...
+Correctly Classified Instances: 9408
+       Accuracy (out of 10000): 94.08
+                    Time Taken: 57588.9 ms.
+                    Total Loss: 8738.4
+EPOCH ITERATION: 5
+tallying...
+Correctly Classified Instances: 9414
+       Accuracy (out of 10000): 94.14
+                    Time Taken: 57500.1 ms.
+                    Total Loss: 8740.62
+EPOCH ITERATION: 6
+tallying...
+Correctly Classified Instances: 9411
+       Accuracy (out of 10000): 94.11
+                    Time Taken: 58018.7 ms.
+                    Total Loss: 8742.95
+EPOCH ITERATION: 7
+tallying...
+Correctly Classified Instances: 9418
+       Accuracy (out of 10000): 94.18
+                    Time Taken: 59607.4 ms.
+                    Total Loss: 8745.32
+EPOCH ITERATION: 8
+tallying...
+Correctly Classified Instances: 9417
+       Accuracy (out of 10000): 94.17
+                    Time Taken: 59262.9 ms.
+                    Total Loss: 8747.67
+EPOCH ITERATION: 9
+tallying...
+Correctly Classified Instances: 9420
+       Accuracy (out of 10000): 94.2
+                    Time Taken: 58915.2 ms.
+                    Total Loss: 8750.07
+EPOCH ITERATION: 10
+tallying...
+Correctly Classified Instances: 9420
+       Accuracy (out of 10000): 94.2
+                    Time Taken: 177496 ms.
+                    Total Loss: 8752.57
+EPOCH ITERATION: 11
+tallying...
+Correctly Classified Instances: 9429
+       Accuracy (out of 10000): 94.29
+                    Time Taken: 57866 ms.
+                    Total Loss: 8755.23
+EPOCH ITERATION: 12
+tallying...
+Correctly Classified Instances: 9431
+       Accuracy (out of 10000): 94.31
+                    Time Taken: 57742.4 ms.
+                    Total Loss: 8758.1
+EPOCH ITERATION: 13
+tallying...
+Correctly Classified Instances: 9431
+       Accuracy (out of 10000): 94.31
+                    Time Taken: 57898.6 ms.
+                    Total Loss: 8761.16
+EPOCH ITERATION: 14
+tallying...
+Correctly Classified Instances: 9435
+       Accuracy (out of 10000): 94.35
+                    Time Taken: 57768.8 ms.
+                    Total Loss: 8764.35
+EPOCH ITERATION: 15
+tallying...
+Correctly Classified Instances: 9438
+       Accuracy (out of 10000): 94.38
+                    Time Taken: 57630.3 ms.
+                    Total Loss: 8767.59
+EPOCH ITERATION: 16
+tallying...
+Correctly Classified Instances: 9441
+       Accuracy (out of 10000): 94.41
+                    Time Taken: 57390.9 ms.
+                    Total Loss: 8770.8
+EPOCH ITERATION: 17
+tallying...
+Correctly Classified Instances: 9447
+       Accuracy (out of 10000): 94.47
+                    Time Taken: 57673.6 ms.
+                    Total Loss: 8773.96
+EPOCH ITERATION: 18
+tallying...
+Correctly Classified Instances: 9454
+       Accuracy (out of 10000): 94.54
+                    Time Taken: 57435.2 ms.
+                    Total Loss: 8777.12
+EPOCH ITERATION: 19
+tallying...
+Correctly Classified Instances: 9460
+       Accuracy (out of 10000): 94.6
+                    Time Taken: 57648.1 ms.
+                    Total Loss: 8780.29
+EPOCH ITERATION: 20
+tallying...
+Correctly Classified Instances: 9459
+       Accuracy (out of 10000): 94.59
+                    Time Taken: 57481.2 ms.
+                    Total Loss: 8783.46
+EPOCH ITERATION: 21
+tallying...
+Correctly Classified Instances: 9464
+       Accuracy (out of 10000): 94.64
+                    Time Taken: 57840.6 ms.
+                    Total Loss: 8786.58
+EPOCH ITERATION: 22
+tallying...
+Correctly Classified Instances: 9466
+       Accuracy (out of 10000): 94.66
+                    Time Taken: 57795.7 ms.
+                    Total Loss: 8789.65
+EPOCH ITERATION: 23
+tallying...
+Correctly Classified Instances: 9465
+       Accuracy (out of 10000): 94.65
+                    Time Taken: 57602.4 ms.
+                    Total Loss: 8792.67
+EPOCH ITERATION: 24
+tallying...
+Correctly Classified Instances: 9463
+       Accuracy (out of 10000): 94.63
+                    Time Taken: 57613 ms.
+                    Total Loss: 8795.66
+EPOCH ITERATION: 25
+tallying...
+Correctly Classified Instances: 9464
+       Accuracy (out of 10000): 94.64
+                    Time Taken: 58280 ms.
+                    Total Loss: 8798.69
+EPOCH ITERATION: 26
+tallying...
+Correctly Classified Instances: 9470
+       Accuracy (out of 10000): 94.7
+                    Time Taken: 57996 ms.
+                    Total Loss: 8801.8
+EPOCH ITERATION: 27
+tallying...
+Correctly Classified Instances: 9471
+       Accuracy (out of 10000): 94.71
+                    Time Taken: 58113.9 ms.
+                    Total Loss: 8805
+EPOCH ITERATION: 28
+tallying...
+Correctly Classified Instances: 9475
+       Accuracy (out of 10000): 94.75
+                    Time Taken: 57475.7 ms.
+                    Total Loss: 8808.29
+EPOCH ITERATION: 29
+tallying...
+Correctly Classified Instances: 9479
+       Accuracy (out of 10000): 94.79
+                    Time Taken: 57525.3 ms.
+                    Total Loss: 8811.69
+EPOCH ITERATION: 30
+tallying...
+Correctly Classified Instances: 9483
+       Accuracy (out of 10000): 94.83
+                    Time Taken: 58701.5 ms.
+                    Total Loss: 8815.21
+EPOCH ITERATION: 31
+tallying...
+Correctly Classified Instances: 9488
+       Accuracy (out of 10000): 94.88
+                    Time Taken: 57798.6 ms.
+                    Total Loss: 8818.77
+EPOCH ITERATION: 32
+tallying...
+Correctly Classified Instances: 9491
+       Accuracy (out of 10000): 94.91
+                    Time Taken: 58041.7 ms.
+                    Total Loss: 8822.33
+EPOCH ITERATION: 33
+tallying...
+Correctly Classified Instances: 9492
+       Accuracy (out of 10000): 94.92
+                    Time Taken: 58317.8 ms.
+                    Total Loss: 8825.85
+EPOCH ITERATION: 34
+tallying...
+Correctly Classified Instances: 9496
+       Accuracy (out of 10000): 94.96
+                    Time Taken: 58210.4 ms.
+                    Total Loss: 8829.32
+EPOCH ITERATION: 35
+tallying...
+Correctly Classified Instances: 9500
+       Accuracy (out of 10000): 95
+                    Time Taken: 58253.3 ms.
+                    Total Loss: 8832.74
+EPOCH ITERATION: 36
+tallying...
+Correctly Classified Instances: 9503
+       Accuracy (out of 10000): 95.03
+                    Time Taken: 58008 ms.
+                    Total Loss: 8836.13
+EPOCH ITERATION: 37
+tallying...
+Correctly Classified Instances: 9503
+       Accuracy (out of 10000): 95.03
+                    Time Taken: 58211.4 ms.
+                    Total Loss: 8839.49
+EPOCH ITERATION: 38
+tallying...
+Correctly Classified Instances: 9501
+       Accuracy (out of 10000): 95.01
+                    Time Taken: 58392.8 ms.
+                    Total Loss: 8842.8
+EPOCH ITERATION: 39
+tallying...
+Correctly Classified Instances: 9502
+       Accuracy (out of 10000): 95.02
+                    Time Taken: 58967.9 ms.
+                    Total Loss: 8846.05
+EPOCH ITERATION: 40
+tallying...
+Correctly Classified Instances: 9501
+       Accuracy (out of 10000): 95.01
+                    Time Taken: 58424.5 ms.
+                    Total Loss: 8849.22
+EPOCH ITERATION: 41
+tallying...
+Correctly Classified Instances: 9501
+       Accuracy (out of 10000): 95.01
+                    Time Taken: 59533.5 ms.
+                    Total Loss: 8852.33
+EPOCH ITERATION: 42
+tallying...
+Correctly Classified Instances: 9501
+       Accuracy (out of 10000): 95.01
+                    Time Taken: 58057 ms.
+                    Total Loss: 8855.38
+EPOCH ITERATION: 43
+tallying...
+Correctly Classified Instances: 9500
+       Accuracy (out of 10000): 95
+                    Time Taken: 58259.4 ms.
+                    Total Loss: 8858.37
+EPOCH ITERATION: 44
+tallying...
+Correctly Classified Instances: 9493
+       Accuracy (out of 10000): 94.93
+                    Time Taken: 58150.1 ms.
+                    Total Loss: 8861.33
+EPOCH ITERATION: 45
+tallying...
+Correctly Classified Instances: 9496
+       Accuracy (out of 10000): 94.96
+                    Time Taken: 58602.4 ms.
+                    Total Loss: 8864.27
+EPOCH ITERATION: 46
+tallying...
+Correctly Classified Instances: 9495
+       Accuracy (out of 10000): 94.95
+                    Time Taken: 58139.5 ms.
+                    Total Loss: 8867.17
+EPOCH ITERATION: 47
+tallying...
+Correctly Classified Instances: 9494
+       Accuracy (out of 10000): 94.94
+                    Time Taken: 57803.4 ms.
+                    Total Loss: 8870.04
+EPOCH ITERATION: 48
+tallying...
+Correctly Classified Instances: 9495
+       Accuracy (out of 10000): 94.95
+                    Time Taken: 58237.2 ms.
+                    Total Loss: 8872.87
+EPOCH ITERATION: 49
+tallying...
+Correctly Classified Instances: 9494
+       Accuracy (out of 10000): 94.94
+                    Time Taken: 57697.5 ms.
+                    Total Loss: 8875.65
+
+0	93.95	8731.12
+1	93.97	8732.74
+2	94.01	8734.47
+3	94.05	8736.35
+4	94.08	8738.4
+5	94.14	8740.62
+6	94.11	8742.95
+7	94.18	8745.32
+8	94.17	8747.67
+9	94.2	8750.07
+10	94.2	8752.57
+11	94.29	8755.23
+12	94.31	8758.1
+13	94.31	8761.16
+14	94.35	8764.35
+15	94.38	8767.59
+16	94.41	8770.8
+17	94.47	8773.96
+18	94.54	8777.12
+19	94.6	8780.29
+20	94.59	8783.46
+21	94.64	8786.58
+22	94.66	8789.65
+23	94.65	8792.67
+24	94.63	8795.66
+25	94.64	8798.69
+26	94.7	8801.8
+27	94.71	8805
+28	94.75	8808.29
+29	94.79	8811.69
+30	94.83	8815.21
+31	94.88	8818.77
+32	94.91	8822.33
+33	94.92	8825.85
+34	94.96	8829.32
+35	95	8832.74
+36	95.03	8836.13
+37	95.03	8839.49
+38	95.01	8842.8
+39	95.02	8846.05
+40	95.01	8849.22
+41	95.01	8852.33
+42	95.01	8855.38
+43	95	8858.37
+44	94.93	8861.33
+45	94.96	8864.27
+46	94.95	8867.17
+47	94.94	8870.04
+48	94.95	8872.87
+49	94.94	8875.65
+DONE!
+running this...00101001101000100110011011100101110
+00101 00110 10001 00110 01101 11001 01110: 
+         cnInnerDim: 7
+         cnOuterDim: 8
+cnNumTensorChannels: 18
+          batchSize: 140
+             m_plus: 0.88125
+            m_minus: 0.1625
+             lambda: 0.4875
+
+     Accuracy (100): 93.98
+         Loss (100): 8272.64
+     Accuracy (300): 94.62
+          Loss(300): 8153.14
+EPOCH ITERATION: 0
+tallying...
+Correctly Classified Instances: 1054
+       Accuracy (out of 10000): 10.54
+                    Time Taken: 137594 ms.
+                    Total Loss: 7471.4
+EPOCH ITERATION: 1
+tallying...
+Correctly Classified Instances: 4244
+       Accuracy (out of 10000): 42.44
+                    Time Taken: 134965 ms.
+                    Total Loss: 7009.85
+EPOCH ITERATION: 2
+tallying...
+Correctly Classified Instances: 7410
+       Accuracy (out of 10000): 74.1
+                    Time Taken: 134487 ms.
+                    Total Loss: 8020.36
+EPOCH ITERATION: 3
+tallying...
+Correctly Classified Instances: 8211
+       Accuracy (out of 10000): 82.11
+                    Time Taken: 134504 ms.
+                    Total Loss: 8070.67
+EPOCH ITERATION: 4
+tallying...
+Correctly Classified Instances: 8629
+       Accuracy (out of 10000): 86.29
+                    Time Taken: 134513 ms.
+                    Total Loss: 7987.52
+EPOCH ITERATION: 5
+tallying...
