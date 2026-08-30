@@ -1,8 +1,18 @@
-# Mac stuff
+# macOS
 *.DS_Store
 
-# Building stuff
-*build*/*
+# Historical / CMake build directories
+*build*/
+cmake-build-*/
 
-# IDE stuff
-.idea/*
+# Revival host test/build outputs
+.build/
+release-assets/
+
+# IDE
+.idea/
+.vscode/
+
+# Python helper caches
+__pycache__/
+*.pyc

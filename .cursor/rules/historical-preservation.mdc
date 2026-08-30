@@ -1,0 +1,19 @@
+---
+description: Preserve thesis-era behavior before changing it
+alwaysApply: true
+---
+
+# Historical preservation
+
+This repository is both software and a research artifact.
+
+When a change could alter numerical results, training behavior, evaluation semantics, timing, memory layout, routing, initialization, or randomization:
+
+1. identify the exact historical path;
+2. add or update a test that captures current behavior when feasible;
+3. document suspected defects in `docs/KNOWN_ISSUES.md` before repairing them;
+4. state whether the change can affect published results;
+5. separate compatibility/reproduction behavior from corrected/modern behavior;
+6. never silently replace historical benchmark numbers with new measurements.
+
+Prefer additive modernization layers over destructive rewrites until reproduction is established.

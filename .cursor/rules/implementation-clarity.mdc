@@ -1,0 +1,17 @@
+---
+description: Verify historical code paths instead of guessing
+alwaysApply: true
+---
+
+# Implementation clarity
+
+This codebase contains stale comments, commented experiments, hard-coded dimensions, and partially completed branches. Before asserting behavior:
+
+- trace the called function from the active entry point;
+- inspect the relevant branch/commit when results are historical;
+- distinguish CPU reference behavior from CUDA behavior;
+- distinguish training from evaluation and check whether weights mutate;
+- verify compiler flags before comparing performance;
+- mark unresolved conclusions as audit flags rather than facts.
+
+When multiple modern designs are possible, prefer the smallest change that preserves a clear historical comparison point.

@@ -1,0 +1,3 @@
+[submodule ".agents/ai-skills"]
+	path = .agents/ai-skills
+	url = https://github.com/TennisGazelle/ai-skills.git
