@@ -1,0 +1,18 @@
+---
+description: Keep code, research context, and agent docs synchronized
+alwaysApply: true
+---
+
+# Documentation sync
+
+Update documentation in the same PR when changing:
+
+- build/toolchain assumptions;
+- CLI or experiment entry points;
+- datasets or evaluation semantics;
+- capsule equations or routing behavior;
+- CUDA memory layout or kernel mapping;
+- tests, CI, or releases;
+- branch/reproduction guidance.
+
+Prefer updating the relevant spoke under `docs/` or `.cursor/` and linking from hubs instead of copying long explanations into README/AGENTS.
