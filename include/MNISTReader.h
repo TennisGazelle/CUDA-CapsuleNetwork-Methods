@@ -5,29 +5,27 @@
 #ifndef NEURALNETS_MNISTREADER_H
 #define NEURALNETS_MNISTREADER_H
 
-#include <vector>
-#include <string>
-#include "models/Image.h"
+#include <models/Image.h>
 
-using namespace std;
+#include <string>
+#include <vector>
 
 class MNISTReader {
 public:
-    ~MNISTReader();
+    ~MNISTReader() = default;
     static MNISTReader* getInstance();
+
     Image getTrainingImage(int index) const;
     Image getTestingImage(int index) const;
     Image* getTrainingImageRef(int index);
     Image* getTestingImageRef(int index);
 
-    vector<Image> trainingData, testingData;
-private:
-    static MNISTReader* instance;
-    MNISTReader() = default;
-    void readMNISTData();
-    void readDataWithLabels(const string& datafile, const string& labelfile, vector<Image>& dst);
+    std::vector<Image> trainingData, testingData;
 
-    static inline void grabFromFile(ifstream &fin, unsigned int &num);
+private:
+    MNISTReader();
+    void readMNISTData();
+    static std::string resolveDataDirectory();
 };
 
 #endif //NEURALNETS_MNISTREADER_H

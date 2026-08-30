@@ -8,6 +8,7 @@ TEST_UTILS_BIN := $(BUILD_DIR)/test_utils
 TEST_GA_BIN := $(BUILD_DIR)/test_ga
 TEST_GA_GENERATION_BIN := $(BUILD_DIR)/test_ga_generation
 TEST_BACKPROP_BIN := $(BUILD_DIR)/test_backprop
+TEST_MNIST_IO_BIN := $(BUILD_DIR)/test_mnist_io
 
 GA_CORE_SOURCES := \
 	src/GA/IndividualCore.cpp \
@@ -43,11 +44,15 @@ $(TEST_GA_GENERATION_BIN): tests/test_ga_generation.cpp src/GA/GACore.cpp $(GA_C
 $(TEST_BACKPROP_BIN): tests/test_backprop.cpp src/CapsuleNetwork/BackpropUtils.cpp include/CapsuleNetwork/BackpropUtils.h | $(BUILD_DIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_backprop.cpp src/CapsuleNetwork/BackpropUtils.cpp -o $@ $(LDLIBS)
 
-unit-test: $(TEST_UTILS_BIN) $(TEST_GA_BIN) $(TEST_GA_GENERATION_BIN) $(TEST_BACKPROP_BIN)
+$(TEST_MNIST_IO_BIN): tests/test_mnist_io.cpp src/MNISTDataIO.cpp src/models/Image.cpp include/MNISTDataIO.h include/models/Image.h | $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_mnist_io.cpp src/MNISTDataIO.cpp src/models/Image.cpp -o $@ $(LDLIBS)
+
+unit-test: $(TEST_UTILS_BIN) $(TEST_GA_BIN) $(TEST_GA_GENERATION_BIN) $(TEST_BACKPROP_BIN) $(TEST_MNIST_IO_BIN)
 	$(TEST_UTILS_BIN)
 	$(TEST_GA_BIN)
 	$(TEST_GA_GENERATION_BIN)
 	$(TEST_BACKPROP_BIN)
+	$(TEST_MNIST_IO_BIN)
 
 docs-check:
 	python3 scripts/check_docs.py
