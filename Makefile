@@ -6,9 +6,9 @@ LDLIBS ?= -larmadillo
 BUILD_DIR := .build
 TEST_UTILS_BIN := $(BUILD_DIR)/test_utils
 TEST_GA_BIN := $(BUILD_DIR)/test_ga
+TEST_GA_GENERATION_BIN := $(BUILD_DIR)/test_ga_generation
 
-GA_TEST_SOURCES := \
-	tests/test_ga.cpp \
+GA_CORE_SOURCES := \
 	src/GA/IndividualCore.cpp \
 	src/GA/PopulationCore.cpp \
 	src/Utils.cpp \
@@ -33,12 +33,16 @@ $(BUILD_DIR):
 $(TEST_UTILS_BIN): tests/test_utils.cpp src/Utils.cpp include/Utils.h | $(BUILD_DIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_utils.cpp src/Utils.cpp -o $@ $(LDLIBS)
 
-$(TEST_GA_BIN): $(GA_TEST_SOURCES) include/GA/Individual.h include/GA/Population.h include/models/PopulationStats.h | $(BUILD_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(GA_TEST_SOURCES) -o $@ $(LDLIBS)
+$(TEST_GA_BIN): tests/test_ga.cpp $(GA_CORE_SOURCES) include/GA/Individual.h include/GA/Population.h include/models/PopulationStats.h | $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_ga.cpp $(GA_CORE_SOURCES) -o $@ $(LDLIBS)
 
-unit-test: $(TEST_UTILS_BIN) $(TEST_GA_BIN)
+$(TEST_GA_GENERATION_BIN): tests/test_ga_generation.cpp src/GA/GACore.cpp $(GA_CORE_SOURCES) include/GA/GA.h | $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_ga_generation.cpp src/GA/GACore.cpp $(GA_CORE_SOURCES) -o $@ $(LDLIBS)
+
+unit-test: $(TEST_UTILS_BIN) $(TEST_GA_BIN) $(TEST_GA_GENERATION_BIN)
 	$(TEST_UTILS_BIN)
 	$(TEST_GA_BIN)
+	$(TEST_GA_GENERATION_BIN)
 
 docs-check:
 	python3 scripts/check_docs.py
