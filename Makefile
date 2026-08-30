@@ -7,6 +7,7 @@ BUILD_DIR := .build
 TEST_UTILS_BIN := $(BUILD_DIR)/test_utils
 TEST_GA_BIN := $(BUILD_DIR)/test_ga
 TEST_GA_GENERATION_BIN := $(BUILD_DIR)/test_ga_generation
+TEST_BACKPROP_BIN := $(BUILD_DIR)/test_backprop
 
 GA_CORE_SOURCES := \
 	src/GA/IndividualCore.cpp \
@@ -39,10 +40,14 @@ $(TEST_GA_BIN): tests/test_ga.cpp $(GA_CORE_SOURCES) include/GA/Individual.h inc
 $(TEST_GA_GENERATION_BIN): tests/test_ga_generation.cpp src/GA/GACore.cpp $(GA_CORE_SOURCES) include/GA/GA.h | $(BUILD_DIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_ga_generation.cpp src/GA/GACore.cpp $(GA_CORE_SOURCES) -o $@ $(LDLIBS)
 
-unit-test: $(TEST_UTILS_BIN) $(TEST_GA_BIN) $(TEST_GA_GENERATION_BIN)
+$(TEST_BACKPROP_BIN): tests/test_backprop.cpp src/CapsuleNetwork/BackpropUtils.cpp include/CapsuleNetwork/BackpropUtils.h | $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_backprop.cpp src/CapsuleNetwork/BackpropUtils.cpp -o $@ $(LDLIBS)
+
+unit-test: $(TEST_UTILS_BIN) $(TEST_GA_BIN) $(TEST_GA_GENERATION_BIN) $(TEST_BACKPROP_BIN)
 	$(TEST_UTILS_BIN)
 	$(TEST_GA_BIN)
 	$(TEST_GA_GENERATION_BIN)
+	$(TEST_BACKPROP_BIN)
 
 docs-check:
 	python3 scripts/check_docs.py

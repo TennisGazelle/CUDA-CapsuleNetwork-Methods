@@ -3,6 +3,7 @@
 //
 
 #include <CapsNetConfig.h>
+#include <CapsuleNetwork/BackpropUtils.h>
 #include <MNISTReader.h>
 #include <models/VectorMap.h>
 #include <Utils.h>
@@ -96,7 +97,7 @@ vector<arma::vec> CapsuleNetwork::getReconstructionError(vector<arma::vec> digit
 
     auto reconstructionImage = reconstructionLayers.loadInputAndGetOutput(Utils::getAsOneDim(digitCapsOutput));
     auto reconstructionGradient = getErrorGradientImage(image, reconstructionImage);
-    auto mlpError = Utils::asCapsuleVectors(16, 10, reconstructionLayers.backPropagateError(reconstructionGradient));
+    auto mlpError = Utils::asCapsuleVectors(config.cnOuterDim, config.numClasses, reconstructionLayers.backPropagateError(reconstructionGradient));
     for (auto &v : mlpError) {
         v *= 0.005; // to not dominate as other error
     }
@@ -240,21 +241,24 @@ void CapsuleNetwork::backPropagate() {
 }
 
 void CapsuleNetwork::backPropagate(const vector<arma::vec>& error) {
-    assert (interimError.size() == digitCaps.size());
-    assert (interimError[0].size() == config.cnOuterDim);
+    if (error.size() != digitCaps.size()) {
+        throw invalid_argument("digit-capsule error count does not match output capsule count");
+    }
+    if (!error.empty() && error[0].size() != static_cast<arma::uword>(config.cnOuterDim)) {
+        throw invalid_argument("digit-capsule error vector dimension does not match configuration");
+    }
 
-    auto flattenedTensorSize = 6 * 6 * config.cnNumTensorChannels;
-
+    const int flattenedTensorSize = 6 * 6 * config.cnNumTensorChannels;
     vector<arma::vec> primaryCapsError(flattenedTensorSize, arma::vec(config.cnInnerDim, arma::fill::zeros));
-    // given the error, put this in the last layer and get the error, and give it to the Conv. net
-    for (int i = 0; i < interimError.size(); i++) {
-        vector<arma::vec> subset = digitCaps[i].backPropagate(interimError[i]);
-        for (int j = 0; j < flattenedTensorSize; j++) {
-            primaryCapsError[i] += subset[i];
-        }
+
+    // Every output capsule contributes an error vector for every flattened
+    // primary capsule. Sum by primary-capsule index.
+    for (size_t i = 0; i < error.size(); ++i) {
+        const vector<arma::vec> subset = digitCaps[i].backPropagate(error[i]);
+        accumulatePrimaryCapsuleError(primaryCapsError, subset);
     }
     for (auto &delta_u : primaryCapsError) {
-        auto derivativeLength = Utils::getSquashDerivativeLength(delta_u);
+        const auto derivativeLength = Utils::getSquashDerivativeLength(delta_u);
         delta_u = derivativeLength * Utils::safeNormalise(delta_u);
     }
     // translate to feature maps
