@@ -73,7 +73,7 @@ The revival work does **not** currently claim that the published accuracy/evolut
 Two code paths deserve special attention before reproducing results:
 
 - the surviving CUDA `tally(false)` path appears to perform backpropagation and periodic weight updates while traversing the test set, despite the thesis describing test evaluation as forward-only;
-- the sequential `CapsuleNetwork::backPropagate` contains suspicious error-accumulation indexing that needs a targeted parity test.
+- the sequential `CapsuleNetwork::backPropagate` accumulation defect is corrected and host-tested in revival PR #7, but CPU/CUDA parity and historical experiment provenance remain unresolved.
 
 These are **audit flags**, not retrospective declarations that the thesis results were generated incorrectly. The exact experiment commit/path must be reconstructed first. See [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
@@ -115,6 +115,26 @@ The `CUDAify` code was written around an old CUDA/CMake environment and currentl
 A modern CUDA installation should **not** be expected to build the historical tree unchanged. Build-system modernization is deliberately tracked as a separate milestone so toolchain fixes do not get confused with algorithm changes.
 
 See [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
+
+### MNIST data location
+
+The reader expects the standard 28x28 MNIST IDX files with these exact names:
+
+- `train-images-idx3-ubyte`
+- `train-labels-idx1-ubyte`
+- `t10k-images-idx3-ubyte`
+- `t10k-labels-idx1-ubyte`
+
+It checks `CAPSNET_DATA_DIR` first, then `data/`, then `../data/`. An explicitly
+configured directory must contain all four files; it does not silently fall back.
+For example:
+
+```bash
+CAPSNET_DATA_DIR=/path/to/mnist ./bin/NeuralNets
+```
+
+The loader validates IDX magic numbers, matching image/label counts, dimensions,
+payload lengths, and labels in the range 0–9.
 
 ## Agent / contributor setup
 

@@ -241,12 +241,7 @@ void CapsuleNetwork::backPropagate() {
 }
 
 void CapsuleNetwork::backPropagate(const vector<arma::vec>& error) {
-    if (error.size() != digitCaps.size()) {
-        throw invalid_argument("digit-capsule error count does not match output capsule count");
-    }
-    if (!error.empty() && error[0].size() != static_cast<arma::uword>(config.cnOuterDim)) {
-        throw invalid_argument("digit-capsule error vector dimension does not match configuration");
-    }
+    validateDigitCapsuleErrors(error, digitCaps.size(), static_cast<arma::uword>(config.cnOuterDim));
 
     const int flattenedTensorSize = 6 * 6 * config.cnNumTensorChannels;
     vector<arma::vec> primaryCapsError(flattenedTensorSize, arma::vec(config.cnInnerDim, arma::fill::zeros));

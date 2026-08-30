@@ -157,6 +157,13 @@ unsigned int Population::getNumUniqueIndividuals() const {
 
 namespace {
 
+bool hasFiniteObjectives(const Individual& individual) {
+    return std::isfinite(individual.accuracy_100) &&
+           std::isfinite(individual.accuracy_300) &&
+           std::isfinite(individual.loss_100) &&
+           std::isfinite(individual.loss_300);
+}
+
 template <typename SortFn, typename ValueFn>
 void addCrowdingContribution(ParedoFront& front, SortFn sortFn, ValueFn valueFn) {
     sortFn();
@@ -222,6 +229,12 @@ void ParedoFront::sortByCrowdingOperator() {
 }
 
 vector<ParedoFront> sortFastNonDominated(Population &population) {
+    for (const Individual& individual : population) {
+        if (!hasFiniteObjectives(individual)) {
+            throw std::invalid_argument("NSGA-II objectives must be finite");
+        }
+    }
+
     vector<ParedoFront> fronts;
     ParedoFront firstFront;
 

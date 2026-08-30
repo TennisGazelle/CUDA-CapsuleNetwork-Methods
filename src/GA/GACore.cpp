@@ -5,6 +5,7 @@
 #include <Utils.h>
 
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 namespace {
@@ -30,7 +31,9 @@ void maybeMutate(Individual& individual, double probability) {
 Population makeOffspringGeneration(Population parents,
                                    const GAConfig& config,
                                    bool useCrowdingOperator) {
-    if (config.prob_mutation < 0.0 || config.prob_mutation > 1.0 ||
+    if (!std::isfinite(config.prob_mutation) ||
+        !std::isfinite(config.prob_crossover) ||
+        config.prob_mutation < 0.0 || config.prob_mutation > 1.0 ||
         config.prob_crossover < 0.0 || config.prob_crossover > 1.0) {
         throw std::invalid_argument("GA probabilities must be in [0, 1]");
     }

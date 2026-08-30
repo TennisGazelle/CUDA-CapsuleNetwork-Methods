@@ -17,6 +17,30 @@ bool throwsInvalidArgument(void (*fn)()) {
     return false;
 }
 
+void wrongDigitCapsuleCount() {
+    validateDigitCapsuleErrors({arma::vec(2, arma::fill::zeros)}, 2, 2);
+}
+
+void wrongFirstDigitCapsuleDimension() {
+    validateDigitCapsuleErrors({arma::vec(3, arma::fill::zeros),
+                                arma::vec(2, arma::fill::zeros)}, 2, 2);
+}
+
+void wrongLaterDigitCapsuleDimension() {
+    validateDigitCapsuleErrors({arma::vec(2, arma::fill::zeros),
+                                arma::vec(3, arma::fill::zeros)}, 2, 2);
+}
+
+void test_digit_capsule_error_shapes_are_validated_completely() {
+    validateDigitCapsuleErrors({}, 0, 2);
+    validateDigitCapsuleErrors({arma::vec(2, arma::fill::zeros),
+                                arma::vec(2, arma::fill::zeros)}, 2, 2);
+
+    assert(throwsInvalidArgument(wrongDigitCapsuleCount));
+    assert(throwsInvalidArgument(wrongFirstDigitCapsuleDimension));
+    assert(throwsInvalidArgument(wrongLaterDigitCapsuleDimension));
+}
+
 void test_accumulates_by_primary_capsule_index() {
     std::vector<arma::vec> accumulated(3, arma::vec(2, arma::fill::zeros));
 
@@ -59,6 +83,7 @@ void test_shape_mismatches_are_rejected() {
 }  // namespace
 
 int main() {
+    test_digit_capsule_error_shapes_are_validated_completely();
     test_accumulates_by_primary_capsule_index();
     test_shape_mismatches_are_rejected();
     std::cout << "host capsule backprop reduction tests passed" << std::endl;

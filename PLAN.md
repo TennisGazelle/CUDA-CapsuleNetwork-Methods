@@ -36,17 +36,19 @@ No contributor needs to discover the thesis implementation by guessing branches.
 
 **Goal:** make every PR run meaningful tests without requiring CUDA hardware.
 
+**Status:** `[x]` completed in revival PR #7.
+
 ### Deliverables
 
 - [x] add initial `Utils` unit-test executable;
 - [x] add Makefile targets for host unit tests and doc checks;
 - [x] add PR workflow;
-- [ ] expand `Utils` tests around edge cases;
-- [ ] write failing/characterization tests for `getWeightRand` and varying-bound `getRandBetween(double)`;
-- [ ] characterize double-epsilon norm semantics;
-- [ ] test `getAsOneDim`/`asCapsuleVectors` round trips including malformed shapes;
-- [ ] decouple chromosome decoding enough for host-only tests;
-- [ ] add synthetic Pareto-front tests for NSGA-II helpers.
+- [x] expand `Utils` tests around edge cases;
+- [x] characterize and correct `getWeightRand` and varying-bound `getRandBetween(double)`;
+- [x] characterize and correct double-epsilon norm semantics;
+- [x] test `getAsOneDim`/`asCapsuleVectors` round trips including malformed shapes;
+- [x] decouple chromosome decoding enough for host-only tests;
+- [x] add synthetic Pareto-front and generation/truncation tests for NSGA-II helpers.
 
 ### Files
 
@@ -144,9 +146,9 @@ Every CUDA primitive used by full forward/backward has direct parity coverage.
 - [ ] full backward error parity;
 - [ ] weight-gradient parity;
 - [ ] post-update weight parity;
-- [ ] investigate suspicious sequential `primaryCapsError` indexing;
-- [ ] investigate historical random initialization bugs;
-- [ ] record each confirmed fix with compatibility/reproduction note.
+- [x] investigate and correct suspicious sequential `primaryCapsError` indexing;
+- [x] investigate and correct historical random initialization bugs;
+- [x] record the confirmed fixes with compatibility/reproduction notes;
 
 ### Acceptance criteria
 
@@ -182,8 +184,8 @@ Test labels never update learned state in corrected mode; historical reproductio
 ### Deliverables
 
 - [ ] one top-level seed;
-- [ ] eliminate first-call-bound static distribution bug;
-- [ ] fix/replace weight initializer with documented distribution;
+- [x] eliminate first-call-bound static distribution bug;
+- [x] fix/replace weight initializer with documented distribution;
 - [ ] seed GA operations deterministically;
 - [ ] record config + seed + git SHA + dataset hash for each run;
 - [ ] add experiment fingerprint to database cache key;
@@ -324,10 +326,10 @@ The research separates the value of **capsule representations** from the value/c
 
 The highest-leverage order after this foundation is:
 
-1. **M1 host characterization tests** for the known `Utils` issues;
-2. **M2 modern CMake compile-only port**;
-3. **M3 first five routing primitive parity tests**;
-4. **M5 pure evaluation API**, once historical mutation behavior is pinned by a characterization test;
-5. **M7 experiment provenance reconstruction** in parallel with the build work.
+1. **M2 modern CMake compile-only port**;
+2. **M3 first five routing primitive parity tests**;
+3. **M5 pure evaluation API**, once historical mutation behavior is pinned by a characterization test;
+4. **M7 experiment provenance reconstruction** in parallel with the build work;
+5. **M8 sanitizer coverage** for the host parsing and GA ownership boundaries.
 
 Do not start M10/M11 merely because they are more exciting. The parity/reproduction boundary is what will make those experiments scientifically interpretable.

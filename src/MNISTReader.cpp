@@ -5,11 +5,7 @@
 #include <MNISTDataIO.h>
 #include <MNISTReader.h>
 
-#include <cstdlib>
-#include <fstream>
-#include <stdexcept>
 #include <string>
-#include <vector>
 
 namespace {
 
@@ -21,18 +17,6 @@ std::string joinPath(const std::string& directory, const std::string& filename) 
         return directory + filename;
     }
     return directory + "/" + filename;
-}
-
-bool fileExists(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
-    return input.good();
-}
-
-bool containsMNIST(const std::string& directory) {
-    return fileExists(joinPath(directory, "train-images-idx3-ubyte")) &&
-           fileExists(joinPath(directory, "train-labels-idx1-ubyte")) &&
-           fileExists(joinPath(directory, "t10k-images-idx3-ubyte")) &&
-           fileExists(joinPath(directory, "t10k-labels-idx1-ubyte"));
 }
 
 }  // namespace
@@ -49,24 +33,7 @@ MNISTReader* MNISTReader::getInstance() {
 }
 
 std::string MNISTReader::resolveDataDirectory() {
-    const char* configured = std::getenv("CAPSNET_DATA_DIR");
-    if (configured != nullptr && configured[0] != '\0') {
-        const std::string directory(configured);
-        if (!containsMNIST(directory)) {
-            throw std::runtime_error("CAPSNET_DATA_DIR does not contain the four required MNIST IDX files: " + directory);
-        }
-        return directory;
-    }
-
-    const std::vector<std::string> candidates = {"data", "../data"};
-    for (const std::string& directory : candidates) {
-        if (containsMNIST(directory)) {
-            return directory;
-        }
-    }
-
-    throw std::runtime_error(
-        "MNIST data not found. Run from the repository/build directory or set CAPSNET_DATA_DIR explicitly.");
+    return resolveMNISTDataDirectory();
 }
 
 void MNISTReader::readMNISTData() {

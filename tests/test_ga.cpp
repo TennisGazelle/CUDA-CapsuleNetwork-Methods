@@ -197,6 +197,28 @@ void test_mutation_changes_exactly_one_bit() {
     assert(changed == 1);
 }
 
+void test_seeded_crossover_exchanges_the_same_suffix_in_both_children() {
+    Individual first = makeIndividual(std::string(35, '0'));
+    Individual second = makeIndividual(std::string(35, '1'));
+
+    Utils::setRandomSeed(314159);
+    first.crossoverWith(second);
+
+    assert(first.to_string() == "00000000000000000000000000001111111");
+    assert(second.to_string() == "11111111111111111111111111110000000");
+}
+
+void test_nonfinite_objectives_are_rejected() {
+    Population population;
+    population.push_back(makeIndividual());
+    setObjectives(population[0], 90.0, 90.0, 1.0, 1.0);
+    population[0].loss_300 = std::numeric_limits<double>::quiet_NaN();
+    assert(throwsInvalidArgument([&population] { sortFastNonDominated(population); }));
+
+    population[0].loss_300 = std::numeric_limits<double>::infinity();
+    assert(throwsInvalidArgument([&population] { sortFastNonDominated(population); }));
+}
+
 }  // namespace
 
 int main() {
@@ -208,6 +230,8 @@ int main() {
     test_crowding_operator_prefers_low_rank_then_large_distance();
     test_population_stats_and_unique_count();
     test_mutation_changes_exactly_one_bit();
+    test_seeded_crossover_exchanges_the_same_suffix_in_both_children();
+    test_nonfinite_objectives_are_rejected();
 
     std::cout << "host GA/NSGA-II correctness tests passed" << std::endl;
     return 0;

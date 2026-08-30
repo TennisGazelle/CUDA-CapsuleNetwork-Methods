@@ -47,7 +47,7 @@ jobs:
       - name: Coverage note
         run: |
           cat <<'EOF'
-          This job validates host-only characterization tests, documentation,
+          This job validates host-only correctness tests, documentation,
           and source packaging. It does NOT execute CUDA kernels and must not be
           interpreted as GPU runtime validation.
           EOF

@@ -41,6 +41,10 @@ Do **not** silently fix this and then claim the historical results reproduced.
 
 ## High: suspicious sequential backpropagation accumulation index
 
+**Status:** Corrected in PR #7 and covered by `test_backprop`. The corrected
+path accumulates each upper-capsule contribution by primary-capsule index and
+validates every incoming error-vector shape before mutating gradients.
+
 **File:** `src/CapsuleNetwork/CapsuleNetwork.cpp`
 
 In the surviving sequential backpropagation path, a nested loop iterates over `j` but appears to accumulate using `primaryCapsError[i] += subset[i]` rather than indexing by the inner loop variable.
@@ -54,9 +58,19 @@ That shape is suspicious because the operation is expected to collect contributi
 - compare against CUDA reduction semantics;
 - inspect earlier commits to determine whether this was present in published benchmarks.
 
+The host reduction semantics are now verified. CUDA parity and historical
+experiment provenance remain open, so this correction can change sequential
+training results and is not evidence that published results have been reproduced.
+
 ---
 
 ## High: random-weight helper does not appear to use its computed scale
+
+**Status:** Corrected in PR #7 and covered by
+`test_weight_initialization_uses_requested_scale`. Corrected mode samples from
+a zero-mean normal distribution with standard deviation `0.8 / n` and rejects
+non-finite or non-positive scale inputs. Historical runs may have used the
+unscaled standard-normal behavior.
 
 **File:** `src/Utils.cpp`
 
@@ -70,6 +84,11 @@ This can materially affect initialization and therefore training/reproducibility
 
 ## High: static real-valued RNG distribution captures first-call bounds
 
+**Status:** Corrected in PR #7 and covered by
+`test_rng_is_seedable_and_bounds_are_per_call`. Each call now constructs a
+distribution for its requested bounds. This changes any historical path that
+relied on varying real-valued ranges after the first call.
+
 **File:** `src/Utils.cpp`
 
 `Utils::getRandBetween(double lowerBound, double upperBound)` declares a `static uniform_real_distribution` constructed from the function arguments. In C++, that distribution is initialized only on the first call, so subsequent calls with different bounds reuse the first call's distribution.
@@ -79,6 +98,11 @@ If this helper is used with varying ranges, later calls do not honor their reque
 ---
 
 ## Medium/High: vector length includes epsilon twice
+
+**Status:** Corrected in PR #7 and covered by `test_corrected_norm_semantics`.
+`square_length` and `length` now implement the literal squared norm and norm;
+zero-safe normalization handles the division guard explicitly. Historical
+training may differ near zero and requires compatibility treatment if needed.
 
 **File:** `src/Utils.cpp`
 
@@ -91,6 +115,10 @@ This may be intentional numerical protection, historical drift, or an accidental
 ---
 
 ## Medium/High: `asCapsuleVectors` assertion does not protect the later indexing pattern
+
+**Status:** Corrected in PR #7 and covered by
+`test_flatten_and_capsule_round_trip`. Corrected mode requires an exact shape
+match and rejects invalid dimensions instead of relying on a debug assertion.
 
 **File:** `src/Utils.cpp`
 
@@ -162,6 +190,13 @@ Do not state that every thesis experiment used reconstruction loss until the exp
 ---
 
 ## Medium: NSGA-II implementation needs independent correctness tests
+
+**Status:** Core host semantics are corrected and covered in PR #7 by
+`test_ga` and `test_ga_generation`, including known fronts, crowding distance,
+exact partial-front truncation, crossover, probability boundaries, non-finite
+objective rejection, odd population sizes, reproducibility, and parent
+immutability. Database-backed evaluation and historical search provenance
+remain separate audit work.
 
 The repository implements non-dominated sorting, crowding distance, tournament selection, crossover, mutation, and front filling manually.
 

@@ -56,6 +56,14 @@ make ci
 
 GPU tests must state the GPU/toolkit used. A CUDA compile without a GPU is not a GPU runtime test.
 
+## C++ style
+
+- Preserve C++11 compatibility until the build-modernization milestone changes it deliberately.
+- Use four-space indentation and place opening braces on the declaration line.
+- Keep host-testable logic out of `.cu` files when it does not depend on CUDA.
+- Prefer deterministic, single-purpose fixtures and standard exceptions for invalid runtime input; do not rely on `assert` for production validation.
+- Follow the naming and include style of the file being edited instead of reformatting unrelated historical code.
+
 ## Documentation
 
 Update the relevant spoke in the same PR. Prefer links from README/AGENTS instead of duplicating long explanations.

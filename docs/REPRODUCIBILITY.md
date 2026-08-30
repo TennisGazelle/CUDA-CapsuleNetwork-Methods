@@ -102,6 +102,13 @@ A single `--seed` or config field should eventually control all deterministic-ca
 
 Historical mode may preserve original seeding behavior when reconstructing old results.
 
+PR #7 routes the corrected host utilities and GA operators through one shared
+`std::mt19937` and exposes `Utils::setRandomSeed` for repeatable tests. This is
+an intermediate boundary, not full experiment fingerprinting: the seed is not
+yet a top-level CLI/config option, other historical randomness sources still
+need inventory, and the shared generator is not a deterministic thread-safe
+experiment stream.
+
 ## 5. Numerical parity before training parity
 
 Full training curves are a bad first correctness oracle because tiny differences accumulate.
