@@ -1,0 +1,33 @@
+name: Create second-wave boundary tag
+
+on:
+  push:
+    branches:
+      - revival/second-wave-normalization
+    paths:
+      - .github/workflows/second-wave-tag.yaml
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create second-wave-start tag if missing
+        env:
+          BASELINE_SHA: 0e9428abbede0d8e960d4a6b467c810926e0e4cd
+        run: |
+          if git ls-remote --exit-code --tags origin refs/tags/second-wave-start >/dev/null 2>&1; then
+            echo "second-wave-start already exists"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a second-wave-start "$BASELINE_SHA" -m "Start of the CUDA Capsule Networks second wave: preservation baseline before corrective normalization."
+          git push origin refs/tags/second-wave-start
