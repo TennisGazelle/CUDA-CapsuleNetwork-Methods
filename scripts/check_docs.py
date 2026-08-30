@@ -35,11 +35,26 @@ def check_required() -> list[str]:
     return [f"missing required documentation: {path}" for path in REQUIRED if not (ROOT / path).exists()]
 
 
+def is_repo_owned_doc(path: Path) -> bool:
+    rel = path.relative_to(ROOT)
+    ignored_parts = {".git", ".build", "release-assets"}
+    if any(part in ignored_parts for part in rel.parts):
+        return False
+
+    # ai-skills is a pinned external submodule. Its own docs may intentionally
+    # contain illustrative placeholder links such as [text](path); audit the
+    # consuming repo's links *to* the submodule, but not the vendored docs
+    # inside it.
+    if rel.parts[:2] == (".agents", "ai-skills"):
+        return False
+
+    return True
+
+
 def markdown_files() -> list[Path]:
-    ignored = {".git", ".build", "release-assets"}
     files: list[Path] = []
     for path in ROOT.rglob("*"):
-        if any(part in ignored for part in path.parts):
+        if not is_repo_owned_doc(path):
             continue
         if path.is_file() and path.suffix.lower() in {".md", ".mdc"}:
             files.append(path)
