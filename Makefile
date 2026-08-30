@@ -33,13 +33,15 @@ docs-check:
 package:
 	bash scripts/package_release.sh
 
-package-check: package
+package-check: package | $(BUILD_DIR)
 	@version="$$(tr -d '[:space:]' < VERSION)"; \
 	 prefix="cuda-capsule-network-methods-$${version}"; \
 	 test -s "release-assets/$${prefix}.tar.gz"; \
 	 test -s "release-assets/$${prefix}.zip"; \
-	 tar -tzf "release-assets/$${prefix}.tar.gz" | grep -q "$${prefix}/README.md"; \
-	 unzip -l "release-assets/$${prefix}.zip" | grep -q "$${prefix}/SPEC.md"
+	 tar -tzf "release-assets/$${prefix}.tar.gz" > "$(BUILD_DIR)/tar-contents.txt"; \
+	 unzip -l "release-assets/$${prefix}.zip" > "$(BUILD_DIR)/zip-contents.txt"; \
+	 grep -q "$${prefix}/README.md" "$(BUILD_DIR)/tar-contents.txt"; \
+	 grep -q "$${prefix}/SPEC.md" "$(BUILD_DIR)/zip-contents.txt"
 
 ci: unit-test docs-check package-check
 
