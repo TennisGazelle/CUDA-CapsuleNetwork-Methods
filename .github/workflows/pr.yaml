@@ -1,0 +1,50 @@
+name: PR
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    branches:
+      - CUDAify
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host-validation:
+    name: Host unit/docs/package validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install host test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarmadillo-dev
+
+      - name: Run host CI bundle
+        run: make ci
+
+      - name: Upload source-package preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: capsule-network-source-${{ github.sha }}
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Coverage note
+        run: |
+          cat <<'EOF'
+          This job validates host-only characterization tests, documentation,
+          and source packaging. It does NOT execute CUDA kernels and must not be
+          interpreted as GPU runtime validation.
+          EOF

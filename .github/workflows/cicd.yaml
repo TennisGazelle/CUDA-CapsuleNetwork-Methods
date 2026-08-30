@@ -1,0 +1,92 @@
+name: CICD
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - CUDAify
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  validate-and-release:
+    name: Validate and optionally release
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout CUDAify
+        uses: actions/checkout@v4
+        with:
+          ref: CUDAify
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install host test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarmadillo-dev
+
+      - name: Host validation
+        run: make ci
+
+      - name: Determine release version
+        id: release
+        shell: bash
+        run: |
+          if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
+            echo 'Manual dispatch: validation only; no release.'
+            echo 'release_version=' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ '${{ contains(github.event.pull_request.labels.*.name, 'major') }}' == 'true' ]]; then
+            python3 scripts/bump_version.py VERSION --major
+          elif [[ '${{ contains(github.event.pull_request.labels.*.name, 'minor') }}' == 'true' ]]; then
+            python3 scripts/bump_version.py VERSION --minor
+          elif [[ '${{ contains(github.event.pull_request.labels.*.name, 'patch') }}' == 'true' ]]; then
+            python3 scripts/bump_version.py VERSION --patch
+          else
+            echo 'No major/minor/patch label found; skipping version bump and release.'
+            echo 'release_version=' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "release_version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Commit version bump
+        if: steps.release.outputs.release_version != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "UPDATE: v${{ steps.release.outputs.release_version }}"
+          git push origin HEAD:CUDAify
+
+      - name: Build release artifacts from version commit
+        if: steps.release.outputs.release_version != ''
+        run: make package
+
+      - name: Tag version
+        if: steps.release.outputs.release_version != ''
+        run: |
+          git tag "v${{ steps.release.outputs.release_version }}"
+          git push origin "v${{ steps.release.outputs.release_version }}"
+
+      - name: Make GitHub release
+        if: steps.release.outputs.release_version != ''
+        uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          tag_name: "v${{ steps.release.outputs.release_version }}"
+          files: |
+            release-assets/*
+            README.md
+            VERSION
+            SPEC.md
+            PLAN.md
+            docs/KNOWN_ISSUES.md
+            docs/REPRODUCIBILITY.md
