@@ -4,14 +4,23 @@ CPPFLAGS ?= -Iinclude
 LDLIBS ?= -larmadillo
 
 BUILD_DIR := .build
-TEST_BIN := $(BUILD_DIR)/test_utils
+TEST_UTILS_BIN := $(BUILD_DIR)/test_utils
+TEST_GA_BIN := $(BUILD_DIR)/test_ga
+
+GA_TEST_SOURCES := \
+	tests/test_ga.cpp \
+	src/GA/IndividualCore.cpp \
+	src/GA/PopulationCore.cpp \
+	src/Utils.cpp \
+	src/CapsNetConfig.cpp \
+	src/models/PopulationStats.cpp
 
 .PHONY: help unit-test docs-check package package-check ci clean
 
 help:
 	@printf '%s\n' \
 	  'Targets:' \
-	  '  unit-test     Build and run host-only characterization tests (no CUDA required)' \
+	  '  unit-test     Build and run host-only correctness tests (no CUDA required)' \
 	  '  docs-check    Validate required docs and relative Markdown links' \
 	  '  package       Create versioned source tar.gz + zip under release-assets/' \
 	  '  package-check Build packages and verify critical files are present' \
@@ -21,11 +30,15 @@ help:
 $(BUILD_DIR):
 	mkdir -p $@
 
-$(TEST_BIN): tests/test_utils.cpp src/Utils.cpp include/Utils.h | $(BUILD_DIR)
+$(TEST_UTILS_BIN): tests/test_utils.cpp src/Utils.cpp include/Utils.h | $(BUILD_DIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) tests/test_utils.cpp src/Utils.cpp -o $@ $(LDLIBS)
 
-unit-test: $(TEST_BIN)
-	$(TEST_BIN)
+$(TEST_GA_BIN): $(GA_TEST_SOURCES) include/GA/Individual.h include/GA/Population.h include/models/PopulationStats.h | $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(GA_TEST_SOURCES) -o $@ $(LDLIBS)
+
+unit-test: $(TEST_UTILS_BIN) $(TEST_GA_BIN)
+	$(TEST_UTILS_BIN)
+	$(TEST_GA_BIN)
 
 docs-check:
 	python3 scripts/check_docs.py
@@ -33,15 +46,18 @@ docs-check:
 package:
 	bash scripts/package_release.sh
 
-package-check: package | $(BUILD_DIR)
+package-check: package
 	@version="$$(tr -d '[:space:]' < VERSION)"; \
 	 prefix="cuda-capsule-network-methods-$${version}"; \
 	 test -s "release-assets/$${prefix}.tar.gz"; \
 	 test -s "release-assets/$${prefix}.zip"; \
-	 tar -tzf "release-assets/$${prefix}.tar.gz" > "$(BUILD_DIR)/tar-contents.txt"; \
-	 unzip -l "release-assets/$${prefix}.zip" > "$(BUILD_DIR)/zip-contents.txt"; \
-	 grep -q "$${prefix}/README.md" "$(BUILD_DIR)/tar-contents.txt"; \
-	 grep -q "$${prefix}/SPEC.md" "$(BUILD_DIR)/zip-contents.txt"
+	 tar_listing="$$(mktemp)"; \
+	 zip_listing="$$(mktemp)"; \
+	 trap 'rm -f "$${tar_listing}" "$${zip_listing}"' EXIT; \
+	 tar -tzf "release-assets/$${prefix}.tar.gz" > "$${tar_listing}"; \
+	 unzip -l "release-assets/$${prefix}.zip" > "$${zip_listing}"; \
+	 grep -q "$${prefix}/README.md" "$${tar_listing}"; \
+	 grep -q "$${prefix}/SPEC.md" "$${zip_listing}"
 
 ci: unit-test docs-check package-check
 

@@ -5,8 +5,13 @@
 #ifndef NEURALNETS_POPULATIONSTATS_H
 #define NEURALNETS_POPULATIONSTATS_H
 
+#include <limits>
+
 struct PopulationStats {
-    double min = 100000.0, max = 0.0, average = 0.0;
+    double min = std::numeric_limits<double>::infinity();
+    double max = -std::numeric_limits<double>::infinity();
+    double average = 0.0;
+
     void reset();
 };
 
