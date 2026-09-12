@@ -42,7 +42,6 @@ vector<double> Image::toVectorOfDoubles() const {
     for (unsigned int i = 0; i < size(); i++) {
         result[i] = double(at(i));
     }
-    assert (result.size() == size());
     return result;
 }
 

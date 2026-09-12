@@ -8,10 +8,11 @@
 
 #include "PerceptronLayer.h"
 #include "MNISTReader.h"
+#include "CapsNetConfig.h"
 
 class MultilayerPerceptron {
 public:
-    MultilayerPerceptron(size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes);
+    MultilayerPerceptron(const CapsNetConfig& incomingConfig, size_t inputLayerSize, size_t outputLayerSize, vector<size_t> hiddenLayerSizes);
     void init(const string& possibleInputFilename = "");
     vector<double> loadImageAndGetOutput(int imageIndex, bool useTraining = true);
     vector<double> loadInputAndGetOutput(const vector<double>& input);
@@ -32,8 +33,8 @@ public:
 
 private:
     vector<PerceptronLayer> layers;
-
     vector<size_t> layerSizes;
+    CapsNetConfig config;
 };
 
 

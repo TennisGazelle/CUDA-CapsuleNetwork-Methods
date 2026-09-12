@@ -13,7 +13,8 @@ using namespace std;
 class Capsule {
 public:
     Capsule() = default;
-    void init(int iD, int oD, int inputs, int outputs);
+    ~Capsule();
+    void init(int iD, int oD, int inputs, int outputs, int r);
     void softmax();
     // squishification function
     vector<arma::vec> backPropagate(const arma::vec& error);
@@ -31,9 +32,8 @@ private:
     int inputDim;
     int outputDim;
     int numInputs;
-    int numOutputs;
+    int numIterations;
 
-    static const int numIterations = 3;
     vector<arma::vec> prevInput;
     arma::vec output;
 };

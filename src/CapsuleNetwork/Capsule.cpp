@@ -4,14 +4,17 @@
 
 #include <cassert>
 #include <Utils.h>
-#include <Config.h>
 #include "CapsuleNetwork/Capsule.h"
 
-void Capsule::init(int iD, int oD, int inputs, int outputs) {
+Capsule::~Capsule() {
+
+}
+
+void Capsule::init(int iD, int oD, int inputs, int outputs, int r) {
     inputDim = iD;
     outputDim = oD;
     numInputs = inputs;
-    numOutputs = outputs;
+    numIterations = r;
 
     weightMatrices.resize(numInputs);
     weightDeltas.resize(numInputs);
@@ -22,6 +25,9 @@ void Capsule::init(int iD, int oD, int inputs, int outputs) {
     for (int i = 0; i < numInputs; i++) {
         b[i] = 0.0;
         weightMatrices[i] = arma::mat(outputDim, inputDim, arma::fill::randn);
+//        for (int j = 0; j < outputDim*inputDim; j++) {
+//        	weightMatrices[i][j] = Utils::getWeightRand(0);
+//        }
         weightDeltas[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
         weightVelocities[i] = arma::mat(outputDim, inputDim, arma::fill::zeros);
     }
@@ -38,7 +44,7 @@ void Capsule::softmax() {
     for (int i = 0; i < numInputs; i++) {
         c[i] = double(exp(b[i]) / sum_b_exps);
         if (isnan(c[i])) {
-            cerr << "c[i] got nan" << endl;
+            cerr << " c[i] got nan" << endl;
             cerr << "       b[i]: " << b[i] << endl;
             cerr << "  exp(b[i]): " << exp(b[i]) << endl;
             cerr << " sum_b_exps: " << sum_b_exps << endl;
@@ -50,8 +56,16 @@ void Capsule::softmax() {
 vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
     vector<arma::vec> delta_u(numInputs);
     for (int i = 0; i < numInputs; i++) {
-        arma::vec delta_u_hat = trans(weightMatrices[i]) * error;
-        delta_u[i] = c[i] * delta_u_hat;
+        delta_u[i] = c[i] * trans(weightMatrices[i]) * error;
+//        arma::vec temp = c[i] * error;
+//        temp.t().print();
+//        cout << "c: " << c[i] << endl;
+//        error.print("error:");
+//        for (int j = 0; j < temp.size(); j++) {
+//            cout << temp[j] << "\t";
+//        }
+//        weightMatrices[i].t().print("with c as: " + to_string(c[i]));
+//        cout << endl;
 
         // calculate your damn deltas
         weightDeltas[i] -= error * trans(prevInput[i]);
@@ -60,7 +74,6 @@ vector<arma::vec> Capsule::backPropagate(const arma::vec &error) {
 }
 
 arma::vec Capsule::forwardPropagate(const vector<arma::vec>& u) {
-    // error check
     // we have as many inputs as we have weights for
     assert (u.size() == numInputs);
     // all inputs have the same dimensions
@@ -78,6 +91,10 @@ arma::vec Capsule::routingAlgorithm() {
     for (size_t i = 0; i < weightMatrices.size(); i++) {
         // go multiply each by the weight matrix
         u_hat[i] = weightMatrices[i] * prevInput[i];
+//        for (int j = 0; j < u_hat[i].size(); j++) {
+//            cout << u_hat[i][j] << "\t";
+//        }
+//        cout << endl;
     }
 
     // routing algorithm on page 3 starts here //

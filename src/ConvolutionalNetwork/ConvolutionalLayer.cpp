@@ -49,11 +49,8 @@ void ConvolutionalLayer::calculateOutput() {
             for (int outputCol = 0; outputCol < inputWidth - filterWidth; outputCol++) {
                 double dotProduct = dotMatrixWithFilter(outputRow, outputCol, outputIndex);
                 // ReLu
-                if (dotProduct > 0) {
-                    outputMaps[outputIndex][outputRow][outputCol] = dotProduct;
-                } else {
-                    outputMaps[outputIndex][outputRow][outputCol] = 0;
-                }
+                outputMaps[outputIndex][outputRow][outputCol] = max(0.0, dotProduct);
+                outputMaps[outputIndex][outputRow][outputCol] = dotProduct;
 //                // Tangental Activation
 //                double e_z = exp(dotProduct);
 //                double e_zn = exp(-dotProduct);
@@ -82,7 +79,7 @@ vector<FeatureMap> ConvolutionalLayer::singleThreadedBackPropagate(const vector<
                         for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
                             // add a 'weighted' version of the output to the newErrorGradient
                             // dX[h:h+f, w:w+f] += W * dh(h,w)
-                            newErrorGradient[inputChannel][filterRow + outputRow][filterCol] += filters[outputChannel][inputChannel][filterRow][filterCol] * dh;
+                            newErrorGradient[inputChannel][filterRow + outputRow][filterCol + outputCol] += filters[outputChannel][inputChannel][filterRow][filterCol] * dh;
                             // get the update for the filters with the difference a "conv" of that error
                             // dW += X[h:h+f, w:w+f] * dH(h,w)
                             filterAdjustments[outputChannel][inputChannel][filterRow][filterCol] += inputMaps[inputChannel][filterRow + outputRow][filterCol + outputCol] * dh;
@@ -133,7 +130,7 @@ void ConvolutionalLayer::m_threading_BackPropagation(int inputMapIndex, const ve
                     for (size_t filterCol = 0; filterCol < filterWidth; filterCol++) {
                         // add a 'weighted' version of the output to the newErrorGradient
                         // dX[h:h+f, w:w+f] += W * dh(h,w)
-                        newErrorGradient[inputMapIndex][filterRow + outputRow][filterCol] += filters[outputChannel][inputMapIndex][filterRow][filterCol] * dh;
+                        newErrorGradient[inputMapIndex][filterRow + outputRow][filterCol + outputCol] += filters[outputChannel][inputMapIndex][filterRow][filterCol] * dh;
                         // get the update for the filters with the difference a "conv" of that error
                         // dW += X[h:h+f, w:w+f] * dH(h,w)
                         filterAdjustments[outputChannel][inputMapIndex][filterRow][filterCol] += inputMaps[inputMapIndex][filterRow + outputRow][filterCol + outputCol] * dh;
@@ -165,7 +162,7 @@ void ConvolutionalLayer::printKernel(int channel) {
     cout << setprecision(3);
     cout << fixed;
     for (int ch = 0; ch < filterDepth; ch++) {
-        cout << "filter depth : " << ch << endl;
+        cout << "filter filterDepth : " << ch << endl;
         for (int r = 0; r < filterHeight; r++) {
             for (int c = 0; c < filterWidth; c++) {
                 cout << filters[channel][ch][r][c] << "\t";
