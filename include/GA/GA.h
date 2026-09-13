@@ -25,9 +25,9 @@ private:
     void NSGAStep();
 };
 
-// Pure host-testable generation mechanics. Inputs are intentionally passed by
-// value so callers cannot accidentally mutate the current generation while
-// constructing or truncating the next one.
+/// Pure host-testable generation mechanics. Inputs are intentionally passed by
+/// value so callers cannot accidentally mutate the current generation while
+/// constructing or truncating the next one.
 Population makeOffspringGeneration(Population parents,
                                    const GAConfig& config,
                                    bool useCrowdingOperator = false);

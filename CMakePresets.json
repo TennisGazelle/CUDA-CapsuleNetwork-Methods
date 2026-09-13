@@ -1,0 +1,118 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 18,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base-host",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "cacheVariables": {
+        "CAPSNET_BUILD_TESTING": "ON",
+        "CAPSNET_BUILD_CUDA": "OFF",
+        "CAPSNET_BUILD_CUDA_APP": "OFF",
+        "CAPSNET_BUILD_GA": "ON",
+        "CAPSNET_BUILD_GA_DB": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "host-debug",
+      "displayName": "Host Debug",
+      "inherits": "base-host",
+      "binaryDir": "${sourceDir}/build/host-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "host-relwithdebinfo",
+      "displayName": "Host RelWithDebInfo",
+      "inherits": "base-host",
+      "binaryDir": "${sourceDir}/build/host",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "ci-host",
+      "displayName": "CI Host",
+      "inherits": "base-host",
+      "binaryDir": "${sourceDir}/build/ci-host",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "host-asan",
+      "displayName": "Host ASan",
+      "inherits": "base-host",
+      "binaryDir": "${sourceDir}/build/host-asan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CAPSNET_ENABLE_ASAN": "ON"
+      }
+    },
+    {
+      "name": "cuda-compile",
+      "displayName": "CUDA Compile",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/cuda",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CAPSNET_BUILD_TESTING": "OFF",
+        "CAPSNET_BUILD_CUDA": "ON",
+        "CAPSNET_BUILD_CUDA_APP": "OFF",
+        "CAPSNET_BUILD_GA": "ON",
+        "CAPSNET_BUILD_GA_DB": "OFF",
+        "CAPSNET_BUILD_CUDA_TESTS": "OFF",
+        "CMAKE_CUDA_ARCHITECTURES": "75"
+      }
+    },
+    {
+      "name": "cuda-gpu",
+      "displayName": "CUDA GPU Tests",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/cuda-gpu",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CAPSNET_BUILD_TESTING": "ON",
+        "CAPSNET_BUILD_CUDA": "ON",
+        "CAPSNET_BUILD_CUDA_APP": "OFF",
+        "CAPSNET_BUILD_CUDA_TESTS": "ON",
+        "CAPSNET_BUILD_GA": "ON",
+        "CAPSNET_BUILD_GA_DB": "OFF",
+        "CMAKE_CUDA_ARCHITECTURES": "75"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "host-debug", "configurePreset": "host-debug" },
+    { "name": "host-relwithdebinfo", "configurePreset": "host-relwithdebinfo" },
+    { "name": "ci-host", "configurePreset": "ci-host" },
+    { "name": "host-asan", "configurePreset": "host-asan" },
+    { "name": "cuda-compile", "configurePreset": "cuda-compile" },
+    { "name": "cuda-gpu", "configurePreset": "cuda-gpu" }
+  ],
+  "testPresets": [
+    {
+      "name": "ci-host",
+      "configurePreset": "ci-host",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "host-asan",
+      "configurePreset": "host-asan",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "cuda-gpu",
+      "configurePreset": "cuda-gpu",
+      "output": { "outputOnFailure": true },
+      "filter": { "include": { "label": "gpu" } }
+    }
+  ]
+}

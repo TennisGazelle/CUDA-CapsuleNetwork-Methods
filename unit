@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""Minimal unit-test runner with timestamped artifacts (Rose-inspired, slim)."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+DEFAULT_ARTIFACTS = ROOT / "testing_artifacts" / "unit"
+DEFAULT_PRESET = "ci-host"
+
+
+def iso_now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def timestamp() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+
+
+def git_output(args: list[str]) -> str:
+    try:
+        return subprocess.check_output(
+            ["git", *args], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
+
+
+def stream(cmd: list[str], log_file: Path) -> int:
+    print(f"[unit] {' '.join(cmd)}", flush=True)
+    with log_file.open("a", encoding="utf-8") as log:
+        log.write(f"$ {' '.join(cmd)}\n")
+        log.flush()
+        proc = subprocess.Popen(
+            cmd,
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            sys.stdout.write(line)
+            log.write(line)
+        return proc.wait()
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description="Build and run host unit tests via CTest.")
+    parser.add_argument("--preset", default=DEFAULT_PRESET, help="CMake configure/test preset")
+    parser.add_argument("--no-build", action="store_true", help="Skip configure/build")
+    parser.add_argument("--list", action="store_true", help="List tests only")
+    parser.add_argument("-R", dest="regex", default=None, help="CTest regex filter")
+    parser.add_argument(
+        "--artifacts-dir",
+        default=str(DEFAULT_ARTIFACTS),
+        help="Directory for timestamped run artifacts",
+    )
+    args, passthrough = parser.parse_known_args(argv)
+    if passthrough and passthrough[0] == "--":
+        passthrough = passthrough[1:]
+
+    artifacts = Path(args.artifacts_dir)
+    if not artifacts.is_absolute():
+        artifacts = ROOT / artifacts
+    run_dir = artifacts / f"{timestamp()}_unit"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    log_file = run_dir / "unit.log"
+    junit_file = run_dir / "junit.xml"
+    metadata_file = run_dir / "metadata.json"
+
+    build_dir = ROOT / "build" / ("ci-host" if args.preset == "ci-host" else args.preset.replace("host-", "host-"))
+    # Prefer preset binaryDir from CMakePresets naming convention.
+    preset_dirs = {
+        "ci-host": ROOT / "build" / "ci-host",
+        "host-debug": ROOT / "build" / "host-debug",
+        "host-relwithdebinfo": ROOT / "build" / "host",
+        "host-asan": ROOT / "build" / "host-asan",
+        "cuda-gpu": ROOT / "build" / "cuda-gpu",
+    }
+    build_dir = preset_dirs.get(args.preset, ROOT / "build" / args.preset)
+
+    metadata = {
+        "argv": [str(ROOT / "unit"), *argv],
+        "branch": git_output(["rev-parse", "--abbrev-ref", "HEAD"]),
+        "commit": git_output(["rev-parse", "HEAD"]),
+        "dirty": bool(git_output(["status", "--short"])),
+        "started_at": iso_now(),
+        "preset": args.preset,
+        "build_dir": str(build_dir),
+        "run_dir": str(run_dir),
+        "exit_code": None,
+        "ended_at": None,
+        "duration_seconds": None,
+    }
+    metadata_file.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+
+    start = time.monotonic()
+    exit_code = 1
+    try:
+        if not args.no_build:
+            code = stream(["cmake", "--preset", args.preset], log_file)
+            if code != 0:
+                exit_code = code
+                return exit_code
+            code = stream(["cmake", "--build", "--preset", args.preset], log_file)
+            if code != 0:
+                exit_code = code
+                return exit_code
+
+        if args.list:
+            cmd = ["ctest", "--test-dir", str(build_dir), "-N"]
+            if args.regex:
+                cmd.extend(["-R", args.regex])
+            exit_code = stream(cmd + passthrough, log_file)
+            return exit_code
+
+        cmd = [
+            "ctest",
+            "--test-dir",
+            str(build_dir),
+            "--output-on-failure",
+            "--output-junit",
+            str(junit_file),
+        ]
+        if args.regex:
+            cmd.extend(["-R", args.regex])
+        cmd.extend(passthrough)
+        exit_code = stream(cmd, log_file)
+        return exit_code
+    finally:
+        metadata["exit_code"] = exit_code
+        metadata["ended_at"] = iso_now()
+        metadata["duration_seconds"] = round(time.monotonic() - start, 3)
+        metadata_file.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+        print(f"[unit] artifacts: {run_dir}", flush=True)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

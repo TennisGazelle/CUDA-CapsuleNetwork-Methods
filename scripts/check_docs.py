@@ -24,6 +24,11 @@ REQUIRED = [
     "docs/KNOWN_ISSUES.md",
     "docs/REPRODUCIBILITY.md",
     "docs/REPO_AUDIT.md",
+    "docs/BUILD.md",
+    "docs/TESTING.md",
+    "docs/CICD.md",
+    "docs/EXPERIMENT_PROVENANCE.md",
+    "tests/README.md",
     ".cursor/AI_QUICK_INDEX.md",
     ".cursor/rules/README.md",
 ]
@@ -37,7 +42,7 @@ def check_required() -> list[str]:
 
 def is_repo_owned_doc(path: Path) -> bool:
     rel = path.relative_to(ROOT)
-    ignored_parts = {".git", ".build", "release-assets"}
+    ignored_parts = {".git", ".build", "build", "release-assets", "testing_artifacts", "third_party"}
     if any(part in ignored_parts for part in rel.parts):
         return False
 

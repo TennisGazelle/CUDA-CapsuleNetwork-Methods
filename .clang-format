@@ -1,0 +1,19 @@
+# Format style for newly modernized C++/CUDA files.
+# Do not mass-format the historical tree in the same PR as behavior changes.
+# Prefer: clang-format -i on files you already touch for modernization.
+
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Attach
+NamespaceIndentation: None
+SortIncludes: false
+PointerAlignment: Left
+SpacesBeforeTrailingComments: 1
+Standard: c++11

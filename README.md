@@ -99,22 +99,23 @@ SPEC.md                          target restoration state
 PLAN.md                          independently attackable work packages
 ```
 
-## Building the historical CUDA code
+## Building
 
-The `CUDAify` code was written around an old CUDA/CMake environment and currently encodes assumptions such as:
+Prefer the Makefile as the developer interface. Contemporary CMake presets cover
+host-only and CUDA configure modes. Details, options, and the historical
+`sm_30` / `FindCUDA` caveats live in [`docs/BUILD.md`](docs/BUILD.md).
 
-- CMake 2.6-era style and `FindCUDA`;
-- CUDA architecture `sm_30`;
-- C++11;
-- Armadillo;
-- pthreads;
-- PostgreSQL/libpqxx for the GA result cache;
-- NVIDIA Unified Memory;
-- historical relative dataset paths and cluster scripts.
+```bash
+make ci              # host tests + docs + package check (no GPU required)
+make configure-host  # CMake host preset
+make cuda-compile    # compile CUDA targets when a toolkit is available
+```
 
-A modern CUDA installation should **not** be expected to build the historical tree unchanged. Build-system modernization is deliberately tracked as a separate milestone so toolchain fixes do not get confused with algorithm changes.
+Host CI success is **not** GPU runtime validation. See [`docs/CICD.md`](docs/CICD.md)
+and [`docs/TESTING.md`](docs/TESTING.md).
 
-See [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
+See also [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and
+[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
 ### MNIST data location
 

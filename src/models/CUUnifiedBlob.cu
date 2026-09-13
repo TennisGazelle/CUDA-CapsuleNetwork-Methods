@@ -605,6 +605,8 @@ void CUUnifiedBlob::CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix,
                                                     int outputDim,
                                                     int numClasses,
                                                     int tensorSize) {
+    // Grid: (tensorSize, numClasses); Block: outputDim threads.
+    // Each block owns one (t,k) matrix-vector product. Synchronizes on return.
     dim3 multElementsBlocks(tensorSize, numClasses);
     cu_matrixVectorMultiplication_kernel <<< multElementsBlocks, outputDim >>> (matrix.data,
             inputVector.data,

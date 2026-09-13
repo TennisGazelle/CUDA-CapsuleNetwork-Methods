@@ -15,7 +15,14 @@ This file deliberately distinguishes **confirmed implementation facts**, **stron
 
 **Files:** `src/CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.cu`
 
-The thesis describes evaluating the testing set using forward propagation to obtain an unbiased estimate. In the surviving `CUDAify` tip, `CUCapsuleNetwork::tally(bool useTraining)` appears to:
+**Status (corrected path):** PR modernization adds `CUCapsuleNetwork::evaluate()`,
+which performs forward + metrics only. Corrected `train()` calls `evaluate(false)`
+unless `CAPSNET_PRESERVE_HISTORICAL_BEHAVIOR` is enabled. Host policy coverage is
+in `tests/test_eval_no_mutation.cpp`. **GPU weight-snapshot parity that
+`evaluate` leaves `w` / velocity / conv filters bit-identical is still required
+on a CUDA host** before claiming runtime proof.
+
+The thesis describes evaluating the testing set using forward propagation to obtain an unbiased estimate. In the surviving `CUDAify` tip, historical `CUCapsuleNetwork::tally(bool useTraining)` appears to:
 
 1. forward propagate an example;
 2. accumulate loss and correctness;
@@ -24,18 +31,18 @@ The thesis describes evaluating the testing set using forward propagation to obt
 
 When `useTraining == false`, this means the testing labels appear to participate in backpropagation/weight updates while the test set is being traversed.
 
-`CUCapsuleNetwork::train()` also needs exact path reconstruction because surviving code has `runEpoch()` commented in a relevant historical section and uses `tally(false)` for history/evaluation.
+`CUCapsuleNetwork::train()` also needs exact path reconstruction because surviving code has `runEpoch()` commented in a relevant historical section and historically used `tally(false)` for history/evaluation.
 
 ### Why this is an audit flag rather than a thesis verdict
 
 The repository was actively changing around the experiment period. We have not yet proven which commit/executable path generated each published figure. The correct next step is:
 
 - reconstruct the experiment commit(s);
-- add a test asserting that a pure evaluation function leaves weights bit-identical;
-- separate `train_epoch()` from `evaluate()` in modern code;
+- add a GPU test asserting that pure `evaluate` leaves weights bit-identical;
+- keep historical `tally` available under an explicit compatibility switch;
 - document whether reproduced historical figures require the mutating behavior.
 
-Do **not** silently fix this and then claim the historical results reproduced.
+Do **not** silently remove `tally` and then claim the historical results reproduced.
 
 ---
 

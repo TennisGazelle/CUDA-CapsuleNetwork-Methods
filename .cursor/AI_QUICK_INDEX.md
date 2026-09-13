@@ -24,8 +24,10 @@
 | Published results | [`../docs/THESIS.md`](../docs/THESIS.md), [`../docs/REPRODUCIBILITY.md`](../docs/REPRODUCIBILITY.md) | experiment paths in `src/main.cu`, `src/GA/` |
 | Genetic search / NSGA-II | [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) | `src/GA/` |
 | Branch archaeology | [`../docs/REPO_AUDIT.md`](../docs/REPO_AUDIT.md) | Git history / PR #3 / PR #5 |
-| Tests | [`../PLAN.md`](../PLAN.md) | `tests/`, `Makefile` |
-| CI/release | [`../docs/REPRODUCIBILITY.md`](../docs/REPRODUCIBILITY.md) | `.github/workflows/`, `scripts/` |
+| Tests | [`../docs/TESTING.md`](../docs/TESTING.md), [`../tests/README.md`](../tests/README.md) | `tests/`, `Makefile`, `./unit` |
+| Build / CMake | [`../docs/BUILD.md`](../docs/BUILD.md) | `CMakeLists.txt`, `CMakePresets.json`, `Makefile` |
+| CI/release | [`../docs/CICD.md`](../docs/CICD.md), [`../docs/REPRODUCIBILITY.md`](../docs/REPRODUCIBILITY.md) | `.github/workflows/`, `scripts/` |
+| Experiment provenance | [`../docs/EXPERIMENT_PROVENANCE.md`](../docs/EXPERIMENT_PROVENANCE.md) | `src/main.cu`, `src/GA/` |
 | Modern CapsNet research | [`../WHY_CAPSULE_NETWORKS_DID_NOT_TAKE_OVER.md`](../WHY_CAPSULE_NETWORKS_DID_NOT_TAKE_OVER.md) | future work only |
 
 ## Branch truth

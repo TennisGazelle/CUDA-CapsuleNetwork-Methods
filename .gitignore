@@ -7,7 +7,9 @@ cmake-build-*/
 
 # Revival host test/build outputs
 .build/
+build/
 release-assets/
+testing_artifacts/
 
 # IDE
 .idea/

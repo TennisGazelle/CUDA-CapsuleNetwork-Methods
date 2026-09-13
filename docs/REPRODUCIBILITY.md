@@ -245,6 +245,17 @@ Standard GitHub-hosted runners do not provide an NVIDIA GPU. The CI design shoul
 
 A green non-GPU CI badge must not be described as "CUDA runtime tested."
 
+Workflow and artifact details: [`CICD.md`](CICD.md). Build presets:
+[`BUILD.md`](BUILD.md).
+
+### PR #7 / second-wave status
+
+Host-verifiable correctness work on the second-wave branch improves RNG, norms,
+GA core semantics, sequential backprop helpers, and MNIST IO, with `make ci` as
+the GitHub-hosted gate. **CUDA compile and GPU runtime parity remain unverified
+until run on a real CUDA host.** Do not merge or advertise CUDA readiness based
+only on host CI.
+
 ## 13. Release artifacts
 
 Release packaging should preserve source/documentation and pin the `ai-skills` submodule reference. Large generated datasets/weights should eventually have an explicit policy.

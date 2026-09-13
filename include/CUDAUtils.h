@@ -8,6 +8,8 @@
 #include <CUDAClionHelper.h>
 #include <string>
 
+/// Thin wrappers around `cudaGetLastError` / `cudaDeviceSynchronize` helpers.
+/// Prefer calling `checkForError` after kernel launches that may fail silently.
 class CUDAUtils {
 public:
     static void handleError(cudaError_t error, const std::string& debugMsg = "");

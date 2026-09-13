@@ -18,15 +18,20 @@ The split is intentional. Research explanations should remain readable without l
 | Why did Capsule Networks not become the dominant ML architecture? | [`../WHY_CAPSULE_NETWORKS_DID_NOT_TAKE_OVER.md`](../WHY_CAPSULE_NETWORKS_DID_NOT_TAKE_OVER.md) |
 | What is currently suspicious or broken? | [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) |
 | Can the original experiments be reproduced? | [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) |
+| How do I configure/build host vs CUDA targets? | [`BUILD.md`](BUILD.md) |
+| How do host and GPU tests work? | [`TESTING.md`](TESTING.md) |
+| What do CI jobs prove? | [`CICD.md`](CICD.md) |
+| Which published figures map to which commits? | [`EXPERIMENT_PROVENANCE.md`](EXPERIMENT_PROVENANCE.md) |
 | What did the documentation/repository audit find? | [`REPO_AUDIT.md`](REPO_AUDIT.md) |
 | What is the restoration target? | [`../SPEC.md`](../SPEC.md) |
 | What can another agent implement next? | [`../PLAN.md`](../PLAN.md) |
 
 ## Primary historical sources
 
-- Daniel Lopez, **A GPU Acceleration Method for Dynamically Routed Capsule Networks**: https://www.cse.unr.edu/~fredh/papers/conf/194-amlfdrcl/paper.pdf
-- Daniel Lopez, **Evolving GPU-Accelerated Capsule Networks**: https://www.cse.unr.edu/~fredh/papers/thesis/071-lopez/thesis.pdf
-- Sara Sabour, Nicholas Frosst, Geoffrey Hinton, **Dynamic Routing Between Capsules**: https://arxiv.org/abs/1710.09829
+- Daniel Lopez, 
+  - [**A GPU Acceleration Method for Dynamically Routed Capsule Networks**](https://www.cse.unr.edu/~fredh/papers/conf/194-amlfdrcl/paper.pdf)
+  - [**Evolving GPU-Accelerated Capsule Networks**](https://www.cse.unr.edu/~fredh/papers/thesis/071-lopez/thesis.pdf)
+- Sara Sabour, Nicholas Frosst, Geoffrey Hinton, [**Dynamic Routing Between Capsules**](https://arxiv.org/abs/1710.09829)
 
 ## Documentation policy
 

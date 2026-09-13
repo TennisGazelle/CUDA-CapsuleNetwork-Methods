@@ -12,11 +12,17 @@ fi
 
 name="cuda-capsule-network-methods-${version}"
 mkdir -p release-assets
-rm -f "release-assets/${name}.tar.gz" "release-assets/${name}.zip"
+rm -f "release-assets/${name}.tar.gz" "release-assets/${name}.zip" "release-assets/${name}.sha256"
 
 git archive --format=tar.gz --prefix="${name}/" HEAD > "release-assets/${name}.tar.gz"
 git archive --format=zip --prefix="${name}/" HEAD > "release-assets/${name}.zip"
 
-printf 'created:\n  %s\n  %s\n' \
+(
+  cd release-assets
+  sha256sum "${name}.tar.gz" "${name}.zip" > "${name}.sha256"
+)
+
+printf 'created:\n  %s\n  %s\n  %s\n' \
   "release-assets/${name}.tar.gz" \
-  "release-assets/${name}.zip"
+  "release-assets/${name}.zip" \
+  "release-assets/${name}.sha256"

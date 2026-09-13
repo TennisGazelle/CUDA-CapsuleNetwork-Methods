@@ -29,9 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install host test dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libarmadillo-dev
+        uses: ./.github/actions/host-deps
 
       - name: Run host CI bundle
         run: make ci
@@ -51,3 +49,76 @@ jobs:
           and source packaging. It does NOT execute CUDA kernels and must not be
           interpreted as GPU runtime validation.
           EOF
+
+  host-sanitizer:
+    name: Host ASan validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install host test dependencies
+        uses: ./.github/actions/host-deps
+
+      - name: Run ASan host tests
+        run: make asan-test
+
+      - name: Coverage note
+        run: |
+          echo "AddressSanitizer host tests only. Not CUDA compile or GPU runtime."
+
+  cuda-compile:
+    name: CUDA compile-only
+    runs-on: ubuntu-latest
+    container: nvidia/cuda:12.4.1-devel-ubuntu22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            cmake g++ libarmadillo-dev ca-certificates
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Configure and compile CUDA targets
+        run: |
+          cmake --preset cuda-compile
+          cmake --build --preset cuda-compile
+
+      - name: Coverage note
+        run: |
+          cat <<'EOF'
+          This job compiles CUDA targets under a CUDA devel container.
+          It does NOT execute kernels and is not GPU runtime validation.
+          EOF
+
+  gpu-parity:
+    name: GPU parity (optional)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, gpu]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Run GPU parity tests
+        run: make gpu-test
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpu-parity-${{ github.sha }}
+          path: testing_artifacts/**
+          if-no-files-found: ignore
+          retention-days: 7
