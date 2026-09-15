@@ -32,7 +32,7 @@ jobs:
         uses: ./.github/actions/host-deps
 
       - name: Run host CI bundle
-        run: make ci
+        run: make host-ci
 
       - name: Upload source-package preview
         uses: actions/upload-artifact@v4
@@ -64,7 +64,7 @@ jobs:
         uses: ./.github/actions/host-deps
 
       - name: Run ASan host tests
-        run: make asan-test
+        run: make host-asan
 
       - name: Coverage note
         run: |
@@ -75,23 +75,24 @@ jobs:
     runs-on: ubuntu-latest
     container: nvidia/cuda:12.4.1-devel-ubuntu22.04
     steps:
+      # The CUDA devel image has no git; checkout@v4 needs it for a real clone
+      # (and for submodules). Install tooling before checkout.
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git ca-certificates cmake g++ libarmadillo-dev
+          rm -rf /var/lib/apt/lists/*
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install build dependencies
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            cmake g++ libarmadillo-dev ca-certificates
-          rm -rf /var/lib/apt/lists/*
-
       - name: Configure and compile CUDA targets
         run: |
-          cmake --preset cuda-compile
-          cmake --build --preset cuda-compile
+          make cuda-compile
 
       - name: Coverage note
         run: |
@@ -112,7 +113,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run GPU parity tests
-        run: make gpu-test
+        run: make cuda-test
 
       - name: Upload test artifacts
         if: always()

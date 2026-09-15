@@ -25,6 +25,9 @@ Back to the [docs hub](README.md).
 | `host-validation` | `ubuntu-latest` | Host tests, docs links, package preview | CUDA compile or GPU runtime |
 | `host-sanitizer` | `ubuntu-latest` | Host ASan/UBSan cleanliness where enabled | CUDA correctness |
 | `cuda-compile` | CUDA container / CUDA runner | Sources compile under modern NVCC | Kernel numerical parity |
+
+The CUDA compile job installs `git` inside `nvidia/cuda:*-devel` before
+`actions/checkout` so submodule-capable clone works (the stock image has no git).
 | `gpu-parity` | self-hosted / manual GPU | CPU/CUDA primitive agreement | Published experiment reproduction |
 
 Standard GitHub-hosted runners do not provide an NVIDIA GPU. A green host job
@@ -33,11 +36,31 @@ must never be described as "CUDA runtime tested."
 ## Local equivalents
 
 ```bash
-make ci                 # host-validation bundle
-make asan-test          # host-sanitizer
+make host-ci            # host-validation bundle
+make host-asan          # host-sanitizer
 make cuda-compile       # cuda-compile (needs toolkit)
-make gpu-test           # gpu-parity (needs GPU)
+make cuda-test          # gpu-parity (needs GPU)
 ```
+
+Run `make cuda-check` first to verify your CUDA toolkit is installed correctly.
+
+### All targets
+
+| Target | Purpose |
+|--------|---------|
+| `host-debug` | Build debug configuration (no tests) |
+| `host-debug-test` | Run tests against debug build |
+| `host-test` | Quick unit tests (no CMake) |
+| `host-ci` | Full CI bundle: tests + docs + package |
+| `host-asan` | AddressSanitizer build + test |
+| `cuda-check` | Verify CUDA toolkit, report missing deps |
+| `cuda-compile` | Compile CUDA (toolkit only, no GPU) |
+| `cuda-test` | CUDA GPU parity tests (requires GPU) |
+
+### VSCode launch configurations
+
+`.vscode/launch.json` provides IDE buttons for all Makefile targets. The Makefile
+is the source of truth; launch.json just invokes it.
 
 ## Artifacts
 

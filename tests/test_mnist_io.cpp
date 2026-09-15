@@ -1,6 +1,7 @@
 #include <MNISTDataIO.h>
 
 #include <cassert>
+#include <cerrno>
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
@@ -24,6 +25,14 @@ const std::vector<std::string> kDataFilenames = {
     "t10k-labels-idx1-ubyte",
 };
 
+void ensureFixtureDirectory() {
+    // CTest/asan paths do not create `.build/` the way `make unit-test` does.
+    // Create it (and ignore EEXIST) before writing fixture files.
+    if (mkdir(".build", 0700) != 0 && errno != EEXIST) {
+        throw std::runtime_error("unable to create .build fixture directory");
+    }
+}
+
 void writeU32(std::ofstream& output, std::uint32_t value) {
     const unsigned char bytes[4] = {
         static_cast<unsigned char>((value >> 24U) & 0xffU),
@@ -43,6 +52,7 @@ void writeDataset(std::uint32_t imageMagic = 2051U,
                   std::uint32_t columns = 28U,
                   bool truncateLabels = false,
                   unsigned char firstLabel = 0U) {
+    ensureFixtureDirectory();
     std::ofstream images(kImages, std::ios::binary | std::ios::trunc);
     writeU32(images, imageMagic);
     writeU32(images, imageCount);
@@ -118,6 +128,7 @@ void test_dimensions_and_labels_are_validated() {
 }
 
 void test_truncated_header_and_label_payload_are_rejected() {
+    ensureFixtureDirectory();
     std::ofstream images(kImages, std::ios::binary | std::ios::trunc);
     writeU32(images, 2051U);
     images.close();
@@ -137,7 +148,8 @@ void test_zero_count_dataset_is_accepted() {
 }
 
 void test_explicit_data_directory_resolution() {
-    assert(mkdir(kDataDirectory.c_str(), 0700) == 0);
+    ensureFixtureDirectory();
+    assert(mkdir(kDataDirectory.c_str(), 0700) == 0 || errno == EEXIST);
     for (const std::string& filename : kDataFilenames) {
         std::ofstream(kDataDirectory + "/" + filename, std::ios::binary).close();
     }

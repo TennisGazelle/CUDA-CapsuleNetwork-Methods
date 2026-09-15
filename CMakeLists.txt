@@ -207,7 +207,7 @@ if(CAPSNET_BUILD_TESTING)
     capsnet_add_host_test(test_eval_no_mutation tests/test_eval_no_mutation.cpp)
 
     if(CAPSNET_BUILD_CUDA AND CAPSNET_BUILD_CUDA_TESTS)
-        add_executable(test_cu_matrix_vector_mult tests/test_cu_matrix_vector_mult.cpp)
+        add_executable(test_cu_matrix_vector_mult tests/test_cu_matrix_vector_mult.cu)
         target_link_libraries(test_cu_matrix_vector_mult PRIVATE capsnet_cuda_kernels doctest_headers)
         target_include_directories(test_cu_matrix_vector_mult PRIVATE "${CMAKE_SOURCE_DIR}/tests")
         set_target_properties(test_cu_matrix_vector_mult PROPERTIES

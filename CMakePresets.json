@@ -29,19 +29,19 @@
       }
     },
     {
-      "name": "host-relwithdebinfo",
+      "name": "host-release",
       "displayName": "Host RelWithDebInfo",
       "inherits": "base-host",
-      "binaryDir": "${sourceDir}/build/host",
+      "binaryDir": "${sourceDir}/build/host-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
-      "name": "ci-host",
-      "displayName": "CI Host",
+      "name": "host-ci",
+      "displayName": "Host CI",
       "inherits": "base-host",
-      "binaryDir": "${sourceDir}/build/ci-host",
+      "binaryDir": "${sourceDir}/build/host-ci",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
@@ -58,9 +58,9 @@
     },
     {
       "name": "cuda-compile",
-      "displayName": "CUDA Compile",
+      "displayName": "CUDA Compile-Only",
       "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build/cuda",
+      "binaryDir": "${sourceDir}/build/cuda-compile",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CAPSNET_BUILD_TESTING": "OFF",
@@ -73,10 +73,10 @@
       }
     },
     {
-      "name": "cuda-gpu",
+      "name": "cuda-test",
       "displayName": "CUDA GPU Tests",
       "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build/cuda-gpu",
+      "binaryDir": "${sourceDir}/build/cuda-test",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CAPSNET_BUILD_TESTING": "ON",
@@ -91,16 +91,21 @@
   ],
   "buildPresets": [
     { "name": "host-debug", "configurePreset": "host-debug" },
-    { "name": "host-relwithdebinfo", "configurePreset": "host-relwithdebinfo" },
-    { "name": "ci-host", "configurePreset": "ci-host" },
+    { "name": "host-release", "configurePreset": "host-release" },
+    { "name": "host-ci", "configurePreset": "host-ci" },
     { "name": "host-asan", "configurePreset": "host-asan" },
     { "name": "cuda-compile", "configurePreset": "cuda-compile" },
-    { "name": "cuda-gpu", "configurePreset": "cuda-gpu" }
+    { "name": "cuda-test", "configurePreset": "cuda-test" }
   ],
   "testPresets": [
     {
-      "name": "ci-host",
-      "configurePreset": "ci-host",
+      "name": "host-debug",
+      "configurePreset": "host-debug",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "host-ci",
+      "configurePreset": "host-ci",
       "output": { "outputOnFailure": true }
     },
     {
@@ -109,8 +114,8 @@
       "output": { "outputOnFailure": true }
     },
     {
-      "name": "cuda-gpu",
-      "configurePreset": "cuda-gpu",
+      "name": "cuda-test",
+      "configurePreset": "cuda-test",
       "output": { "outputOnFailure": true },
       "filter": { "include": { "label": "gpu" } }
     }
