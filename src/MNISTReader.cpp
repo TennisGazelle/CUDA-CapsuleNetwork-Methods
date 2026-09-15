@@ -2,98 +2,62 @@
 // Created by Daniel Lopez on 12/29/17.
 //
 
-#include <fstream>
-#include <iostream>
-#include <Utils.h>
-#include "MNISTReader.h"
+#include <MNISTDataIO.h>
+#include <MNISTReader.h>
 
-MNISTReader* MNISTReader::instance = nullptr;
+#include <string>
 
-MNISTReader* MNISTReader::getInstance() {
-    static mutex mtx;
-    mtx.lock();
-    if (instance == nullptr) {
-        instance = new MNISTReader;
-        instance->readMNISTData();
+namespace {
+
+std::string joinPath(const std::string& directory, const std::string& filename) {
+    if (directory.empty() || directory == ".") {
+        return directory.empty() ? filename : directory + "/" + filename;
     }
-    mtx.unlock();
-    return instance;
+    if (directory.back() == '/') {
+        return directory + filename;
+    }
+    return directory + "/" + filename;
 }
 
-MNISTReader::~MNISTReader() {
-    if (instance == nullptr) {
-        delete instance;
-    }
+}  // namespace
+
+MNISTReader::MNISTReader() {
+    readMNISTData();
+}
+
+MNISTReader* MNISTReader::getInstance() {
+    // Function-local static initialization is thread-safe in C++11 and avoids
+    // the historical manually locked singleton and unreachable delete path.
+    static MNISTReader reader;
+    return &reader;
+}
+
+std::string MNISTReader::resolveDataDirectory() {
+    return resolveMNISTDataDirectory();
 }
 
 void MNISTReader::readMNISTData() {
-    readDataWithLabels("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte", trainingData);
-    readDataWithLabels("../data/t10k-images-idx3-ubyte", "../data/t10k-labels-idx1-ubyte", testingData);
-}
-
-void MNISTReader::readDataWithLabels(const string &datafile, const string &labelfile, vector<Image>& dst){
-    unsigned int magicNumber, numImages, numRows, numCols, labels;
-    dst.clear();
-
-    ifstream fin(datafile, ios::binary);
-    if (!fin.good()) {
-        cerr << "Something went wrong in reading..." << endl;
-        return;
-    }
-    grabFromFile(fin, magicNumber);
-    grabFromFile(fin, numImages);
-    grabFromFile(fin, numRows);
-    grabFromFile(fin, numCols);
-
-    for (int i = 0; i < numImages; i++) {
-        Image image;
-
-        for (int r = 0; r < numRows; r++) {
-            vector<unsigned char> row(numCols);
-
-            for (int c = 0; c < numCols; c++) {
-                fin.read((char*)&row[c], sizeof(row[c]));
-            }
-
-            image.addRow(row);
-        }
-
-        dst.push_back(image);
-    }
-    fin.close();
-
-    fin.open(labelfile, ios::binary);
-    grabFromFile(fin, magicNumber);
-    grabFromFile(fin, labels);
-    for (int i = 0; i < labels; i++) {
-        unsigned char temp;
-        fin.read((char*)&temp, 1);
-        dst[i].setLabel(temp);
-    }
-    fin.close();
-
-//    cout << "example" << endl;
-//    dst[1].print();
-
-}
-
-void MNISTReader::grabFromFile(ifstream &fin, unsigned int &num) {
-    fin.read((char*)&num, sizeof(num));
-    num = Utils::reverseInt(num);
+    const std::string directory = resolveDataDirectory();
+    trainingData = readMNISTPair(
+        joinPath(directory, "train-images-idx3-ubyte"),
+        joinPath(directory, "train-labels-idx1-ubyte"));
+    testingData = readMNISTPair(
+        joinPath(directory, "t10k-images-idx3-ubyte"),
+        joinPath(directory, "t10k-labels-idx1-ubyte"));
 }
 
 Image MNISTReader::getTrainingImage(int index) const {
-    return trainingData[index];
+    return trainingData.at(static_cast<std::size_t>(index));
 }
 
 Image MNISTReader::getTestingImage(int index) const {
-    return testingData[index];
+    return testingData.at(static_cast<std::size_t>(index));
 }
 
 Image* MNISTReader::getTrainingImageRef(int index) {
-    return &trainingData[index];
+    return &trainingData.at(static_cast<std::size_t>(index));
 }
 
 Image* MNISTReader::getTestingImageRef(int index) {
-    return &testingData[index];
+    return &testingData.at(static_cast<std::size_t>(index));
 }

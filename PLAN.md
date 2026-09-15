@@ -24,7 +24,7 @@ Status legend: `[ ]` not started, `[~]` partial, `[x]` complete.
 - [x] add known-issues/reproducibility ledgers;
 - [ ] reconstruct exact commit/entry point for every published timing figure;
 - [ ] reconstruct exact commit/entry point for thesis accuracy/GA plots;
-- [ ] create `docs/EXPERIMENT_PROVENANCE.md` table once evidence is available.
+- [x] create `docs/EXPERIMENT_PROVENANCE.md` table once evidence is available.
 
 ### Acceptance criteria
 
@@ -36,17 +36,19 @@ No contributor needs to discover the thesis implementation by guessing branches.
 
 **Goal:** make every PR run meaningful tests without requiring CUDA hardware.
 
+**Status:** `[x]` completed in revival PR #7.
+
 ### Deliverables
 
 - [x] add initial `Utils` unit-test executable;
 - [x] add Makefile targets for host unit tests and doc checks;
 - [x] add PR workflow;
-- [ ] expand `Utils` tests around edge cases;
-- [ ] write failing/characterization tests for `getWeightRand` and varying-bound `getRandBetween(double)`;
-- [ ] characterize double-epsilon norm semantics;
-- [ ] test `getAsOneDim`/`asCapsuleVectors` round trips including malformed shapes;
-- [ ] decouple chromosome decoding enough for host-only tests;
-- [ ] add synthetic Pareto-front tests for NSGA-II helpers.
+- [x] expand `Utils` tests around edge cases;
+- [x] characterize and correct `getWeightRand` and varying-bound `getRandBetween(double)`;
+- [x] characterize and correct double-epsilon norm semantics;
+- [x] test `getAsOneDim`/`asCapsuleVectors` round trips including malformed shapes;
+- [x] decouple chromosome decoding enough for host-only tests;
+- [x] add synthetic Pareto-front and generation/truncation tests for NSGA-II helpers.
 
 ### Files
 
@@ -66,16 +68,20 @@ No contributor needs to discover the thesis implementation by guessing branches.
 
 **Goal:** configure/build the historical source on a contemporary CUDA toolchain while preserving numerical algorithms.
 
+**Status:** `[~]` Rose-inspired CMake presets / host-CUDA split in progress.
+
 ### Deliverables
 
-- [ ] raise CMake minimum to a contemporary supported version;
-- [ ] enable CUDA as a first-class CMake language;
-- [ ] replace deprecated `FindCUDA`/`cuda_add_executable`;
-- [ ] make CUDA architectures configurable;
-- [ ] remove obsolete compiler workaround flags only after verifying need;
-- [ ] make PQXX/GA database support optional;
-- [ ] add `BUILD_TESTING`, `BUILD_GA`, and similar scoped options;
-- [ ] create a documented legacy build recipe/container if modern compile requires material compatibility changes.
+- [x] raise CMake minimum to a contemporary supported version (3.18+);
+- [x] enable CUDA as a first-class CMake language behind an option;
+- [x] replace deprecated `FindCUDA`/`cuda_add_executable`;
+- [x] make CUDA architectures configurable;
+- [x] make PQXX/GA database support optional;
+- [x] add `CAPSNET_BUILD_TESTING`, `CAPSNET_BUILD_CUDA`, `CAPSNET_BUILD_GA`, and related options;
+- [x] add `CMakePresets.json` (`ci-host`, `host-debug`, `cuda-compile`, `cuda-gpu`);
+- [x] document build map in `docs/BUILD.md`;
+- [ ] create a documented legacy container/recipe if modern compile requires material compatibility changes;
+- [ ] verify full `NeuralNets` link on a contemporary CUDA host and record the toolkit matrix.
 
 ### Gotchas
 
@@ -88,6 +94,7 @@ No contributor needs to discover the thesis implementation by guessing branches.
 
 A documented current CUDA toolkit can compile the main CUDA targets. Host tests remain buildable without CUDA/PQXX.
 
+
 ---
 
 ## M3 — CUDA primitive parity harness
@@ -98,7 +105,7 @@ A documented current CUDA toolkit can compile the main CUDA targets. Host tests 
 
 Each item can be a separate PR:
 
-- [ ] M3.1 matrix-vector vote transform;
+- [x] M3.1 matrix-vector vote transform;
 - [ ] M3.2 routing softmax;
 - [ ] M3.3 weighted vote reduction;
 - [ ] M3.4 vector squash;
@@ -144,9 +151,9 @@ Every CUDA primitive used by full forward/backward has direct parity coverage.
 - [ ] full backward error parity;
 - [ ] weight-gradient parity;
 - [ ] post-update weight parity;
-- [ ] investigate suspicious sequential `primaryCapsError` indexing;
-- [ ] investigate historical random initialization bugs;
-- [ ] record each confirmed fix with compatibility/reproduction note.
+- [x] investigate and correct suspicious sequential `primaryCapsError` indexing;
+- [x] investigate and correct historical random initialization bugs;
+- [x] record the confirmed fixes with compatibility/reproduction notes;
 
 ### Acceptance criteria
 
@@ -158,11 +165,14 @@ Differences are either below tolerance or have a documented, tested explanation.
 
 **Goal:** eliminate accidental leakage in corrected mode and make data boundaries explicit.
 
+**Status:** `[~]` corrected `evaluate()` API added; GPU weight-snapshot proof still open.
+
 ### Deliverables
 
-- [ ] introduce pure `evaluate` path;
-- [ ] test that evaluation cannot mutate weights/velocity/deltas;
-- [ ] separate metric accumulation from backprop;
+- [x] introduce pure `evaluate` path;
+- [x] host policy tests for historical vs corrected mutation contracts;
+- [ ] GPU test that evaluation cannot mutate weights/velocity/deltas;
+- [x] separate metric accumulation from backprop in corrected `evaluate`;
 - [ ] reconstruct whether published experiments used mutating `tally(false)`;
 - [ ] add validation-set concept if needed for hyperparameter/GA fitness;
 - [ ] checksum/document historical MNIST inputs;
@@ -182,8 +192,8 @@ Test labels never update learned state in corrected mode; historical reproductio
 ### Deliverables
 
 - [ ] one top-level seed;
-- [ ] eliminate first-call-bound static distribution bug;
-- [ ] fix/replace weight initializer with documented distribution;
+- [x] eliminate first-call-bound static distribution bug;
+- [x] fix/replace weight initializer with documented distribution;
 - [ ] seed GA operations deterministically;
 - [ ] record config + seed + git SHA + dataset hash for each run;
 - [ ] add experiment fingerprint to database cache key;
@@ -220,16 +230,19 @@ Every major published number has provenance and a reproduction status.
 
 **Goal:** turn the initial workflow scaffold into trustworthy continuous verification.
 
+**Status:** `[~]` tiered jobs and checksum packaging in progress.
+
 ### Deliverables
 
 - [x] host PR validation scaffold;
 - [x] label-driven release packaging scaffold;
-- [ ] modern CUDA compile job;
-- [ ] optional/self-hosted GPU runtime job;
-- [ ] sanitizer job for host code;
+- [x] `docs/CICD.md` contributor map;
+- [x] modern CUDA compile job (container/compile-only);
+- [x] optional/self-hosted GPU runtime job skeleton;
+- [x] sanitizer job for host code;
+- [x] release manifest/checksum generation;
 - [ ] cache dependencies/build outputs appropriately;
-- [ ] release manifest/checksum generation;
-- [ ] automatic documentation of tested CUDA/toolchain matrix.
+- [ ] automatic documentation of tested CUDA/toolchain matrix from real GPU runs.
 
 ### Acceptance criteria
 
@@ -324,10 +337,10 @@ The research separates the value of **capsule representations** from the value/c
 
 The highest-leverage order after this foundation is:
 
-1. **M1 host characterization tests** for the known `Utils` issues;
-2. **M2 modern CMake compile-only port**;
-3. **M3 first five routing primitive parity tests**;
-4. **M5 pure evaluation API**, once historical mutation behavior is pinned by a characterization test;
-5. **M7 experiment provenance reconstruction** in parallel with the build work.
+1. **M2 modern CMake compile-only port**;
+2. **M3 first five routing primitive parity tests**;
+3. **M5 pure evaluation API**, once historical mutation behavior is pinned by a characterization test;
+4. **M7 experiment provenance reconstruction** in parallel with the build work;
+5. **M8 sanitizer coverage** for the host parsing and GA ownership boundaries.
 
 Do not start M10/M11 merely because they are more exciting. The parity/reproduction boundary is what will make those experiments scientifically interpretable.

@@ -1,10 +1,15 @@
 # Why Capsule Networks did not take over the ML world
 
-Capsule Networks are a useful case study because the architecture did **not** disappear for lack of an interesting idea. The original proposal was unusually ambitious: represent entities as vectors, preserve pose-like information rather than destroying it for invariance, learn part-whole transformations, and let lower-level entities dynamically choose higher-level destinations by agreement.
+Capsule Networks are a useful case study because the architecture did **not** disappear for lack of an interesting idea. The original proposal was unusually ambitious: 
+
+1. represent entities as vectors
+2. preserve pose-like information rather than destroying it for invariance
+3. learn part-whole transformations
+4. finally, let lower-level entities dynamically choose higher-level destinations by agreement.
 
 That remains conceptually attractive.
 
-The architecture nevertheless lost the race to become a general foundation for modern machine learning. The best explanation is not one fatal flaw. It is the interaction of **computational cost, optimization difficulty, benchmark/ecosystem reality, weaker-than-hoped semantic guarantees, and the arrival of attention at almost exactly the same historical moment**.
+The architecture nevertheless lost the race to become a general foundation for modern machine learning. The best explanation is not one fatal flaw. It is the interaction of **computational cost, optimization difficulty, benchmark/reality, weaker-than-hoped semantic guarantees, and the arrival of attention at almost exactly the same historical moment**.
 
 This document separates those factors and also records why some Capsule Network ideas still feel contemporary.
 
@@ -16,7 +21,7 @@ The 2017 Sabour, Frosst, and Hinton paper defines a capsule as a group of neuron
 
 This is a stronger hypothesis about representation than an ordinary CNN makes.
 
-A CNN feature channel largely asks whether a learned feature occurs at a location. A capsule tries to retain a **stateful entity-like representation** and connect entities through learned transformations.
+A CNN feature channel asks whether a learned feature occurs at a location. A capsule tries to retain a **stateful entity-like representation** and connect entities through learned transformations.
 
 The attraction is easy to see:
 
@@ -36,33 +41,33 @@ So "CapsNets failed because the idea was silly" is not a useful history.
 
 For a lower-level capsule \(\mathbf{u}_i\), every candidate parent \(j\) receives a transformed vote:
 
-\[
-\hat{\mathbf{u}}_{j|i}=\mathbf{W}_{ij}\mathbf{u}_i.
-\]
+$$
+[\hat{\mathbf{u}}{j|i}=\mathbf{W}{ij}\mathbf{u}_i.]
+$$
 
 Routing logits \(b_{ij}\) become coupling coefficients:
 
-\[
-c_{ij}=\operatorname{softmax}_j(b_{ij}).
-\]
+$$
+[c_{ij}=\operatorname{softmax}_j(b_{ij}).]
+$$
 
 The candidate parent receives a weighted sum:
 
-\[
-\mathbf{s}_j=\sum_i c_{ij}\hat{\mathbf{u}}_{j|i},
-\]
+$$
+[\mathbf{s}_j=\sum_i c_{ij}\hat{\mathbf{u}}_{j|i},]
+$$
 
 then is squashed:
 
-\[
-\mathbf{v}_j=\operatorname{squash}(\mathbf{s}_j).
-\]
+$$
+[\mathbf{v}_j=\operatorname{squash}(\mathbf{s}_j).]
+$$
 
 Agreement changes routing logits:
 
-\[
-b_{ij}\leftarrow b_{ij}+\hat{\mathbf{u}}_{j|i}\cdot\mathbf{v}_j.
-\]
+$$
+[b_{ij}\leftarrow b_{ij}+\hat{\mathbf{u}}_{j|i}\cdot\mathbf{v}_j.]
+$$
 
 Then the softmax/aggregation/agreement loop runs again.
 
@@ -78,23 +83,23 @@ The cost is that this is an **iterative, densely connected assignment problem em
 
 Let:
 
-- \(N\) be the number of lower-level capsules;
-- \(M\) be the number of candidate upper-level capsules;
-- \(d_{in}\) and \(d_{out}\) be their vector dimensions.
+- $N$ be the number of lower-level capsules;
+- $M$ be the number of candidate upper-level capsules;
+- $d_{in}$ and $d_{out}$ be their vector dimensions.
 
 A vanilla relationship can require a matrix
 
-\[
-\mathbf{W}_{ij}\in\mathbb{R}^{d_{out}\times d_{in}}
-\]
+$$
+[\mathbf{W}_{ij}\in\mathbb{R}^{d_{out}\times d_{in}}]
+$$
 
-for each \((i,j)\) pair.
+for each $(i,j)$ pair.
 
 That makes the transformation work approximately:
 
-\[
+$$
 O(NM d_{in}d_{out}).
-\]
+$$
 
 The routing state/votes also scale with the child-parent relationship graph. Then dynamic routing revisits these relationships for multiple iterations.
 
@@ -150,11 +155,11 @@ Capsule Networks were asking hardware to execute a workload whose **semantic str
 
 The original squash is:
 
-\[
+$$
 \operatorname{squash}(\mathbf{s}) =
-\frac{\|\mathbf{s}\|^2}{1+\|\mathbf{s}\|^2}
+[\frac{\|\mathbf{s}\|^2}{1+\|\mathbf{s}\|^2}
 \frac{\mathbf{s}}{\|\mathbf{s}\|}.
-\]
+$$
 
 It creates the attractive interpretation that vector direction carries instantiation information while vector length approaches one for strongly present entities and zero for absent entities.
 
@@ -231,9 +236,9 @@ But ordinary end-to-end training does not force the basis to line up with human 
 
 A coordinate can encode an arbitrary mixture:
 
-\[
+$$
 z_1 = 0.63(\text{rotation}) + 0.17(\text{x-position}) - 0.42(\text{stroke style}) + \cdots
-\]
+$$
 
 and still be perfectly useful.
 
@@ -297,10 +302,10 @@ Both architectures were responding, in very different domains, to a question abo
 
 The Transformer answer was extraordinarily accelerator-friendly:
 
-\[
+$$
 \operatorname{Attention}(Q,K,V)
 = \operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V.
-\]
+$$
 
 Conceptually:
 

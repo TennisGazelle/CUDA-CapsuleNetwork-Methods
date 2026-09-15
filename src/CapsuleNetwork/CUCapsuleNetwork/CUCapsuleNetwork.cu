@@ -10,6 +10,7 @@
 #include <ProgressBar.h>
 #include <HostTimer.h>
 #include <CUDAUtils.h>
+#include <CapsuleNetwork/EvalPolicy.h>
 #include "CapsuleNetwork/CUCapsuleNetwork/CUCapsuleNetwork.h"
 
 CUCapsuleNetwork::CUCapsuleNetwork(const CapsNetConfig& incomingConfig) :
@@ -313,6 +314,8 @@ long double CUCapsuleNetwork::runEpoch() {
 }
 
 pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
+    // Historical behavior: metrics traversal also runs backprop + periodic
+    // updateWeights. Do not use this for corrected evaluation.
     cout << "tallying..." << endl;
     auto dataSize = MNISTReader::getInstance()->trainingData.size();
     if (!useTraining) {
@@ -352,12 +355,50 @@ pair<double, long double> CUCapsuleNetwork::tally(bool useTraining) {
     };
 }
 
+pair<double, long double> CUCapsuleNetwork::evaluate(bool useTraining) {
+    // Corrected pure evaluation: forward + metrics only.
+    cout << "evaluating..." << endl;
+    auto dataSize = MNISTReader::getInstance()->trainingData.size();
+    if (!useTraining) {
+        dataSize = MNISTReader::getInstance()->testingData.size();
+    }
+
+    int numCorrectlyClassified = 0;
+    long double totalLoss = 0.0;
+    HostTimer timer;
+    ProgressBar pb(dataSize);
+    timer.start();
+    for (int i = 0; i < dataSize; i++) {
+        forwardPropagation(i, useTraining);
+        totalLoss += getLoss();
+        if (testResults(i, useTraining)) {
+            numCorrectlyClassified++;
+        }
+        pb.updateProgress(i);
+    }
+    timer.stop();
+
+    cout << "Correctly Classified Instances: " << numCorrectlyClassified << endl;
+    cout << "       Accuracy (out of " << dataSize << "): "
+         << double(numCorrectlyClassified) / double(dataSize) * 100 << endl;
+    cout << "                    Time Taken: " << timer.getElapsedTime() << " ms." << endl;
+    cout << "                    Total Loss: " << totalLoss << endl;
+    return {
+            double(numCorrectlyClassified) / double(dataSize) * 100,
+            totalLoss
+    };
+}
+
 pair<double, long double> CUCapsuleNetwork::train(const string& logHeader) {
     vector<pair<double, long double>> history;
     for (size_t i = 0; i < config.numEpochs; i++) {
         cout << "[" << logHeader << "] - " << "EPOCH ITERATION: " << i << endl;
 //        runEpoch(); // running epochs and then incrementally getting tally's helps too...
-        history.push_back(tally(false));
+        if (capsnet::preserveHistoricalEvalMutation()) {
+            history.push_back(tally(false));
+        } else {
+            history.push_back(evaluate(false));
+        }
         // TODO file writing (and eventual reading)
     }
     cout << endl;

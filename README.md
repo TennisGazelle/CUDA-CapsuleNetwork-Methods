@@ -73,7 +73,7 @@ The revival work does **not** currently claim that the published accuracy/evolut
 Two code paths deserve special attention before reproducing results:
 
 - the surviving CUDA `tally(false)` path appears to perform backpropagation and periodic weight updates while traversing the test set, despite the thesis describing test evaluation as forward-only;
-- the sequential `CapsuleNetwork::backPropagate` contains suspicious error-accumulation indexing that needs a targeted parity test.
+- the sequential `CapsuleNetwork::backPropagate` accumulation defect is corrected and host-tested in revival PR #7, but CPU/CUDA parity and historical experiment provenance remain unresolved.
 
 These are **audit flags**, not retrospective declarations that the thesis results were generated incorrectly. The exact experiment commit/path must be reconstructed first. See [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
@@ -99,22 +99,43 @@ SPEC.md                          target restoration state
 PLAN.md                          independently attackable work packages
 ```
 
-## Building the historical CUDA code
+## Building
 
-The `CUDAify` code was written around an old CUDA/CMake environment and currently encodes assumptions such as:
+Prefer the Makefile as the developer interface. Contemporary CMake presets cover
+host-only and CUDA configure modes. Details, options, and the historical
+`sm_30` / `FindCUDA` caveats live in [`docs/BUILD.md`](docs/BUILD.md).
 
-- CMake 2.6-era style and `FindCUDA`;
-- CUDA architecture `sm_30`;
-- C++11;
-- Armadillo;
-- pthreads;
-- PostgreSQL/libpqxx for the GA result cache;
-- NVIDIA Unified Memory;
-- historical relative dataset paths and cluster scripts.
+```bash
+make ci              # host tests + docs + package check (no GPU required)
+make configure-host  # CMake host preset
+make cuda-compile    # compile CUDA targets when a toolkit is available
+```
 
-A modern CUDA installation should **not** be expected to build the historical tree unchanged. Build-system modernization is deliberately tracked as a separate milestone so toolchain fixes do not get confused with algorithm changes.
+Host CI success is **not** GPU runtime validation. See [`docs/CICD.md`](docs/CICD.md)
+and [`docs/TESTING.md`](docs/TESTING.md).
 
-See [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
+See also [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and
+[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
+
+### MNIST data location
+
+The reader expects the standard 28x28 MNIST IDX files with these exact names:
+
+- `train-images-idx3-ubyte`
+- `train-labels-idx1-ubyte`
+- `t10k-images-idx3-ubyte`
+- `t10k-labels-idx1-ubyte`
+
+It checks `CAPSNET_DATA_DIR` first, then `data/`, then `../data/`. An explicitly
+configured directory must contain all four files; it does not silently fall back.
+For example:
+
+```bash
+CAPSNET_DATA_DIR=/path/to/mnist ./bin/NeuralNets
+```
+
+The loader validates IDX magic numbers, matching image/label counts, dimensions,
+payload lengths, and labels in the range 0–9.
 
 ## Agent / contributor setup
 

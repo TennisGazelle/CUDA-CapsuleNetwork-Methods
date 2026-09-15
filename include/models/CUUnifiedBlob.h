@@ -8,6 +8,19 @@
 #include <string>
 #include <CUDAClionHelper.h>
 
+/// Flat managed-memory (`cudaMallocManaged`) buffer of `double` used as the
+/// CapsNet tensor/vector/matrix substrate.
+///
+/// Logical shapes are recovered by index arithmetic and kernel parameters, not
+/// by nested GPU container types. See docs/CUDA_ARCHITECTURE.md.
+///
+/// Ownership:
+/// - `data` and `flagHelper` are allocated together in `allocateMemory`.
+/// - Copy/assign/resize are manual; audit free paths when changing lifetime.
+/// - Many `CUDA_*` wrappers call `cudaDeviceSynchronize()` after launch.
+///
+/// Naming: each logical primitive has a host (`name`) and device (`CUDA_name`)
+/// entry. Prefer parity tests before changing either side.
 class CUUnifiedBlob {
 public:
     explicit CUUnifiedBlob(int pSize = 1);
@@ -36,21 +49,29 @@ public:
     void setValueAt_2D(int x, int y, int xDim, double incomingValue);
     void setValueAt_3D(int x, int y, int z, int xDim, int yDim, double incomingValue);
 
+    /// Vote transform: for each (t,k), `output = W * input` with dims
+    /// `inputDim`→`outputDim`. Buffers sized by `numClasses * tensorSize`.
     static void matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim, int numClasses, int tensorSize);
+    /// Device twin of `matrixVectorMultiplication`. Synchronizes before return.
     static void CUDA_matrixVectorMultiplication(CUUnifiedBlob &matrix, CUUnifiedBlob &inputVector, CUUnifiedBlob &outputVector, int inputDim, int outputDim, int numClasses, int tensorSize);
 
+    /// Routing softmax over logits `b` into coupling coefficients `c`.
     static void vectorVectorSoftmax(CUUnifiedBlob &b, CUUnifiedBlob &c, int numClasses, int tensorSize);
     static void CUDA_vectorVectorSoftmax(CUUnifiedBlob &b, CUUnifiedBlob &c, int numClasses, int tensorSize);
 
+    /// Weighted vote reduction into parent capsule candidates `v`.
     static void weightReduceVectors(CUUnifiedBlob &u_hat, CUUnifiedBlob &c, CUUnifiedBlob &v, int numClasses, int tensorSize, int dim);
     static void CUDA_weightReduceVectors(CUUnifiedBlob &u_hat, CUUnifiedBlob &c, CUUnifiedBlob &v, int numClasses, int tensorSize, int dim);
 
+    /// Capsule squash nonlinearity over `numVecs` vectors of length `vecDim`.
     static void vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
     static void CUDA_vectorSquash(CUUnifiedBlob &v, int numVecs, int vecDim);
 
+    /// Agreement: accumulate `u_hat · v` into routing logits `b`.
     static void vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim);
     static void CUDA_vectorVectorScalarProduct(CUUnifiedBlob &u_hat, CUUnifiedBlob &v, CUUnifiedBlob &b, int numClasses, int tensorSize, int dim);
 
+    /// Margin-loss / error transform into class capsule state.
     static void vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim, double m_plus,
                                        double m_minus, double lambda);
     static void CUDA_vectorLossFunction(CUUnifiedBlob &v, CUUnifiedBlob &truthMap, int numClasses, int dim,
@@ -68,6 +89,7 @@ public:
     static void multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim);
     static void CUDA_multiVectorReduction(CUUnifiedBlob &u, int numClasses, int tensorSize, int dim);
 
+    /// Momentum-style elementwise weight update; mutates `w` and clears deltas.
     static void elementWiseErrorUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_delta, CUUnifiedBlob &w_velocity, int size);
     static void CUDA_elementWiseErrorUpdate(CUUnifiedBlob &w, CUUnifiedBlob &w_error, CUUnifiedBlob &w_velocity, int size);
 
@@ -102,13 +124,6 @@ private:
     bool isGPUAllocated;
     int *flagHelper;
 };
-
-// https://stackoverflow.com/questions/37566987/cuda-atomicadd-for-doubles-definition-error/37569519
-//#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
-//#define ATOMIC_ADD_DEFINITION_REQUIRED
-//__device__
-//double atomicAdd(double *addr, double val);
-//#endif
 
 __device__
 double sharedMemoryReduce(double *shared_mem, double thread_val, int kernelIndex, int sharedMemSize);

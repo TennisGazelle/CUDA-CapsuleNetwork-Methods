@@ -1,0 +1,11 @@
+name: host-deps
+description: Install host apt dependencies for CapsNet revival CI
+runs:
+  using: composite
+  steps:
+    - name: Install host packages
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          g++ cmake libarmadillo-dev python3 unzip

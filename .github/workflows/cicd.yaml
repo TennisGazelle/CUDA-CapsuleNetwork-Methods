@@ -25,9 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install host test dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libarmadillo-dev
+        uses: ./.github/actions/host-deps
 
       - name: Host validation
         run: make ci
@@ -90,3 +88,7 @@ jobs:
             PLAN.md
             docs/KNOWN_ISSUES.md
             docs/REPRODUCIBILITY.md
+            docs/BUILD.md
+            docs/TESTING.md
+            docs/CICD.md
+            docs/EXPERIMENT_PROVENANCE.md
